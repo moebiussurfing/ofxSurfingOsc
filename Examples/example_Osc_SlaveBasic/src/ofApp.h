@@ -2,86 +2,98 @@
 
 #include "ofMain.h"
 
-//----
-
-#define DEBUG_LOCAL_TARGETS // -> Debug local targets
-//#define OFX_DISPLAY_VALUES // -> Debug targets
-
-//----
-
-// NOTE:
-// If you change the OSC ports/out IP 
-// you must restart the app to apply that settings! 
-// OSC_Settings.xml will be saved!
-// Also you can edit outside the app file 
-// OSC_Settings.xml before open the app.
-
-//--
-
 #include "ofxSurfingOsc.h"
 
 #include "ofxGui.h"
-
-#ifdef DEBUG_LOCAL_TARGETS
-#define NUM_VALUES 8
-#endif
-
-#ifdef OFX_DISPLAY_VALUES
-#include "ofxDisplayValues.h"
-#endif
-
 #include "ofxWindowApp.h"
 
-//--------------------------------------------------------------
-class ofApp : public ofBaseApp {
-
+class ofApp : public ofBaseApp 
+{
 public:
 
 	void setup();
-	void update();
 	void draw();
 	void exit();
 	void keyPressed(int key);
 
 	//--
 
-	ofxSurfingOsc OscHelper;
-
-	//--
-
-	void setupOscManager();
-	void Changed_Params_TARGETS(ofAbstractParameter &e);
-	ofParameter<bool> bBypass{ "ByPass", false };
-
-	// Gui
+	// Gui local 
+	void setupGui();
 	ofxPanel gui;
 
-	//--
-
-#ifdef OFX_DISPLAY_VALUES
-
-	void setupDebugger();
-
-#endif
+	ofParameter<bool> bBypass{ "ByPass", false };
+	ofParameter<bool> bRandom{ "Random", false };
 
 	//--
 
-	// Local targets 
-	// Where we receive the variables from the add-on.
+	// Remote and control
+	void setupOscManager();
 
-#ifdef DEBUG_LOCAL_TARGETS
+	// OSC Input/Output and MIDI
+	ofxSurfingOsc OscHelper;
+	
+	// NOTE:
+	// If you change the OSC ports/out IP 
+	// you must restart the app to apply that settings! 
+	// OSC_Settings.xml will be saved!
+	// Also you can edit outside the app file 
+	// OSC_Settings.xml before open the app.
 
-	bool bangs[NUM_VALUES];
-	bool toggles[NUM_VALUES];
-	float values[NUM_VALUES];
-	int numbers[NUM_VALUES];
+	//--
 
-	void doRandom();
-	void doUpdateTargets();
+	// Local targets aka receivers/senders
+	
+	void setupParamsTargets();
 
-#endif
+	//--
 
-	//-
+	// Senders on MASTER mode 
+	// or Targets on SLAVE mode
+
+	ofParameterGroup params_Targets;
+
+	//--
+
+	// Bool bangs / triggers
+
+#define NUM_BANGS 8
+	ofParameterGroup params_Bangs;
+	ofParameter<bool> bBangs[NUM_BANGS];
+	string bangsNames[NUM_BANGS];
+	void Changed_Params_Bangs(ofAbstractParameter &e);
+
+	//--
+
+	// Bool toggles / states-on/off
+
+#define NUM_TOGGLES 8
+	ofParameterGroup params_Toggles;
+	ofParameter<bool> bToggles[NUM_TOGGLES];
+	string togglesNames[NUM_TOGGLES];
+	void Changed_params_Toggles(ofAbstractParameter &e);
+
+	//--
+
+	// Float values
+
+#define NUM_VALUES 8
+	ofParameterGroup params_Values;
+	ofParameter<float> values[NUM_VALUES];
+	string valuesNames[NUM_VALUES];
+	void Changed_params_Values(ofAbstractParameter &e);
+
+	//--
+
+	// Int numbers
+
+#define NUM_NUMBERS 8
+	ofParameterGroup params_Numbers;
+	ofParameter<int> numbers[NUM_NUMBERS];
+	string numberNames[NUM_NUMBERS];
+	void Changed_params_Numbers(ofAbstractParameter &e);
+
+	//----
 
 	ofxWindowApp w;
 };

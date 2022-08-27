@@ -79,7 +79,7 @@
 
 #define USE_MODE_INTERNAL_PARAMS
 
-#define MODE_SLAVE_RECEIVER_PATCHING // Patcher Feature
+//#define MODE_SLAVE_RECEIVER_PATCHING // Patcher Feature
 
 //#define USE_MIDI
 
@@ -91,6 +91,7 @@
 
 //--
 
+//TODO:
 //-> duplicated into the patching manager class!
 #define NUM_BANGS 8 
 #define NUM_TOGGLES 8
@@ -595,19 +596,21 @@ private:
 
 #ifdef MODE_SLAVE_RECEIVER_PATCHING
 
-private:
-
-	ofParameter<bool> bGui_PatchingManager;
-
 public:
 	
 	void draw_PatchingManager();
 
 	PatchingManager patchingManager;
 
+private:
+
+	ofParameter<bool> bGui_PatchingManager;
+
 	//--
 
 #endif
+
+private:
 
 	void buildHelp();
 };

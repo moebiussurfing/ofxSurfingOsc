@@ -2,9 +2,9 @@
 
 //--------------------------------------------------------------
 void ofApp::setup() {
-	ofSetWindowTitle("SURFING OSC | MASTER");
+	ofSetWindowTitle("OSC | Master");
 
-	ofSetBackgroundColor(32);
+	ofSetBackgroundColor(ofColor::yellow);
 
 	//-
 
@@ -136,6 +136,8 @@ void ofApp::setupOscManager()
 		string OSC_address = "/bang/1/" + ofToString(i + 1);
 		OscHelper.addSender_Bool(bBangs[i], OSC_address);
 		//OscHelper.addReceiver_Bool(bBangs[i], OSC_address);
+
+		//OscHelper.
 	}
 
 	//--
@@ -212,18 +214,18 @@ void ofApp::draw()
 	if (bRandom && ofGetFrameNum() % 6 == 0)
 	{
 		float r = ofRandom(1);
-		int i0 = (ofRandom(1 < 0.5) ? 0 : 1);
-		int i1 = (ofRandom(1 < 0.5) ? 2 : 3);
+		int i0 = (ofRandom(1 < ofRandom(1)) ? 0 : 1);
+		int i1 = (ofRandom(1 < ofRandom(1)) ? 2 : 3);
 
 		if (r < 0.1) bBangs[i0] = !bBangs[i0];
 		else if (r < 0.2) bBangs[i1] = !bBangs[i1];
 		else if (r < 0.3) bToggles[i0] = !bToggles[i0];
 		else if (r < 0.4) bToggles[i1] = !bToggles[i1];
-		else if (r < 0.5) values[0] = ofRandom(values[0].getMin(), values[0].getMax());
-		else if (r < 0.6) values[1] = ofRandom(values[1].getMin(), values[1].getMax());
+		else if (r < 0.5) values[i0] = ofRandom(values[i0].getMin(), values[i0].getMax());
+		else if (r < 0.6) values[i1] = ofRandom(values[i1].getMin(), values[i1].getMax());
 		else if (r < 0.7) values[i0] = ofRandom(values[i0].getMin(), values[i0].getMax());
 		else if (r < 0.8) values[i1] = ofRandom(values[i1].getMin(), values[i1].getMax());
-		else if (r < 0.9) numbers[i1] = ofRandom(numbers[i1].getMin(), numbers[i1].getMax());
+		else if (r < 0.9) numbers[i0] = ofRandom(numbers[i0].getMin(), numbers[i0].getMax());
 		else if (r < 1) numbers[i1] = ofRandom(numbers[i1].getMin(), numbers[i1].getMax());
 	}
 }

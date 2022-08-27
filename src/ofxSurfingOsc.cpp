@@ -129,14 +129,14 @@ void ofxSurfingOsc::buildHelp() {
 	if (bUseOscIn)
 	{
 		strHelpInfo += "INPUT \n";
-		strHelpInfo += "PORT    " + str_OSC_InputPort.get() + "\n";
+		strHelpInfo += "PORT      " + str_OSC_InputPort.get() + "\n";
 		strHelpInfo += "\n";
 	}
 
 	if (bUseOscOut) {
 		strHelpInfo += "OUTPUT \n";
-		strHelpInfo += "PORT    " + str_OSC_OutputPort.get() + "\n";
-		strHelpInfo += "IP      " + OSC_OutputIp.get() + "\n";
+		strHelpInfo += "PORT      " + str_OSC_OutputPort.get() + "\n";
+		strHelpInfo += "IP        " + OSC_OutputIp.get() + "\n";
 		strHelpInfo += "\n";
 	}
 
@@ -155,7 +155,7 @@ void ofxSurfingOsc::disconnectOscInput() {
 //----------------------------------------------------
 void ofxSurfingOsc::setupOscInput()
 {
-	ofLogNotice("ofxSurfingOsc") << (__FUNCTION__);
+	//ofLogNotice("ofxSurfingOsc") << (__FUNCTION__);
 
 	//-
 
@@ -192,7 +192,9 @@ void ofxSurfingOsc::setupOscInput()
 
 						// Get the argument type
 
-						msgString += " ";
+						//msgString += " ";
+						msgString += "\t\t";
+
 						//show type too:
 						//msgString += m.getArgTypeName(i);
 						//msgString += ":";
@@ -226,7 +228,8 @@ void ofxSurfingOsc::setupOscInput()
 					//	//<< m.getNumArgs()
 					//	;
 
-					ofLogNotice(__FUNCTION__) << "\t" << msgString;
+					ofLogNotice("ofxSurfingOsc") << "OscIn \t" << msgString;
+					//ofLogNotice(__FUNCTION__) << "\t" << msgString;
 
 #ifdef USE_TEXT_FLOW
 					ofxTextFlow::addText(msgString);
@@ -399,7 +402,14 @@ void ofxSurfingOsc::startup()
 
 	//----
 
+	// Load File Settings
 	ofxSurfingHelpers::loadGroup(params_OscSettings, path_Global + "/" + path_OscSettings);
+
+	// Fix workaround
+	if (bUseOscIn)
+	{
+		bEnableOsc_Input = bEnableOsc_Input;
+	}
 
 	buildHelp();
 }
@@ -411,6 +421,15 @@ void ofxSurfingOsc::setupParams()
 	bEnableOsc.set("Enable OSC", true);
 	//bGui_OscHelper.set("Show OSC", false);
 
+	bGui_Debug.set("Debug", false);
+	bKeys.set("Keys", true);
+
+	bGui_Plots.set("Plots", true);
+	bEnableSmoothPlots.set("Smooth", false);
+	smoothPlotsPower.set("Smooth Power", 0.5, 0, 1);
+	bGui_AllPlots.set("All Plots", false);
+	bModePlotsMini.set("Mini", false);
+
 #ifdef USE_MIDI
 	bGui_MIDI.set("Show MIDI", false);
 #endif
@@ -419,18 +438,9 @@ void ofxSurfingOsc::setupParams()
 	bGui_Log.set("Log", false);
 #endif
 
-	bGui_Debug.set("Debug", false);
-	bKeys.set("Keys", true);
-
 #ifdef MODE_SLAVE_RECEIVER_PATCHING
 	bGui_PatchingManager.set("Patching Manager", false);
 #endif
-
-	bGui_Plots.set("Plots", true);
-	bEnableSmoothPlots.set("Smooth", false);
-	smoothPlotsPower.set("Smooth Power", 0.5, 0, 1);
-	bGui_AllPlots.set("All Plots", false);
-	bModePlotsMini.set("Mini", false);
 
 	//--
 
@@ -460,7 +470,8 @@ void ofxSurfingOsc::setupParams()
 
 	if (bUseOscOut) {
 		params_OscOutput.setName("OSC OUTPUT");
-		//params_OscOutput.add(bEnableOsc_Output);//TODO: cant be disabled once publishers are added..
+		///TODO: cant be disabled once publishers are added..
+		//params_OscOutput.add(bEnableOsc_Output);
 		// Looking for something like: https://github.com/2bbb/ofxPubSubOsc/issues/41
 		params_OscOutput.add(str_OSC_OutputPort);
 		params_OscOutput.add(OSC_OutputIp);
@@ -468,10 +479,6 @@ void ofxSurfingOsc::setupParams()
 	}
 
 	params_Osc.setName("OSC");
-
-#ifdef MODE_SLAVE_RECEIVER_PATCHING
-	params_Osc.add(bGui_PatchingManager);
-#endif
 
 	if (bUseOscIn) params_Osc.add(params_OscInput);
 	if (bUseOscOut) params_Osc.add(params_OscOutput);
@@ -490,6 +497,10 @@ void ofxSurfingOsc::setupParams()
 	//params_PlotsInput.add(bEnableSmoothPlots);
 	//params_PlotsInput.add(smoothPlotsPower);
 	params_Osc.add(params_PlotsInput);
+
+#ifdef MODE_SLAVE_RECEIVER_PATCHING
+	params_Osc.add(bGui_PatchingManager);
+#endif
 
 	//--
 
@@ -585,6 +596,7 @@ void ofxSurfingOsc::setupParams()
 	params_AppSettings.setName("ofxSurfingOsc");
 	params_AppSettings.add(bGui_Debug);
 	//params_AppSettings.add(bGui_OscHelper);
+
 #ifdef USE_TEXT_FLOW
 	params_AppSettings.add(bGui_Log);
 #endif
@@ -702,8 +714,9 @@ void ofxSurfingOsc::Changed_params_SettingsOSC(ofAbstractParameter& e)
 		//		setupOscInput();
 		//	}
 		//}
-
 	}
+
+	//--
 
 	if (bUseOscOut)
 	{
@@ -900,25 +913,24 @@ void ofxSurfingOsc::exit()
 
 	ofRemoveListener(params_AppSettings.parameterChangedE(), this, &ofxSurfingOsc::Changed_params);
 	ofRemoveListener(params_Osc.parameterChangedE(), this, &ofxSurfingOsc::Changed_params);
+	ofRemoveListener(params_OscSettings.parameterChangedE(), this, &ofxSurfingOsc::Changed_params_SettingsOSC);
+
 #ifdef USE_MIDI
 	ofRemoveListener(params_MIDI.parameterChangedE(), this, &ofxSurfingOsc::Changed_params);
 #endif
-	ofRemoveListener(params_OscSettings.parameterChangedE(), this, &ofxSurfingOsc::Changed_params_SettingsOSC);
 
 	positionGuiInternal = guiInternal.getPosition();
 
 	// exclude settings for this group
-	bool _b = false;
-	OSC_InputPort.setSerializable(_b);
-	OSC_OutputPort.setSerializable(_b);
-	OSC_OutputIp.setSerializable(_b);
+	OSC_InputPort.setSerializable(false);
+	OSC_OutputPort.setSerializable(false);
+	OSC_OutputIp.setSerializable(false);
 	ofxSurfingHelpers::saveGroup(params_AppSettings, path_Global + "/" + path_AppSettings);
 
 	// include settings for this group
-	_b = true;
-	OSC_InputPort.setSerializable(_b);
-	OSC_OutputPort.setSerializable(_b);
-	OSC_OutputIp.setSerializable(_b);
+	OSC_InputPort.setSerializable(true);
+	OSC_OutputPort.setSerializable(true);
+	OSC_OutputIp.setSerializable(true);
 	ofxSurfingHelpers::saveGroup(params_OscSettings, path_Global + "/" + path_OscSettings);
 
 	//-
@@ -929,6 +941,10 @@ void ofxSurfingOsc::exit()
 #endif
 }
 
+//--
+
+// Note that some settings can not be changed without restart the app!
+// 
 //--------------------------------------------------------------
 void ofxSurfingOsc::setInputPort(int p)
 {
@@ -965,6 +981,26 @@ void ofxSurfingOsc::setOutputIp(string ip)
 
 //--
 
+//TODO:
+
+////--------------------------------------------------------------
+//void ofxSurfingOsc::listParams()
+//{
+//	int i = 0;
+//	for (auto &p : paramsAbstract)
+//	{
+//		cout << "[" << ofToString(i++) << "] " << p.getName() << " : " << p.type << endl;
+//	}
+//}
+
+////--------------------------------------------------------------
+//void ofxSurfingOsc::addReceiver_Float(ofParameter<float> &f, string address)
+//{
+//	paramsAbstract.push_back(f);
+//}
+
+//----
+
 // Receivers
 
 //--------------------------------------------------------------
@@ -986,6 +1022,9 @@ void ofxSurfingOsc::addReceiver_Int(ofParameter<int>& p, string address)
 
 	ofxSubscribeOsc(OSC_InputPort, address, p);
 
+	//--
+
+	// Feedback
 	if (bModeFeedback && bUseOscOut)
 	{
 		ofxPublishOsc(OSC_OutputIp, OSC_OutputPort, address, p);
@@ -1011,6 +1050,9 @@ void ofxSurfingOsc::addReceiver_Float(ofParameter<float>& p, string address)
 
 	ofxSubscribeOsc(OSC_InputPort, address, p);
 
+	//--
+
+	// Feedback
 	if (bModeFeedback && bUseOscOut)
 	{
 		ofxPublishOsc(OSC_OutputIp, OSC_OutputPort, address, p);
@@ -1041,33 +1083,16 @@ void ofxSurfingOsc::addReceiver_Bool(ofParameter<bool>& p, string address)
 
 	ofxSubscribeOsc(OSC_InputPort, address, p);
 
+	//--
+
+	// Feedback
 	if (bModeFeedback && bUseOscOut)
 	{
 		ofxPublishOsc(OSC_OutputIp, OSC_OutputPort, address, p);
 	}
 }
 
-//--
-
-//TODO:
-
-////--------------------------------------------------------------
-//void ofxSurfingOsc::listParams()
-//{
-//	int i = 0;
-//	for (auto &p : paramsAbstract)
-//	{
-//		cout << "[" << ofToString(i++) << "] " << p.getName() << " : " << p.type << endl;
-//	}
-//}
-
-////--------------------------------------------------------------
-//void ofxSurfingOsc::addReceiver_Float(ofParameter<float> &f, string address)
-//{
-//	paramsAbstract.push_back(f);
-//}
-
-//--
+//----
 
 // Senders
 
@@ -1109,6 +1134,8 @@ void ofxSurfingOsc::addSender_Bool(ofParameter<bool>& p, string address)
 	ofxPublishOsc(OSC_OutputIp, OSC_OutputPort, address, p);
 	strs_outputAddresses.push_back(address);
 }
+
+//----
 
 //--------------------------------------------------------------
 ofxSurfingOsc::~ofxSurfingOsc()
@@ -1170,6 +1197,7 @@ void ofxSurfingOsc::Changed_params(ofAbstractParameter& e)
 
 			setInputPort(p);
 		}
+
 		else if (name == bEnableOsc_Input.getName())
 		{
 			ofxSetOscSubscriberActive(OSC_InputPort, bEnableOsc_Input);
@@ -1207,9 +1235,10 @@ void ofxSurfingOsc::Changed_params(ofAbstractParameter& e)
 
 	//--
 
+
 	//TODO:
 #ifdef MODE_SLAVE_RECEIVER_PATCHING
-	else if (name == bGui_PatchingManager.getName())
+	if (name == bGui_PatchingManager.getName())
 	{
 		if (bGui_PatchingManager) {
 		}
@@ -1219,7 +1248,7 @@ void ofxSurfingOsc::Changed_params(ofAbstractParameter& e)
 	//--
 
 	// Smooth
-	else if (name == bEnableSmoothPlots.getName())
+	if (name == bEnableSmoothPlots.getName())
 	{
 		int _start = NUM_BANGS + NUM_TOGGLES;
 
@@ -1240,24 +1269,6 @@ void ofxSurfingOsc::Changed_params(ofAbstractParameter& e)
 				plots_TARGETS[i]->setSmoothFilter(0.1);
 			}
 		}
-	}
-
-	//--
-
-#ifdef USE_TEXT_FLOW
-	else if (name == bGui_Log.getName())
-	{
-		// workflow
-		if (bGui_Log) bGui_OscHelper = true;
-		//if (!bGui_OscHelper && bGui_Log) bGui_OscHelper = true;
-	}
-#endif
-
-	//--
-
-	else if (name == positionGuiInternal.getName())
-	{
-		guiInternal.setPosition(positionGuiInternal.get().x, positionGuiInternal.get().y);
 	}
 
 	//--
@@ -1301,7 +1312,7 @@ void ofxSurfingOsc::Changed_params(ofAbstractParameter& e)
 
 #ifdef USE_MIDI_OUT
 
-	else if (name == MIDI_OutputPort.getName())
+	if (name == MIDI_OutputPort.getName())
 	{
 		ofLogNotice(__FUNCTION__) << "MIDI OUT PORT: " << (MIDI_OutputPort);
 		midiOut.listOutPorts();
@@ -1327,6 +1338,24 @@ void ofxSurfingOsc::Changed_params(ofAbstractParameter& e)
 #endif//midiOut
 
 #endif//midi
+
+	//--
+
+#ifdef USE_TEXT_FLOW
+	if (name == bGui_Log.getName())
+	{
+		// workflow
+		if (bGui_Log) bGui_OscHelper = true;
+		//if (!bGui_OscHelper && bGui_Log) bGui_OscHelper = true;
+	}
+#endif
+
+	//--
+
+	if (name == positionGuiInternal.getName())
+	{
+		guiInternal.setPosition(positionGuiInternal.get().x, positionGuiInternal.get().y);
+	}
 }
 
 //--------------------------------------------------------------
