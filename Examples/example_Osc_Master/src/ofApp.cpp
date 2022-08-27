@@ -3,7 +3,7 @@
 //--------------------------------------------------------------
 void ofApp::setup() {
 	ofSetWindowTitle("SURFING OSC | MASTER");
-	
+
 	ofSetBackgroundColor(32);
 
 	//-
@@ -101,16 +101,14 @@ void ofApp::setupOscManager()
 	// Here we add all the local parameters (TARGETS) 
 	// that we want to control-from / to-receive-from,
 	// or to control-to / to-send-to.
-	 
+
 	// MIDI linking / assignments will be made 
 	// on the add-on gui by a MIDI learn workflow,
 	// bc it's easier than passing all the notes/cc addresses here.
 
 	//--
 
-	OscHelper.setEnableOscInput(false);
-	OscHelper.setEnableOscOutput(true);
-
+	OscHelper.setMode(ofxSurfingOsc::Master);
 	OscHelper.setup();
 
 	//OscHelper.setModeFeedback(true); 
@@ -179,6 +177,7 @@ void ofApp::setupOscManager()
 
 	// Call this when all the local/target 
 	// parameters are already added.
+
 	OscHelper.startup();
 }
 
@@ -190,6 +189,7 @@ void ofApp::setupGui()
 
 	// Control
 	gui.add(OscHelper.bGui);
+	gui.add(bRandom);
 	gui.add(bBypass);// bypass the callbacks, not the receiving itself!
 
 	// Widgets for all the params they are:
@@ -206,11 +206,26 @@ void ofApp::setupGui()
 //--------------------------------------------------------------
 void ofApp::draw()
 {
-	// local
 	gui.draw();
 
-	// add-on 
-	//OscHelper.draw();
+	// Timed Randomize
+	if (bRandom && ofGetFrameNum() % 6 == 0)
+	{
+		float r = ofRandom(1);
+		int i0 = (ofRandom(1 < 0.5) ? 0 : 1);
+		int i1 = (ofRandom(1 < 0.5) ? 2 : 3);
+
+		if (r < 0.1) bBangs[i0] = !bBangs[i0];
+		else if (r < 0.2) bBangs[i1] = !bBangs[i1];
+		else if (r < 0.3) bToggles[i0] = !bToggles[i0];
+		else if (r < 0.4) bToggles[i1] = !bToggles[i1];
+		else if (r < 0.5) values[0] = ofRandom(values[0].getMin(), values[0].getMax());
+		else if (r < 0.6) values[1] = ofRandom(values[1].getMin(), values[1].getMax());
+		else if (r < 0.7) values[i0] = ofRandom(values[i0].getMin(), values[i0].getMax());
+		else if (r < 0.8) values[i1] = ofRandom(values[i1].getMin(), values[i1].getMax());
+		else if (r < 0.9) numbers[i1] = ofRandom(numbers[i1].getMin(), numbers[i1].getMax());
+		else if (r < 1) numbers[i1] = ofRandom(numbers[i1].getMin(), numbers[i1].getMax());
+	}
 }
 
 //--------------------------------------------------------------
@@ -220,25 +235,25 @@ void ofApp::keyPressed(int key)
 	// if all is settled correctly, 
 	// auto send OSC messages!
 
-	if (key == '1') bBangs[0]=!bBangs[0];
-	if (key == '2') bBangs[1]=!bBangs[1];
-	if (key == '3') bBangs[2]=!bBangs[2];
-	if (key == '4') bBangs[3]=!bBangs[3];
+	if (key == '1') bBangs[0] = !bBangs[0];
+	if (key == '2') bBangs[1] = !bBangs[1];
+	if (key == '3') bBangs[2] = !bBangs[2];
+	if (key == '4') bBangs[3] = !bBangs[3];
 
-	if (key == '5') bToggles[0]=!bToggles[0];
-	if (key == '6') bToggles[1]=!bToggles[1];
-	if (key == '7') bToggles[2]=!bToggles[2];
-	if (key == '8') bToggles[3]=!bToggles[3];
+	if (key == '5') bToggles[0] = !bToggles[0];
+	if (key == '6') bToggles[1] = !bToggles[1];
+	if (key == '7') bToggles[2] = !bToggles[2];
+	if (key == '8') bToggles[3] = !bToggles[3];
 
-	if (key == 'q') values[0]=ofRandom(values[0].getMin(), values[0].getMax());
-	if (key == 'w') values[1]=ofRandom(values[1].getMin(), values[1].getMax());
-	if (key == 'e') values[2]=ofRandom(values[2].getMin(), values[2].getMax());
-	if (key == 'r') values[3]=ofRandom(values[3].getMin(), values[3].getMax());
+	if (key == 'q') values[0] = ofRandom(values[0].getMin(), values[0].getMax());
+	if (key == 'w') values[1] = ofRandom(values[1].getMin(), values[1].getMax());
+	if (key == 'e') values[2] = ofRandom(values[2].getMin(), values[2].getMax());
+	if (key == 'r') values[3] = ofRandom(values[3].getMin(), values[3].getMax());
 
-	if (key == 't') numbers[0]=ofRandom(numbers[0].getMin(), numbers[0].getMax());
-	if (key == 'y') numbers[1]=ofRandom(numbers[1].getMin(), numbers[1].getMax());
-	if (key == 'u') numbers[2]=ofRandom(numbers[2].getMin(), numbers[2].getMax());
-	if (key == 'i') numbers[3]=ofRandom(numbers[3].getMin(), numbers[3].getMax());
+	if (key == 't') numbers[0] = ofRandom(numbers[0].getMin(), numbers[0].getMax());
+	if (key == 'y') numbers[1] = ofRandom(numbers[1].getMin(), numbers[1].getMax());
+	if (key == 'u') numbers[2] = ofRandom(numbers[2].getMin(), numbers[2].getMax());
+	if (key == 'i') numbers[3] = ofRandom(numbers[3].getMin(), numbers[3].getMax());
 }
 
 //--

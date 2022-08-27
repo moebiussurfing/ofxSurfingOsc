@@ -1,0 +1,10 @@
+ofxDisplayValues
+ofxGui
+ofxHistoryPlot
+ofxImGui
+ofxOsc
+ofxPubSubOsc
+ofxSurfingHelpers
+ofxSurfingImGui
+ofxSurfingOsc
+ofxWindowApp

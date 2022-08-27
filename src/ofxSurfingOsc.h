@@ -79,7 +79,7 @@
 
 #define USE_MODE_INTERNAL_PARAMS
 
-//#define MODE_SLAVE_RECEIVER_PATCHING // Patcher feature
+#define MODE_SLAVE_RECEIVER_PATCHING // Patcher Feature
 
 //#define USE_MIDI
 
@@ -157,7 +157,6 @@ private:
 
 	void update(); // only required to plotting
 	void draw();
-	void draw_PatchingManager();
 
 private:
 
@@ -167,6 +166,20 @@ private:
 	bool bUseOscOut = true;//master 
 
 public:
+
+	enum SurfOscModes
+	{
+		UNKNOWN = 0,
+		Master,
+		Slave,
+		FullDuplex
+	};
+
+	void setMode(SurfOscModes mode = FullDuplex);
+
+private:
+	
+	SurfOscModes mode = UNKNOWN;
 
 	void setEnableOscInput(bool b) { bUseOscIn = b; };//must be called before setup. can not be modified on runtime!
 	void setEnableOscOutput(bool b) { bUseOscOut = b; };//must be called before setup. can not be modified on runtime!
@@ -357,6 +370,10 @@ private:
 
 	//ofParameter<bool> bGui_OscHelper;
 	ofParameter<bool> bGui_Debug;
+
+	ofParameterGroup params_Extra;
+
+	//--
 
 #ifdef USE_TEXT_FLOW
 	ofParameter<bool> bGui_Log;
@@ -583,6 +600,8 @@ private:
 	ofParameter<bool> bGui_PatchingManager;
 
 public:
+	
+	void draw_PatchingManager();
 
 	PatchingManager patchingManager;
 

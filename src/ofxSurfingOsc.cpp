@@ -22,6 +22,41 @@ ofxSurfingOsc::ofxSurfingOsc()
 }
 
 //----------------------------------------------------
+void ofxSurfingOsc::setMode(SurfOscModes mode)
+{
+	ofLogNotice("ofxSurfingOsc") << (__FUNCTION__);
+
+	switch (mode)
+	{
+	case ofxSurfingOsc::UNKNOWN:
+		setEnableOscInput(false);
+		setEnableOscOutput(false);
+		ofLogError("ofxSurfingOsc") << "Must define a working mode correctly. UNKNOWN Mode!";
+		ofLogError("ofxSurfingOsc") << "e.g: .setMode(ofxSurfingOsc::Master);";
+		break;
+
+	case ofxSurfingOsc::Master:
+		setEnableOscInput(false);
+		setEnableOscOutput(true);
+		ofLogNotice("ofxSurfingOsc") << "Setup Mode Master";
+		break;
+
+	case ofxSurfingOsc::Slave:
+		setEnableOscInput(true);
+		setEnableOscOutput(false);
+		ofLogNotice("ofxSurfingOsc") << "Setup Mode Slave";
+		break;
+
+	case ofxSurfingOsc::FullDuplex:
+		setEnableOscInput(true);
+		setEnableOscOutput(true);
+		ofLogNotice("ofxSurfingOsc") << "Setup Mode FullDuplex";
+		break;
+	}
+
+}
+
+//----------------------------------------------------
 void ofxSurfingOsc::setup()
 {
 	ofLogNotice("ofxSurfingOsc") << (__FUNCTION__);
@@ -451,16 +486,17 @@ void ofxSurfingOsc::setupParams()
 	params_PlotsInput.add(bGui_Plots);
 	params_PlotsInput.add(bGui_AllPlots);
 	params_PlotsInput.add(bModePlotsMini);
-	params_PlotsInput.add(boxPlotsBg.bEditMode);
-	params_PlotsInput.add(bEnableSmoothPlots);
-	params_PlotsInput.add(smoothPlotsPower);
+	//params_PlotsInput.add(boxPlotsBg.bEditMode);
+	//params_PlotsInput.add(bEnableSmoothPlots);
+	//params_PlotsInput.add(smoothPlotsPower);
 	params_Osc.add(params_PlotsInput);
 
-	//-
+	//--
 
 #ifdef USE_MIDI
 
 	// MIDI
+
 	bEnableMIDI.set("Enable MIDI", true);
 	params_MIDI.setName("MIDI");
 
@@ -507,7 +543,7 @@ void ofxSurfingOsc::setupParams()
 	guiInternal.setup(bGui.getName());
 	//guiInternal.add(bGui_OscHelper);
 
-	// Osc
+	// OSC
 	guiInternal.add(params_Osc);
 
 	// Midi
@@ -516,9 +552,12 @@ void ofxSurfingOsc::setupParams()
 	guiInternal.add(params_MIDI);
 #endif
 
-	guiInternal.add(bKeys);
-	guiInternal.add(boxHelp.bGui);
-	guiInternal.add(bGui_Debug);
+	// Extra
+	params_Extra.setName("Extra");
+	params_Extra.add(bKeys);
+	params_Extra.add(boxHelp.bGui);
+	params_Extra.add(bGui_Debug);
+	guiInternal.add(params_Extra);
 
 	// Position
 	positionGuiInternal.set("GUI POSITION",
@@ -544,8 +583,8 @@ void ofxSurfingOsc::setupParams()
 	// Not into gui: just for store/recall and callbacks
 
 	params_AppSettings.setName("ofxSurfingOsc");
-	//params_AppSettings.add(bGui_OscHelper);
 	params_AppSettings.add(bGui_Debug);
+	//params_AppSettings.add(bGui_OscHelper);
 #ifdef USE_TEXT_FLOW
 	params_AppSettings.add(bGui_Log);
 #endif
@@ -584,26 +623,32 @@ void ofxSurfingOsc::setupParams()
 
 	//--
 
-	// Plots
-
-	params_AppSettings.add(bGui_Plots);
-	params_AppSettings.add(bGui_AllPlots);
-	params_AppSettings.add(bModePlotsMini);
-	//params_AppSettings.add(bEnableSmoothPlots);//crashes
-
 #ifdef MODE_SLAVE_RECEIVER_PATCHING
 	params_AppSettings.add(bGui_PatchingManager);
 #endif
 
-	// Exclude settings for this group
-	bool _b = false;
-	OSC_InputPort.setSerializable(_b);
-	OSC_OutputPort.setSerializable(_b);
-	OSC_OutputIp.setSerializable(_b);
+	// Plots
+
+	params_AppSettings.add(params_PlotsInput);
+
+	/*
+	params_AppSettings.add(bGui_Plots);
+	params_AppSettings.add(bGui_AllPlots);
+	params_AppSettings.add(bModePlotsMini);
+	//params_AppSettings.add(bEnableSmoothPlots);//crashes
+	*/
 
 	//--
 
-	// Load settings
+	//TODO:
+	// Exclude settings for this group
+	OSC_InputPort.setSerializable(false);
+	OSC_OutputPort.setSerializable(false);
+	OSC_OutputIp.setSerializable(false);
+
+	//--
+
+	// Load Settings
 
 	ofxSurfingHelpers::loadGroup(params_AppSettings, path_Global + "/" + path_AppSettings);
 
@@ -1168,260 +1213,262 @@ void ofxSurfingOsc::Changed_params(ofAbstractParameter& e)
 	{
 		if (bGui_PatchingManager) {
 		}
+	}
 #endif
 
-		//--
+	//--
 
-		// Smooth
-		else if (name == bEnableSmoothPlots.getName())
+	// Smooth
+	else if (name == bEnableSmoothPlots.getName())
+	{
+		int _start = NUM_BANGS + NUM_TOGGLES;
+
+		for (int i = _start; i < _start + NUM_VALUES; i++)
 		{
+			if (i > plots_TARGETS.size() - 1) return;
+			plots_TARGETS[i]->setShowSmoothedCurve(bEnableSmoothPlots);
+		}
+	}
+	else if (name == smoothPlotsPower.getName())
+	{
+		if (bEnableSmoothPlots) {
 			int _start = NUM_BANGS + NUM_TOGGLES;
 
 			for (int i = _start; i < _start + NUM_VALUES; i++)
 			{
 				if (i > plots_TARGETS.size() - 1) return;
-				plots_TARGETS[i]->setShowSmoothedCurve(bEnableSmoothPlots);
+				plots_TARGETS[i]->setSmoothFilter(0.1);
 			}
 		}
-		else if (name == smoothPlotsPower.getName())
-		{
-			if (bEnableSmoothPlots) {
-				int _start = NUM_BANGS + NUM_TOGGLES;
+	}
 
-				for (int i = _start; i < _start + NUM_VALUES; i++)
-				{
-					if (i > plots_TARGETS.size() - 1) return;
-					plots_TARGETS[i]->setSmoothFilter(0.1);
-				}
-			}
-		}
-
-		//--
+	//--
 
 #ifdef USE_TEXT_FLOW
-		else if (name == bGui_Log.getName())
-		{
-			// workflow
-			if (bGui_Log) bGui_OscHelper = true;
-			//if (!bGui_OscHelper && bGui_Log) bGui_OscHelper = true;
-		}
+	else if (name == bGui_Log.getName())
+	{
+		// workflow
+		if (bGui_Log) bGui_OscHelper = true;
+		//if (!bGui_OscHelper && bGui_Log) bGui_OscHelper = true;
+	}
 #endif
 
-		//--
+	//--
 
-		else if (name == positionGuiInternal.getName())
-		{
-			guiInternal.setPosition(positionGuiInternal.get().x, positionGuiInternal.get().y);
-		}
+	else if (name == positionGuiInternal.getName())
+	{
+		guiInternal.setPosition(positionGuiInternal.get().x, positionGuiInternal.get().y);
+	}
 
-		//--
+	//--
 
-		// MIDI
+	// MIDI
 
 #ifdef USE_MIDI
 
 	// MIDI in
 
-		if (name == MIDI_InputPort.getName())
-		{
-			ofLogNotice(__FUNCTION__) << "MIDI INPUT PORT: " << (MIDI_InputPort);
-			mMidiParams.disconnect();
-			MIDI_InputPort.setMax(mMidiParams.getMidi().getNumInPorts() - 1);
+	if (name == MIDI_InputPort.getName())
+	{
+		ofLogNotice(__FUNCTION__) << "MIDI INPUT PORT: " << (MIDI_InputPort);
+		mMidiParams.disconnect();
+		MIDI_InputPort.setMax(mMidiParams.getMidi().getNumInPorts() - 1);
 
+		mMidiParams.connect(MIDI_InputPort, false);
+
+		str_MIDI_InputPort_name = mMidiParams.getMidi().getName();
+	}
+	else if (name == bEnableMIDI.getName())
+	{
+		ofLogNotice(__FUNCTION__) << "ENABLE MIDI: " << (bEnableMIDI ? "ON" : "OFF");
+		if (bEnableMIDI)
+		{
 			mMidiParams.connect(MIDI_InputPort, false);
-
-			str_MIDI_InputPort_name = mMidiParams.getMidi().getName();
 		}
-		else if (name == bEnableMIDI.getName())
+		else
 		{
-			ofLogNotice(__FUNCTION__) << "ENABLE MIDI: " << (bEnableMIDI ? "ON" : "OFF");
-			if (bEnableMIDI)
-			{
-				mMidiParams.connect(MIDI_InputPort, false);
-			}
-			else
-			{
-				mMidiParams.disconnect();
-			}
+			mMidiParams.disconnect();
 		}
-		else if (name == bGui_MIDI.getName())
-		{
-			refreshGui();
-		}
+	}
+	else if (name == bGui_MIDI.getName())
+	{
+		refreshGui();
+	}
 
-		//--
+	//--
 
-		// MIDI out
+	// MIDI out
 
 #ifdef USE_MIDI_OUT
 
-		else if (name == MIDI_OutputPort.getName())
+	else if (name == MIDI_OutputPort.getName())
+	{
+		ofLogNotice(__FUNCTION__) << "MIDI OUT PORT: " << (MIDI_OutputPort);
+		midiOut.listOutPorts();
+
+		int size = midiOut.getNumOutPorts();
+		MIDI_OutputPort.setMax(size - 1);
+
+		// connect
+		bool b = midiOut.openPort(MIDI_OutputPort);
+
+		if (b)
 		{
-			ofLogNotice(__FUNCTION__) << "MIDI OUT PORT: " << (MIDI_OutputPort);
-			midiOut.listOutPorts();
-
-			int size = midiOut.getNumOutPorts();
-			MIDI_OutputPort.setMax(size - 1);
-
-			// connect
-			bool b = midiOut.openPort(MIDI_OutputPort);
-
-			if (b)
-			{
-				MIDI_OutPort_name = midiOut.getName();
-				auto strs = ofSplitString(MIDI_OutPort_name, "Wavetable");//shortname
-				MIDI_OutPort_name = strs[0];
-			}
-			else
-			{
-				MIDI_OutPort_name = "ERROR";
-			}
+			MIDI_OutPort_name = midiOut.getName();
+			auto strs = ofSplitString(MIDI_OutPort_name, "Wavetable");//shortname
+			MIDI_OutPort_name = strs[0];
 		}
+		else
+		{
+			MIDI_OutPort_name = "ERROR";
+		}
+	}
 
 #endif//midiOut
 
 #endif//midi
 }
 
-	//--------------------------------------------------------------
-	void ofxSurfingOsc::refreshGui()
-	{
+//--------------------------------------------------------------
+void ofxSurfingOsc::refreshGui()
+{
 
 #ifdef USE_MIDI
 
-		auto& gm = guiInternal.getGroup(params_MIDI.getName());
+	auto& gm = guiInternal.getGroup(params_MIDI.getName());
+	gm.minimize();
+	if (bGui_MIDI)
+	{
+		gm.maximize();
+	}
+	else
+	{
 		gm.minimize();
-		if (bGui_MIDI)
-		{
-			gm.maximize();
-		}
-		else
-		{
-			gm.minimize();
-		}
+	}
 
 #endif
 
-		//--
+	//--
 
-		auto& go = guiInternal.getGroup(params_Osc.getName());
-		if (bUseOscOut) go.getGroup(params_OscOutput.getName()).minimize();
-		if (bUseOscIn) go.getGroup(params_OscInput.getName()).minimize();
-		go.getGroup(params_PlotsInput.getName()).minimize();
-		go.minimize();
-		//if (bGui_OscHelper)
-		//{
-		//	go.maximize();
-		//}
-		//else
-		//{
-		//	go.minimize();
-		//}
+	auto& ge = guiInternal.getGroup(params_Extra.getName());
+	ge.minimize();
+
+	auto& go = guiInternal.getGroup(params_Osc.getName());
+	if (bUseOscOut) go.getGroup(params_OscOutput.getName()).minimize();
+	if (bUseOscIn) go.getGroup(params_OscInput.getName()).minimize();
+	go.getGroup(params_PlotsInput.getName()).minimize();
+	go.minimize();
+	//if (bGui_OscHelper)
+	//{
+	//	go.maximize();
+	//}
+	//else
+	//{
+	//	go.minimize();
+	//}
+}
+
+//--------------------------------------------------------------
+void ofxSurfingOsc::keyPressed(ofKeyEventArgs& eventArgs)
+{
+	if (!bKeys) return;
+
+	const int& key = eventArgs.key;
+
+	if (key == 'g')
+	{
+		setToggleVisible();
 	}
 
-	//--------------------------------------------------------------
-	void ofxSurfingOsc::keyPressed(ofKeyEventArgs & eventArgs)
-	{
-		if (!bKeys) return;
-
-		const int& key = eventArgs.key;
-
-		if (key == 'g')
-		{
-			setToggleVisible();
-		}
-
-		//else if (key == ' ')
-		//{
-		//	//listParams();
-		//}
+	//else if (key == ' ')
+	//{
+	//	//listParams();
+	//}
 
 #ifdef USE_TEXT_FLOW
-		else if (key == OF_KEY_BACKSPACE) {
-			ofxTextFlow::clear();
-		}
-#endif
+	else if (key == OF_KEY_BACKSPACE) {
+		ofxTextFlow::clear();
 	}
+#endif
+}
 
-	////--------------------------------------------------------------
-	//void ofxSurfingOsc::loadParams(ofParameterGroup& g, string path)
-	//{
-	//	ofLogNotice(__FUNCTION__) << "--------------------------------------------------------------";
-	//	ofLogNotice(__FUNCTION__) << path;
-	//
-	//	ofXml settings;
-	//	settings.load(path);
-	//	ofLogNotice(__FUNCTION__) << "params: \n" << settings.toString();
-	//	ofDeserialize(settings, g);
-	//}
-	//
-	////--------------------------------------------------------------
-	//void ofxSurfingOsc::ofxSurfingHelpers::saveGroup(ofParameterGroup& g, string path)
-	//{
-	//	ofLogNotice(__FUNCTION__) << "--------------------------------------------------------------";
-	//	ofLogNotice(__FUNCTION__) << path;
-	//
-	//	ofXml settings;
-	//	ofSerialize(settings, g);
-	//	ofLogNotice(__FUNCTION__) << "params: \n" << settings.toString();
-	//	settings.save(path);
-	//}
+////--------------------------------------------------------------
+//void ofxSurfingOsc::loadParams(ofParameterGroup& g, string path)
+//{
+//	ofLogNotice(__FUNCTION__) << "--------------------------------------------------------------";
+//	ofLogNotice(__FUNCTION__) << path;
+//
+//	ofXml settings;
+//	settings.load(path);
+//	ofLogNotice(__FUNCTION__) << "params: \n" << settings.toString();
+//	ofDeserialize(settings, g);
+//}
+//
+////--------------------------------------------------------------
+//void ofxSurfingOsc::ofxSurfingHelpers::saveGroup(ofParameterGroup& g, string path)
+//{
+//	ofLogNotice(__FUNCTION__) << "--------------------------------------------------------------";
+//	ofLogNotice(__FUNCTION__) << path;
+//
+//	ofXml settings;
+//	ofSerialize(settings, g);
+//	ofLogNotice(__FUNCTION__) << "params: \n" << settings.toString();
+//	settings.save(path);
+//}
 
 #ifdef USE_TEXT_FLOW
 
 //--------------------------------------------------------------
-	void ofxSurfingOsc::setupTextFlow() {
-		string str = "assets/fonts/JetBrainsMono-Bold.ttf";
-		//string str = "assets/fonts/mono.ttf";
-		//string str = path_Global + "/fonts" + "/" + "DIN.otf";
-		ofxTextFlow::loadFont(str, 8);
-		ofxTextFlow::setMaxLineNum(40);
-		ofxTextFlow::setShowing(true);
-		ofxTextFlow::setBBoxWidth(200);
-		ofxTextFlow::setShowingBBox(true);
-		ofxTextFlow::setMarginBorders(10);
-		ofxTextFlow::setRounded(true, 5);
-		//ofxTextFlow::setTitle("OSC INPUT LOG: " + OSC_InputPort);//crash?
-		ofxTextFlow::setShowFPS(false);
-	}
+void ofxSurfingOsc::setupTextFlow() {
+	string str = "assets/fonts/JetBrainsMono-Bold.ttf";
+	ofxTextFlow::loadFont(str, 8);
+	ofxTextFlow::setMaxLineNum(40);
+	ofxTextFlow::setShowing(true);
+	ofxTextFlow::setBBoxWidth(200);
+	ofxTextFlow::setShowingBBox(true);
+	ofxTextFlow::setMarginBorders(10);
+	ofxTextFlow::setRounded(true, 5);
+	//ofxTextFlow::setTitle("OSC INPUT LOG: " + OSC_InputPort);//crash?
+	ofxTextFlow::setShowFPS(false);
+}
 
 #endif
 
 #ifdef USE_MIDI_OUT
 
-	//TODO:
-	//--------------------------------------------------------------
-	void ofxSurfingOsc::noteOut(int note, bool state)
+//TODO:
+//--------------------------------------------------------------
+void ofxSurfingOsc::noteOut(int note, bool state)
+{
+	if (midiOut.isOpen())
 	{
-		if (midiOut.isOpen())
+
+		int channel = 1;
+		int velocity;
+		if (state)
 		{
-
-			int channel = 1;
-			int velocity;
-			if (state)
-			{
-				velocity = 127;
-			}
-			else
-			{
-				velocity = 0;
-			}
-			midiOut.sendNoteOn(channel, note, velocity);
-
-			//print out both the midi note and the frequency
-			ofLogNotice() << __FUNCTION__ << "note: " << note
-				<< " freq: " << ofxMidi::mtof(note) << " Hz";
+			velocity = 127;
 		}
 		else
 		{
-			ofLogError() << __FUNCTION__ << "midi out port is closed!";
+			velocity = 0;
 		}
+		midiOut.sendNoteOn(channel, note, velocity);
+
+		//print out both the midi note and the frequency
+		ofLogNotice() << __FUNCTION__ << "note: " << note
+			<< " freq: " << ofxMidi::mtof(note) << " Hz";
 	}
+	else
+	{
+		ofLogError() << __FUNCTION__ << "midi out port is closed!";
+	}
+}
 
 #endif
 
 
-	//----
+//----
 
 
 #ifndef USE_ADDON_PARAMS
@@ -1429,373 +1476,373 @@ void ofxSurfingOsc::Changed_params(ofAbstractParameter& e)
 //#define INCLUDE_GUI
 
 //--------------------------------------------------------------
-	void ofxSurfingOsc::setup(bool standardTemplate) {
+void ofxSurfingOsc::setup(bool standardTemplate) {
 
-		//// colors
-		//colorBangs = ofColor::aquamarine;
-		//colorToggles = ofColor::aliceBlue;
-		//colorValues = ofColor::cyan;
-		//colorNumbers = ofColor::deepSkyBlue;
+	//// colors
+	//colorBangs = ofColor::aquamarine;
+	//colorToggles = ofColor::aliceBlue;
+	//colorValues = ofColor::cyan;
+	//colorNumbers = ofColor::deepSkyBlue;
 
-		//// greys
-		//int _min = 0;
-		//int _max = 128;
-		//colorBangs = ofColor((int)ofMap(0, 0, 1, _min, _max));
-		//colorToggles = ofColor((int)ofMap(0.2, 0, 1, _min, _max));
-		//colorValues = ofColor((int)ofMap(0.7, 0, 1, _min, _max));
-		//colorNumbers = ofColor((int)ofMap(1, 0, 1, _min, _max));
+	//// greys
+	//int _min = 0;
+	//int _max = 128;
+	//colorBangs = ofColor((int)ofMap(0, 0, 1, _min, _max));
+	//colorToggles = ofColor((int)ofMap(0.2, 0, 1, _min, _max));
+	//colorValues = ofColor((int)ofMap(0.7, 0, 1, _min, _max));
+	//colorNumbers = ofColor((int)ofMap(1, 0, 1, _min, _max));
 
-		// dark
-		int _dark = 24;
-		colorBangs = ofColor(_dark);
-		colorToggles = ofColor(_dark);
-		colorValues = ofColor(_dark);
-		colorNumbers = ofColor(_dark);
+	// dark
+	int _dark = 24;
+	colorBangs = ofColor(_dark);
+	colorToggles = ofColor(_dark);
+	colorValues = ofColor(_dark);
+	colorNumbers = ofColor(_dark);
 
-		//-
+	//-
 
-		setup();
-		setupManager();
-		startup();
+	setup();
+	setupManager();
+	startup();
+}
+
+//--------------------------------------------------------------
+void ofxSurfingOsc::setupManager() {
+
+	// 1. params
+
+	// create params used to receive from the addon class
+
+	// NOTE:
+	// param names goes from 1 to 8, not starting at 0 like vectors
+
+	//-
+
+	// Bangs / triggers
+
+	params_Bangs.setName("BANGS");
+	for (int i = 0; i < NUM_BANGS; i++)
+	{
+		string _name = "BANG_" + ofToString(i + 1);
+
+		//create trigger bools params
+		bBangs[i].set(_name, false);
+		params_Bangs.add(bBangs[i]);
+
+		//plots
+		ofxHistoryPlot* graph = addGraph(_name, 1.0f, colorBangs, 0);
+		plots_TARGETS.push_back(graph);
+
+		//beatCircles
+		bangCircles[i].setColor(colorBangs);
 	}
+	ofAddListener(params_Bangs.parameterChangedE(), this, &ofxSurfingOsc::Changed_params_TARGET_Bangs);
 
-	//--------------------------------------------------------------
-	void ofxSurfingOsc::setupManager() {
+	//-
 
-		// 1. params
+	// Toggles / state on-off
 
-		// create params used to receive from the addon class
+	params_Toggles.setName("TOGGLES");
+	for (int i = 0; i < NUM_TOGGLES; i++)
+	{
+		string _name = "TOGGLE_" + ofToString(i + 1);
 
-		// NOTE:
-		// param names goes from 1 to 8, not starting at 0 like vectors
+		// create toggle bools params
+		bToggles[i].set(_name, false);
+		params_Toggles.add(bToggles[i]);
 
-		//-
+		// plots
+		ofxHistoryPlot* graph = addGraph(_name, 1.0f, colorToggles, 0);
+		plots_TARGETS.push_back(graph);
 
-		// Bangs / triggers
+		// beatCircles
+		togglesCircles[i].setColor(colorToggles);
+	}
+	ofAddListener(params_Toggles.parameterChangedE(), this, &ofxSurfingOsc::Changed_params_TARGETS_Toggles);
 
-		params_Bangs.setName("BANGS");
-		for (int i = 0; i < NUM_BANGS; i++)
-		{
-			string _name = "BANG_" + ofToString(i + 1);
+	//-
 
-			//create trigger bools params
-			bBangs[i].set(_name, false);
-			params_Bangs.add(bBangs[i]);
+	// Values / floats
 
-			//plots
-			ofxHistoryPlot* graph = addGraph(_name, 1.0f, colorBangs, 0);
-			plots_TARGETS.push_back(graph);
+	params_Values.setName("VALUES");
+	for (int i = 0; i < NUM_VALUES; i++)
+	{
+		string _name = "VALUE_" + ofToString(i + 1);
 
-			//beatCircles
-			bangCircles[i].setColor(colorBangs);
-		}
-		ofAddListener(params_Bangs.parameterChangedE(), this, &ofxSurfingOsc::Changed_params_TARGET_Bangs);
+		// create values params
+		values[i].set(_name, 0.f, 0.f, 1.f);
+		params_Values.add(values[i]);
 
-		//-
+		// plots
+		ofxHistoryPlot* graph = addGraph(_name, 1.0f, colorValues, 2, false);// no smooth
+		plots_TARGETS.push_back(graph);
 
-		// Toggles / state on-off
+		// bars
+		barValues[i].setColor(colorValues);
+	}
+	ofAddListener(params_Values.parameterChangedE(), this, &ofxSurfingOsc::Changed_params_TARGETS_Values);
 
-		params_Toggles.setName("TOGGLES");
-		for (int i = 0; i < NUM_TOGGLES; i++)
-		{
-			string _name = "TOGGLE_" + ofToString(i + 1);
+	//-
 
-			// create toggle bools params
-			bToggles[i].set(_name, false);
-			params_Toggles.add(bToggles[i]);
+	// Numbers / ints
 
-			// plots
-			ofxHistoryPlot* graph = addGraph(_name, 1.0f, colorToggles, 0);
-			plots_TARGETS.push_back(graph);
+	params_Numbers.setName("NUMBERS");
+	int _max = 1000;
+	for (int i = 0; i < NUM_NUMBERS; i++)
+	{
+		string _name = "NUMBER_" + ofToString(i + 1);
 
-			// beatCircles
-			togglesCircles[i].setColor(colorToggles);
-		}
-		ofAddListener(params_Toggles.parameterChangedE(), this, &ofxSurfingOsc::Changed_params_TARGETS_Toggles);
+		// create numbers params
+		numbers[i].set(_name, 0, 0, _max);
+		params_Numbers.add(numbers[i]);
 
-		//-
+		// plots
+		ofxHistoryPlot* graph = addGraph(_name, _max, colorNumbers, 0);
+		plots_TARGETS.push_back(graph);
+	}
+	ofAddListener(params_Numbers.parameterChangedE(), this, &ofxSurfingOsc::Changed_params_TARGETS_Numbers);
 
-		// Values / floats
+	//-
 
-		params_Values.setName("VALUES");
-		for (int i = 0; i < NUM_VALUES; i++)
-		{
-			string _name = "VALUE_" + ofToString(i + 1);
+	// customize label and selected plots
+	customizePlots_TARGETS();
 
-			// create values params
-			values[i].set(_name, 0.f, 0.f, 1.f);
-			params_Values.add(values[i]);
+	//----
 
-			// plots
-			ofxHistoryPlot* graph = addGraph(_name, 1.0f, colorValues, 2, false);// no smooth
-			plots_TARGETS.push_back(graph);
+	// widgets for all the params they are:
+	// 1. updating when receiving OSC/MIDI messages 
+	// or 2. sending OSC/MIDI messages when params changes locally
+	// that will depends on how params are subcribed to the class: 
+	//addReceiver/addSender -> OSC in/out
 
-			// bars
-			barValues[i].setColor(colorValues);
-		}
-		ofAddListener(params_Values.parameterChangedE(), this, &ofxSurfingOsc::Changed_params_TARGETS_Values);
+	params_TARGETS.setName("TARGET PARAMS");
+	params_TARGETS.add(params_Bangs);
+	params_TARGETS.add(params_Toggles);
+	params_TARGETS.add(params_Values);
+	params_TARGETS.add(params_Numbers);
 
-		//-
-
-		// Numbers / ints
-
-		params_Numbers.setName("NUMBERS");
-		int _max = 1000;
-		for (int i = 0; i < NUM_NUMBERS; i++)
-		{
-			string _name = "NUMBER_" + ofToString(i + 1);
-
-			// create numbers params
-			numbers[i].set(_name, 0, 0, _max);
-			params_Numbers.add(numbers[i]);
-
-			// plots
-			ofxHistoryPlot* graph = addGraph(_name, _max, colorNumbers, 0);
-			plots_TARGETS.push_back(graph);
-		}
-		ofAddListener(params_Numbers.parameterChangedE(), this, &ofxSurfingOsc::Changed_params_TARGETS_Numbers);
-
-		//-
-
-		// customize label and selected plots
-		customizePlots_TARGETS();
-
-		//----
-
-		// widgets for all the params they are:
-		// 1. updating when receiving OSC/MIDI messages 
-		// or 2. sending OSC/MIDI messages when params changes locally
-		// that will depends on how params are subcribed to the class: 
-		//addReceiver/addSender -> OSC in/out
-
-		params_TARGETS.setName("TARGET PARAMS");
-		params_TARGETS.add(params_Bangs);
-		params_TARGETS.add(params_Toggles);
-		params_TARGETS.add(params_Values);
-		params_TARGETS.add(params_Numbers);
-
-		//--
+	//--
 
 #ifdef INCLUDE_GUI
 	// Gui panel
-		gui_TARGETS.setup("ofxSurfingOsc SLAVE");
+	gui_TARGETS.setup("ofxSurfingOsc SLAVE");
 
-		// Control
-		//gui_TARGETS.add(bGui_Control);
+	// Control
+	//gui_TARGETS.add(bGui_Control);
 
-		gui_TARGETS.add(params_TARGETS);
-		gui_TARGETS.setPosition(100, 100);
+	gui_TARGETS.add(params_TARGETS);
+	gui_TARGETS.setPosition(100, 100);
 #endif
 
-		//--
+	//--
 
-		// Subscribe all parameters to OSC incomming messages
-		setupSubscribersManager();
+	// Subscribe all parameters to OSC incomming messages
+	setupSubscribersManager();
 
-		//--
+	//--
 
 #ifdef MODE_SLAVE_RECEIVER_PATCHING
-		patchingManager.setup("PATCHING MANAGER");
+	patchingManager.setup("PATCHING MANAGER");
 #endif
-	}
+}
 
-	//--------------------------------------------------------------
-	void ofxSurfingOsc::customizePlots_TARGETS() {
+//--------------------------------------------------------------
+void ofxSurfingOsc::customizePlots_TARGETS() {
 
-		// Array with bool of display state of any plot
-		plotsSelected_TARGETS.clear();
-		plotsSelected_TARGETS.resize(NUM_PLOTS);
-		for (int _i = 0; _i < plotsSelected_TARGETS.size(); _i++)
-			plotsSelected_TARGETS[_i] = false; // disable all plots by default
+	// Array with bool of display state of any plot
+	plotsSelected_TARGETS.clear();
+	plotsSelected_TARGETS.resize(NUM_PLOTS);
+	for (int _i = 0; _i < plotsSelected_TARGETS.size(); _i++)
+		plotsSelected_TARGETS[_i] = false; // disable all plots by default
 
-		//----
+	//----
 
-		// Customize special plots
+	// Customize special plots
 
-		// template is for my audioanalyzer
-		int _i;
-		int _start;
+	// template is for my audioanalyzer
+	int _i;
+	int _start;
 
-		//-
+	//-
 
-		// bangs
-		_start = 0;
+	// bangs
+	_start = 0;
 
-		// bang 1 as beat
-		_i = _start + 1;
-		plots_TARGETS[_i - 1]->setVariableName("BEAT");
-		plots_TARGETS[_i - 1]->setColor(ofColor::green);
-		plotsSelected_TARGETS[_i - 1] = true;
-		bangCircles[_i - 1].setColor(ofColor::green);
+	// bang 1 as beat
+	_i = _start + 1;
+	plots_TARGETS[_i - 1]->setVariableName("BEAT");
+	plots_TARGETS[_i - 1]->setColor(ofColor::green);
+	plotsSelected_TARGETS[_i - 1] = true;
+	bangCircles[_i - 1].setColor(ofColor::green);
 
-		// bang 2 as onset
-		_i = _start + 2;
-		plots_TARGETS[_i - 1]->setVariableName("ONSET");
-		plots_TARGETS[_i - 1]->setColor(ofColor::red);
-		plotsSelected_TARGETS[_i - 1] = true;
-		bangCircles[_i - 1].setColor(ofColor::red);
+	// bang 2 as onset
+	_i = _start + 2;
+	plots_TARGETS[_i - 1]->setVariableName("ONSET");
+	plots_TARGETS[_i - 1]->setColor(ofColor::red);
+	plotsSelected_TARGETS[_i - 1] = true;
+	bangCircles[_i - 1].setColor(ofColor::red);
 
-		//--
+	//--
 
-		// Toggles
-		_start = NUM_BANGS;
+	// Toggles
+	_start = NUM_BANGS;
 
-		//toggle 1 as note
-		_i = _start + 1;
-		plots_TARGETS[_i - 1]->setVariableName("NOTE");
-		plots_TARGETS[_i - 1]->setColor(ofColor::orange);
-		plotsSelected_TARGETS[_i - 1] = true;
-		togglesCircles[_i - 1 - _start].setColor(ofColor::orange);
+	//toggle 1 as note
+	_i = _start + 1;
+	plots_TARGETS[_i - 1]->setVariableName("NOTE");
+	plots_TARGETS[_i - 1]->setColor(ofColor::orange);
+	plotsSelected_TARGETS[_i - 1] = true;
+	togglesCircles[_i - 1 - _start].setColor(ofColor::orange);
 
-		//-
+	//-
 
-		// Values
-		_start = NUM_BANGS + NUM_TOGGLES;
+	// Values
+	_start = NUM_BANGS + NUM_TOGGLES;
 
-		// Value 1 
-		_i = _start + 1;
-		plots_TARGETS[_i - 1]->setVariableName("AUBIO");
-		plots_TARGETS[_i - 1]->setColor(ofColor::red);
-		plotsSelected_TARGETS[_i - 1] = true;
-		barValues[_i - 1 - _start].setColor(ofColor::red);
+	// Value 1 
+	_i = _start + 1;
+	plots_TARGETS[_i - 1]->setVariableName("AUBIO");
+	plots_TARGETS[_i - 1]->setColor(ofColor::red);
+	plotsSelected_TARGETS[_i - 1] = true;
+	barValues[_i - 1 - _start].setColor(ofColor::red);
 
-		// Value 2 
-		_i = _start + 2;
-		plots_TARGETS[_i - 1]->setVariableName("GIST");
-		plots_TARGETS[_i - 1]->setColor(ofColor::orange);
-		plotsSelected_TARGETS[_i - 1] = true;
-		barValues[_i - 1 - _start].setColor(ofColor::orange);
+	// Value 2 
+	_i = _start + 2;
+	plots_TARGETS[_i - 1]->setVariableName("GIST");
+	plots_TARGETS[_i - 1]->setColor(ofColor::orange);
+	plotsSelected_TARGETS[_i - 1] = true;
+	barValues[_i - 1 - _start].setColor(ofColor::orange);
 
-		//// Value 3 
-		//_i = _start + 3;
-		//plots_TARGETS[_i - 1]->setVariableName("CIRCLE AUBIO");
-		//plots_TARGETS[_i - 1]->setColor(ofColor::green);
-		//plotsSelected_TARGETS[_i - 1] = true;
+	//// Value 3 
+	//_i = _start + 3;
+	//plots_TARGETS[_i - 1]->setVariableName("CIRCLE AUBIO");
+	//plots_TARGETS[_i - 1]->setColor(ofColor::green);
+	//plotsSelected_TARGETS[_i - 1] = true;
 
-		//// Value 4
-		//_i = _start + 4;
-		//plots_TARGETS[_i - 1]->setVariableName("CIRCLE GIST");
-		//plots_TARGETS[_i - 1]->setColor(ofColor::orange);
-		//plotsSelected_TARGETS[_i - 1] = true;
+	//// Value 4
+	//_i = _start + 4;
+	//plots_TARGETS[_i - 1]->setVariableName("CIRCLE GIST");
+	//plots_TARGETS[_i - 1]->setColor(ofColor::orange);
+	//plotsSelected_TARGETS[_i - 1] = true;
 
-		// Value 8
-		_i = _start + 8;//last value
-		plots_TARGETS[_i - 1]->setRange(40, 300);
-		plots_TARGETS[_i - 1]->setVariableName("BPM");
-		plots_TARGETS[_i - 1]->setPrecision(0);
-		plots_TARGETS[_i - 1]->setColor(ofColor::lightPink);
-		plotsSelected_TARGETS[_i - 1] = true;
-		barValues[_i - 1 - _start].setColor(ofColor::lightPink);
+	// Value 8
+	_i = _start + 8;//last value
+	plots_TARGETS[_i - 1]->setRange(40, 300);
+	plots_TARGETS[_i - 1]->setVariableName("BPM");
+	plots_TARGETS[_i - 1]->setPrecision(0);
+	plots_TARGETS[_i - 1]->setColor(ofColor::lightPink);
+	plotsSelected_TARGETS[_i - 1] = true;
+	barValues[_i - 1 - _start].setColor(ofColor::lightPink);
 
-		//-
+	//-
 
-		// Count enabled plots to enable hide the all not used
-		numPlostEnabled = 0;
-		for (int _i = 0; _i < plotsSelected_TARGETS.size(); _i++)
-		{
-			if (plotsSelected_TARGETS[_i])
-				numPlostEnabled++;
-		}
-
-		//cout << "numPlostEnabled:" << numPlostEnabled << endl;
-	}
-
-	//--------------------------------------------------------------
-	void ofxSurfingOsc::setupSubscribersManager()
+	// Count enabled plots to enable hide the all not used
+	numPlostEnabled = 0;
+	for (int _i = 0; _i < plotsSelected_TARGETS.size(); _i++)
 	{
-		setModeFeedback(false);//disabled by default
-		// enabled: received OSC/MIDI input messages are auto sended to the output OSC too
-
-		string prefixPage_TARGET = "1/";
-
-		//-
-
-		// add OSC targets to the addon class
-		// this will subscribe the OSC addresses with/to the target local parameters
-
-		// NOTE:
-		// '/1/' -> it's an address pattern to adapt to pages or layout
-		// of some app controllers like TouchOSC
-
-		//--
-
-		// bangs
-		for (int i = 0; i < NUM_BANGS; i++)
-		{
-			string OSC_address = "/bang/" + prefixPage_TARGET + ofToString(i + 1);
-			addReceiver_Bool(bBangs[i], OSC_address);
-		}
-
-		//-
-
-		// toggles
-		for (int i = 0; i < NUM_TOGGLES; i++)
-		{
-			//add target
-			string OSC_address = "/toggle/" + prefixPage_TARGET + ofToString(i + 1);
-			addReceiver_Bool(bToggles[i], OSC_address);
-		}
-
-		//-
-
-		// values
-		for (int i = 0; i < NUM_VALUES; i++)
-		{
-			//add target
-			string OSC_address = "/value/" + prefixPage_TARGET + ofToString(i + 1);
-			addReceiver_Float(values[i], OSC_address);
-		}
-
-		//-
-
-		// numbers
-		for (int i = 0; i < NUM_NUMBERS; i++)
-		{
-			//add target
-			string OSC_address = "/number/" + prefixPage_TARGET + ofToString(i + 1);
-			addReceiver_Int(numbers[i], OSC_address);
-		}
-
-		//--
-
-		// startup
-
-		// call this when all the local/target parameters are already added.
-		startup();
-
-		//--
+		if (plotsSelected_TARGETS[_i])
+			numPlostEnabled++;
 	}
 
-	//--------------------------------------------------------------
-	void ofxSurfingOsc::updateManager() {
+	//cout << "numPlostEnabled:" << numPlostEnabled << endl;
+}
 
-		// Update plots
-		for (int i = 0; i < plots_TARGETS.size(); i++)
-		{
-			int _start, _end;
+//--------------------------------------------------------------
+void ofxSurfingOsc::setupSubscribersManager()
+{
+	setModeFeedback(false);//disabled by default
+	// enabled: received OSC/MIDI input messages are auto sended to the output OSC too
 
-			_start = 0;
-			_end = NUM_BANGS;
-			if (i >= _start && i < _end)
-				plots_TARGETS[i]->update(bBangs[i]);//0?
+	string prefixPage_TARGET = "1/";
 
-			_start = _end;
-			_end = _start + NUM_TOGGLES;
-			if (i >= _start && i < _end)
-				plots_TARGETS[i]->update(bToggles[i - _start]);
+	//-
 
-			_start = _end;
-			_end = _start + NUM_VALUES;
-			if (i >= _start && i < _end)
-				plots_TARGETS[i]->update(values[i - _start]);
+	// add OSC targets to the addon class
+	// this will subscribe the OSC addresses with/to the target local parameters
 
-			_start = _end;
-			_end = _start + NUM_NUMBERS;
-			if (i >= _start && i < _end)
-				plots_TARGETS[i]->update(numbers[i - _start]);
-		}
+	// NOTE:
+	// '/1/' -> it's an address pattern to adapt to pages or layout
+	// of some app controllers like TouchOSC
 
-		//--
+	//--
+
+	// bangs
+	for (int i = 0; i < NUM_BANGS; i++)
+	{
+		string OSC_address = "/bang/" + prefixPage_TARGET + ofToString(i + 1);
+		addReceiver_Bool(bBangs[i], OSC_address);
+	}
+
+	//-
+
+	// toggles
+	for (int i = 0; i < NUM_TOGGLES; i++)
+	{
+		//add target
+		string OSC_address = "/toggle/" + prefixPage_TARGET + ofToString(i + 1);
+		addReceiver_Bool(bToggles[i], OSC_address);
+	}
+
+	//-
+
+	// values
+	for (int i = 0; i < NUM_VALUES; i++)
+	{
+		//add target
+		string OSC_address = "/value/" + prefixPage_TARGET + ofToString(i + 1);
+		addReceiver_Float(values[i], OSC_address);
+	}
+
+	//-
+
+	// numbers
+	for (int i = 0; i < NUM_NUMBERS; i++)
+	{
+		//add target
+		string OSC_address = "/number/" + prefixPage_TARGET + ofToString(i + 1);
+		addReceiver_Int(numbers[i], OSC_address);
+	}
+
+	//--
+
+	// startup
+
+	// call this when all the local/target parameters are already added.
+	startup();
+
+	//--
+}
+
+//--------------------------------------------------------------
+void ofxSurfingOsc::updateManager() {
+
+	// Update plots
+	for (int i = 0; i < plots_TARGETS.size(); i++)
+	{
+		int _start, _end;
+
+		_start = 0;
+		_end = NUM_BANGS;
+		if (i >= _start && i < _end)
+			plots_TARGETS[i]->update(bBangs[i]);//0?
+
+		_start = _end;
+		_end = _start + NUM_TOGGLES;
+		if (i >= _start && i < _end)
+			plots_TARGETS[i]->update(bToggles[i - _start]);
+
+		_start = _end;
+		_end = _start + NUM_VALUES;
+		if (i >= _start && i < _end)
+			plots_TARGETS[i]->update(values[i - _start]);
+
+		_start = _end;
+		_end = _start + NUM_NUMBERS;
+		if (i >= _start && i < _end)
+			plots_TARGETS[i]->update(numbers[i - _start]);
+	}
+
+	//--
 
 #ifdef MODE_SLAVE_RECEIVER_PATCHING
 
@@ -1803,311 +1850,311 @@ void ofxSurfingOsc::Changed_params(ofAbstractParameter& e)
 	// reads OSC messages (to final local receivers) 
 	// after being processed by PatchingManager class:
 
-		for (int i = 0; i < NUM_BANGS; i++)
-		{
-			patchingManager.pipeBangs[i].input = bBangs[i];
-		}
-		for (int i = 0; i < NUM_TOGGLES; i++)
-		{
-			patchingManager.pipeToggles[i].input = bToggles[i];
-		}
-		for (int i = 0; i < NUM_VALUES; i++)
-		{
-			patchingManager.pipeValues[i].input = values[i];
-			//patchingManager.pipeValues[i].input = plots_TARGETS[i + NUM_BANGS + NUM_TOGGLES];//smoothed
-		}
-		for (int i = 0; i < NUM_NUMBERS; i++)
-		{
-			patchingManager.pipeNumbers[i].input = numbers[i];
-		}
-
-		//--
-
-		// customize some params:
-		int _i = 8;
-		patchingManager.pipeValues[_i - 1].setClamp(false);
-		patchingManager.pipeValues[_i - 1].setRangeOutput(40, 300);
-
-		//--
-
-		// update pipe manager
-		patchingManager.update(); // to process filters
-#endif
-	}
-
-	//--------------------------------------------------------------
-	void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
+	for (int i = 0; i < NUM_BANGS; i++)
 	{
-		if (bGui_Plots)
-		{
-			float plotHeight;
-			float plotMargin = 3;
-			float _size = plots_TARGETS.size();
-
-			if (bGui_AllPlots)
-				plotHeight = (_h - 2 * plotMargin) / (float)_size; // draw all plots
-			else
-				plotHeight = (_h - 2 * plotMargin) / (float)numPlostEnabled; // draw only enable plots
-
-			int x, y, w, h;
-
-			int p = 0; // accumulate how many we have draw to not draw empty spaces
-
-			for (int i = 0; i < _size; i++)
-			{
-				if (bGui_AllPlots)
-					y = plotMargin + plotHeight * i;
-				else
-					y = plotMargin + plotHeight * (p);
-
-				y += _y;
-				x = _x + plotMargin;
-				w = _w - 2 * plotMargin;
-				h = plotHeight - plotMargin;
-
-				if (plotsSelected_TARGETS[i] || bGui_AllPlots)
-				{
-					plots_TARGETS[i]->draw(x, y + plotMargin, w, h);
-
-					p++;
-				}
-
-				//----
-
-				// Extra widgets
-
-				float xpad = 40;
-				float r = (h * 0.8 * 0.5);
-				int _start, _end;
-
-				//----
-
-				// CircleBeats
-
-				//--
-
-				// Bangs
-
-				_start = 0;
-				_end = _start + NUM_BANGS;
-				if (i >= _start && i < _end) {
-					bangCircles[i].draw(glm::vec2(x + r + xpad, y + plotMargin + h / 2.0f), r);
-				}
-
-				//--
-
-				// Toggles
-
-				_start = _end;
-				_end = _start + NUM_TOGGLES;
-				if (i >= _start && i < _end) {
-					togglesCircles[i - _start].draw(glm::vec2(x + r + xpad, y + plotMargin + h / 2.0f), r);
-				}
-
-				//--
-
-				// Bars
-				// Values
-
-				_start = NUM_BANGS + NUM_TOGGLES;
-				_end = _start + NUM_VALUES;
-				float _gap = h * 0.1;
-
-				if (i >= _start && i < _end && i != _end - 1) {//exclude bpm bc out of range
-					float v = values[i - _start];
-
-					//barValues[i - _start].draw(
-					//	v,
-					//	glm::vec2(x + xpad, y + plotMargin + h),
-					//	2 * r, -(h - _gap));
-
-					barValues[i - _start].draw(
-						v,
-						glm::vec2(x + xpad, y + plotMargin + h - 2),
-						2 * r, h - _gap);
-				}
-			}
-
-			//--
-		}
+		patchingManager.pipeBangs[i].input = bBangs[i];
 	}
-
-	//--------------------------------------------------------------
-	void ofxSurfingOsc::drawPlots()
+	for (int i = 0; i < NUM_TOGGLES; i++)
 	{
-		if (!bGui_Plots) return;
-
-		// Mini size
-		if (bModePlotsMini)
-		{
-			float wPlotsView;
-			float hPlotsView;
-			float xPlotsView;
-			float yPlotsView;
-
-			xPlotsView = boxPlotsBg.getX();
-			yPlotsView = boxPlotsBg.getY();
-			wPlotsView = boxPlotsBg.getWidth();
-			hPlotsView = boxPlotsBg.getHeight();
-
-			ofPushStyle();
-			ofSetColor(OF_COLOR_BG_PANELS);
-			ofDrawRectRounded(boxPlotsBg, 5);
-			boxPlotsBg.draw();
-			ofPopStyle();
-
-			drawPlots(xPlotsView, yPlotsView, wPlotsView, hPlotsView);
-		}
-
-		// Full screen
-		else
-		{
-			wPlotsView = ofGetWidth();
-			hPlotsView = ofGetHeight();
-			xPlotsView = 0;
-			yPlotsView = 0;
-			drawPlots(xPlotsView, yPlotsView, wPlotsView, hPlotsView);
-		}
+		patchingManager.pipeToggles[i].input = bToggles[i];
 	}
-
-	//--------------------------------------------------------------
-	void ofxSurfingOsc::exitManager()
+	for (int i = 0; i < NUM_VALUES; i++)
 	{
-		ofRemoveListener(params_Bangs.parameterChangedE(), this, &ofxSurfingOsc::Changed_params_TARGET_Bangs);
-		ofRemoveListener(params_Toggles.parameterChangedE(), this, &ofxSurfingOsc::Changed_params_TARGETS_Toggles);
-		ofRemoveListener(params_Values.parameterChangedE(), this, &ofxSurfingOsc::Changed_params_TARGETS_Values);
-		ofRemoveListener(params_Numbers.parameterChangedE(), this, &ofxSurfingOsc::Changed_params_TARGETS_Numbers);
+		patchingManager.pipeValues[i].input = values[i];
+		//patchingManager.pipeValues[i].input = plots_TARGETS[i + NUM_BANGS + NUM_TOGGLES];//smoothed
 	}
-
-	// Local callbacks
-	// All the params will send 
-	// and receive OSC/MIDI changes
-
-	//--------------------------------------------------------------
-	void ofxSurfingOsc::Changed_params_TARGET_Bangs(ofAbstractParameter & e) // preset load/trig
+	for (int i = 0; i < NUM_NUMBERS; i++)
 	{
-		if (!bDISABLE_CALLBACKS)
-		{
-			string name = e.getName();
-
-			for (int i = 0; i < NUM_BANGS - 1; i++)
-			{
-				// only when true (BANG, not note-off)
-				if (name == "BANG_" + ofToString(i + 1) && bBangs[i])
-				{
-					// bang
-					ofLogVerbose("ofxSurfingOsc") << (__FUNCTION__) << "BANGS\t[" << ofToString(i + 1) << "] " << "BANG";
-
-					// plot
-					//plots_TARGETS[i]->update(1);
-
-					bangCircles[i].bang();
-				}
-			}
-		}
-	}
-
-	//--------------------------------------------------------------
-	void ofxSurfingOsc::Changed_params_TARGETS_Toggles(ofAbstractParameter & e)
-	{
-		if (!bDISABLE_CALLBACKS)
-		{
-			string name = e.getName();
-
-			for (int i = 0; i < NUM_TOGGLES - 1; i++)//?
-			{
-				if (name == "TOGGLE_" + ofToString(i + 1))
-				{
-					// state
-					bool b = bToggles[i].get();
-					ofLogVerbose("ofxSurfingOsc") << (__FUNCTION__) << "TOGGLE\t[" << ofToString(i + 1) << "] " << (b ? "ON" : "OFF");
-
-					// first toggle (eg: gist note)
-					if (b) { togglesCircles[i].bang(); }
-				}
-			}
-		}
-	}
-
-	//--------------------------------------------------------------
-	void ofxSurfingOsc::Changed_params_TARGETS_Values(ofAbstractParameter & e)
-	{
-		if (!bDISABLE_CALLBACKS)
-		{
-			string name = e.getName();
-
-			for (int i = 0; i < NUM_VALUES - 1; i++)
-			{
-				if (name == "VALUE_" + ofToString(i + 1))
-				{
-					// values
-					ofLogVerbose("ofxSurfingOsc") << (__FUNCTION__) << "VALUE\t[" << ofToString(i + 1) << "] " << values[i];
-				}
-			}
-		}
-	}
-
-	//--------------------------------------------------------------
-	void ofxSurfingOsc::Changed_params_TARGETS_Numbers(ofAbstractParameter & e)
-	{
-		if (!bDISABLE_CALLBACKS)
-		{
-			string name = e.getName();
-
-			for (int i = 0; i < NUM_NUMBERS - 1; i++)
-			{
-				if (name == "NUMBER_" + ofToString(i + 1))
-				{
-					// numbers
-					ofLogVerbose("ofxSurfingOsc") << (__FUNCTION__) << "NUMBER\t[" << ofToString(i + 1) << "] " << numbers[i];
-				}
-			}
-		}
+		patchingManager.pipeNumbers[i].input = numbers[i];
 	}
 
 	//--
 
-	// Plots
-	//--------------------------------------------------------------
-	ofxHistoryPlot* ofxSurfingOsc::addGraph(string varName, float max, ofColor color, int precision, bool _smooth)
+	// customize some params:
+	int _i = 8;
+	patchingManager.pipeValues[_i - 1].setClamp(false);
+	patchingManager.pipeValues[_i - 1].setRangeOutput(40, 300);
+
+	//--
+
+	// update pipe manager
+	patchingManager.update(); // to process filters
+#endif
+}
+
+//--------------------------------------------------------------
+void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
+{
+	if (bGui_Plots)
 	{
-		float _line = 1.0f;
+		float plotHeight;
+		float plotMargin = 3;
+		float _size = plots_TARGETS.size();
 
-		ofxHistoryPlot* graph = new ofxHistoryPlot(NULL, varName, max, false);//true for autoupdate
+		if (bGui_AllPlots)
+			plotHeight = (_h - 2 * plotMargin) / (float)_size; // draw all plots
+		else
+			plotHeight = (_h - 2 * plotMargin) / (float)numPlostEnabled; // draw only enable plots
 
-		//graph->setRangeAuto();
-		//graph->setAutoRangeShrinksBack(true);
-		//graph2 scale can shrink back after growing if graph2 curves requires it
-		graph->setRange(0, max); // this lock the auto range!
+		int x, y, w, h;
 
-		if (_smooth) {
-			graph->setShowSmoothedCurve(true);
-			graph->setSmoothFilter(0.1);
+		int p = 0; // accumulate how many we have draw to not draw empty spaces
+
+		for (int i = 0; i < _size; i++)
+		{
+			if (bGui_AllPlots)
+				y = plotMargin + plotHeight * i;
+			else
+				y = plotMargin + plotHeight * (p);
+
+			y += _y;
+			x = _x + plotMargin;
+			w = _w - 2 * plotMargin;
+			h = plotHeight - plotMargin;
+
+			if (plotsSelected_TARGETS[i] || bGui_AllPlots)
+			{
+				plots_TARGETS[i]->draw(x, y + plotMargin, w, h);
+
+				p++;
+			}
+
+			//----
+
+			// Extra widgets
+
+			float xpad = 40;
+			float r = (h * 0.8 * 0.5);
+			int _start, _end;
+
+			//----
+
+			// CircleBeats
+
+			//--
+
+			// Bangs
+
+			_start = 0;
+			_end = _start + NUM_BANGS;
+			if (i >= _start && i < _end) {
+				bangCircles[i].draw(glm::vec2(x + r + xpad, y + plotMargin + h / 2.0f), r);
+			}
+
+			//--
+
+			// Toggles
+
+			_start = _end;
+			_end = _start + NUM_TOGGLES;
+			if (i >= _start && i < _end) {
+				togglesCircles[i - _start].draw(glm::vec2(x + r + xpad, y + plotMargin + h / 2.0f), r);
+			}
+
+			//--
+
+			// Bars
+			// Values
+
+			_start = NUM_BANGS + NUM_TOGGLES;
+			_end = _start + NUM_VALUES;
+			float _gap = h * 0.1;
+
+			if (i >= _start && i < _end && i != _end - 1) {//exclude bpm bc out of range
+				float v = values[i - _start];
+
+				//barValues[i - _start].draw(
+				//	v,
+				//	glm::vec2(x + xpad, y + plotMargin + h),
+				//	2 * r, -(h - _gap));
+
+				barValues[i - _start].draw(
+					v,
+					glm::vec2(x + xpad, y + plotMargin + h - 2),
+					2 * r, h - _gap);
+			}
 		}
 
-		// it looks like this can cause problems, maybe bc translating
-		graph->setCropToRect(true);
-		graph->setRespectBorders(true);
+		//--
+	}
+}
 
-		graph->setShowNumericalInfo(true);
-		graph->setPrecision(precision);
+//--------------------------------------------------------------
+void ofxSurfingOsc::drawPlots()
+{
+	if (!bGui_Plots) return;
 
-		graph->setLineWidth(_line);
-		graph->setColor(color);
-		graph->setDrawBackground(true);
-		graph->setBackgroundColor(ofColor(0, 225));
-		graph->setDrawGrid(false);
+	// Mini size
+	if (bModePlotsMini)
+	{
+		float wPlotsView;
+		float hPlotsView;
+		float xPlotsView;
+		float yPlotsView;
 
-		// speed
-		//graph->setMaxHistory(2000);
-		graph->setMaxHistory(60 * 20);
+		xPlotsView = boxPlotsBg.getX();
+		yPlotsView = boxPlotsBg.getY();
+		wPlotsView = boxPlotsBg.getWidth();
+		hPlotsView = boxPlotsBg.getHeight();
 
-		//graph2->setLowerRange(0);//set only the lowest part of the range upper is adaptative to curve
-		//graph->setGridColor(colorGrid);//grid lines color
-		//graph->setGridUnit(10);
-		//graph->setDrawFromRight(true);//should move all widgets..
+		ofPushStyle();
+		ofSetColor(OF_COLOR_BG_PANELS);
+		ofDrawRectRounded(boxPlotsBg, 5);
+		boxPlotsBg.draw();
+		ofPopStyle();
 
-		return graph;
-	};
+		drawPlots(xPlotsView, yPlotsView, wPlotsView, hPlotsView);
+	}
+
+	// Full screen
+	else
+	{
+		wPlotsView = ofGetWidth();
+		hPlotsView = ofGetHeight();
+		xPlotsView = 0;
+		yPlotsView = 0;
+		drawPlots(xPlotsView, yPlotsView, wPlotsView, hPlotsView);
+	}
+}
+
+//--------------------------------------------------------------
+void ofxSurfingOsc::exitManager()
+{
+	ofRemoveListener(params_Bangs.parameterChangedE(), this, &ofxSurfingOsc::Changed_params_TARGET_Bangs);
+	ofRemoveListener(params_Toggles.parameterChangedE(), this, &ofxSurfingOsc::Changed_params_TARGETS_Toggles);
+	ofRemoveListener(params_Values.parameterChangedE(), this, &ofxSurfingOsc::Changed_params_TARGETS_Values);
+	ofRemoveListener(params_Numbers.parameterChangedE(), this, &ofxSurfingOsc::Changed_params_TARGETS_Numbers);
+}
+
+// Local callbacks
+// All the params will send 
+// and receive OSC/MIDI changes
+
+//--------------------------------------------------------------
+void ofxSurfingOsc::Changed_params_TARGET_Bangs(ofAbstractParameter& e) // preset load/trig
+{
+	if (!bDISABLE_CALLBACKS)
+	{
+		string name = e.getName();
+
+		for (int i = 0; i < NUM_BANGS - 1; i++)
+		{
+			// only when true (BANG, not note-off)
+			if (name == "BANG_" + ofToString(i + 1) && bBangs[i])
+			{
+				// bang
+				ofLogVerbose("ofxSurfingOsc") << (__FUNCTION__) << "BANGS\t[" << ofToString(i + 1) << "] " << "BANG";
+
+				// plot
+				//plots_TARGETS[i]->update(1);
+
+				bangCircles[i].bang();
+			}
+		}
+	}
+}
+
+//--------------------------------------------------------------
+void ofxSurfingOsc::Changed_params_TARGETS_Toggles(ofAbstractParameter& e)
+{
+	if (!bDISABLE_CALLBACKS)
+	{
+		string name = e.getName();
+
+		for (int i = 0; i < NUM_TOGGLES - 1; i++)//?
+		{
+			if (name == "TOGGLE_" + ofToString(i + 1))
+			{
+				// state
+				bool b = bToggles[i].get();
+				ofLogVerbose("ofxSurfingOsc") << (__FUNCTION__) << "TOGGLE\t[" << ofToString(i + 1) << "] " << (b ? "ON" : "OFF");
+
+				// first toggle (eg: gist note)
+				if (b) { togglesCircles[i].bang(); }
+			}
+		}
+	}
+}
+
+//--------------------------------------------------------------
+void ofxSurfingOsc::Changed_params_TARGETS_Values(ofAbstractParameter& e)
+{
+	if (!bDISABLE_CALLBACKS)
+	{
+		string name = e.getName();
+
+		for (int i = 0; i < NUM_VALUES - 1; i++)
+		{
+			if (name == "VALUE_" + ofToString(i + 1))
+			{
+				// values
+				ofLogVerbose("ofxSurfingOsc") << (__FUNCTION__) << "VALUE\t[" << ofToString(i + 1) << "] " << values[i];
+			}
+		}
+	}
+}
+
+//--------------------------------------------------------------
+void ofxSurfingOsc::Changed_params_TARGETS_Numbers(ofAbstractParameter& e)
+{
+	if (!bDISABLE_CALLBACKS)
+	{
+		string name = e.getName();
+
+		for (int i = 0; i < NUM_NUMBERS - 1; i++)
+		{
+			if (name == "NUMBER_" + ofToString(i + 1))
+			{
+				// numbers
+				ofLogVerbose("ofxSurfingOsc") << (__FUNCTION__) << "NUMBER\t[" << ofToString(i + 1) << "] " << numbers[i];
+			}
+		}
+	}
+}
+
+//--
+
+// Plots
+//--------------------------------------------------------------
+ofxHistoryPlot* ofxSurfingOsc::addGraph(string varName, float max, ofColor color, int precision, bool _smooth)
+{
+	float _line = 1.0f;
+
+	ofxHistoryPlot* graph = new ofxHistoryPlot(NULL, varName, max, false);//true for autoupdate
+
+	//graph->setRangeAuto();
+	//graph->setAutoRangeShrinksBack(true);
+	//graph2 scale can shrink back after growing if graph2 curves requires it
+	graph->setRange(0, max); // this lock the auto range!
+
+	if (_smooth) {
+		graph->setShowSmoothedCurve(true);
+		graph->setSmoothFilter(0.1);
+	}
+
+	// it looks like this can cause problems, maybe bc translating
+	graph->setCropToRect(true);
+	graph->setRespectBorders(true);
+
+	graph->setShowNumericalInfo(true);
+	graph->setPrecision(precision);
+
+	graph->setLineWidth(_line);
+	graph->setColor(color);
+	graph->setDrawBackground(true);
+	graph->setBackgroundColor(ofColor(0, 225));
+	graph->setDrawGrid(false);
+
+	// speed
+	//graph->setMaxHistory(2000);
+	graph->setMaxHistory(60 * 20);
+
+	//graph2->setLowerRange(0);//set only the lowest part of the range upper is adaptative to curve
+	//graph->setGridColor(colorGrid);//grid lines color
+	//graph->setGridUnit(10);
+	//graph->setDrawFromRight(true);//should move all widgets..
+
+	return graph;
+};
 
 #endif

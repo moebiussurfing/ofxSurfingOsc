@@ -21,7 +21,9 @@ public:
 	// Gui local 
 	void setupGui();
 	ofxPanel gui;
+
 	ofParameter<bool> bBypass{ "ByPass", false };
+	ofParameter<bool> bRandom{ "Random", false };
 
 	//--
 
