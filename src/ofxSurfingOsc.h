@@ -32,38 +32,6 @@
 	+		better gui layout/colors. add ofxGuiExtended mode?
 */
 
-//--
-
-/*
-
-	// NOTES: HOW TO USE
-
-	//// MODE A:
-	//
-	// 1. Easy Workflow
-	// We use a standard template of params. No need to add or local targets param by param.
-	// We just will update our local params on the local callback method, listening to the template params.
-
-	oscHelper.setup(true);
-
-	//--
-
-	//// MODE B:
-
-	// 2. Advanced Workflow
-	// Subscribe all local target params to the controller
-
-	oscHelper.setup(true);
-
-	// Here we add all the local parameters (TARGETS) that we want to control from or to receive to.
-	// midi assignments will be made on the addon gui by midi learn engine,
-	// bc it's easier than passing all the notes/cc addresses here.
-
-	//// Subscribe each params
-	oscHelper.setModeFeedback(false); // disabled by default
-	//// enabled: received OSC/MIDI input messages are auto send to the output OSC too.
-
-*/
 
 //------------------------------------------------------------------------------------------------
 
@@ -81,7 +49,7 @@
 
 //#define USE_PLOTS // Plots
 
-//#define MODE_SLAVE_RECEIVER_PATCHING // Patcher Feature
+#define SURF_OSC__USE__RECEIVER_PATCHING_MODE // Patcher Feature
 
 //#define USE_MIDI // MIDI //TODO:
 
@@ -104,7 +72,7 @@
 
 // Patch received signals to some targets (params)
 // that will be processed, mapped, clamped, etc
-#ifdef MODE_SLAVE_RECEIVER_PATCHING
+#ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
 #include "PatchingManager.h"
 #endif
 
@@ -152,8 +120,6 @@ public:
 	ofxSurfingOsc();
 	~ofxSurfingOsc();
 
-	void setup();
-
 private:
 
 	void update(ofEventArgs& args);
@@ -184,12 +150,20 @@ public:
 	};
 
 	//--------------------------------------------------------------
-	void setup(SurfOscModes mode) {
+	void setup(SurfOscModes mode) { // fast setup passing the mode
 		setMode(mode);
 		this->setup();
 	};
 	
-	void setMode(SurfOscModes mode = FullDuplex);
+	void setMode(SurfOscModes mode = FullDuplex); // set mode before call setup
+
+	void setup();// must setMode before
+
+	void startup(); // must be called after all params has been added!
+
+	void setInputPort(int p); // must be called after setupParams is called
+	void setOutputPort(int p); // must be called after setupParams is called
+	void setOutputIp(string ip); // must be called after setupParams is called
 
 	//--------------------------------------------------------------
 	void setModeFeedback(bool b) // Enables output mirror sending to of the incoming messages.
@@ -201,7 +175,11 @@ public:
 
 	ofParameter<bool> bGui;
 
+	void setName(string n) { name = n; };
+
 private:
+	
+	string name = "";
 
 	SurfOscModes mode = UNKNOWN;
 
@@ -246,13 +224,6 @@ private:
 	// API
 
 public:
-
-	//TODO:
-	void setInputPort(int p); // must be called after setupParams is called
-	void setOutputPort(int p); // must be called after setupParams is called
-	void setOutputIp(string ip); // must be called after setupParams is called
-
-	void startup(); // must be called after all params has been added!
 
 	//--
 
@@ -476,17 +447,14 @@ private:
 	//--
 
 private:
+	
 	void setupReceiver();
+	void setupReceiveLogger();
 
 	bool bDone_SetupReceiver = false;
 
-#ifdef MODE_SLAVE_RECEIVER_PATCHING
 private:
-	void updateManager();
-#endif
-
-private:
-	void exitManager();
+	void exit_InternalParams();
 
 	//--
 
@@ -627,16 +595,13 @@ private:
 
 	//----
 
-#ifdef MODE_SLAVE_RECEIVER_PATCHING
-
-public:
-
-	void draw_PatchingManager();
-
-	PatchingManager patchingManager;
+#ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
 
 private:
 
+	PatchingManager patchingManager;
+	void update_PatchingManager();
+	void draw_PatchingManager();
 	ofParameter<bool> bGui_PatchingManager;
 
 #endif

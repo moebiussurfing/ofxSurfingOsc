@@ -3,9 +3,9 @@
 //--------------------------------------------------------------
 void ofApp::setup() 
 {
-	ofSetWindowTitle("OSC | Master");
+	ofSetWindowTitle("OSC | Slave");
 
-	ofSetBackgroundColor(ofColor::yellow);
+	ofSetBackgroundColor(ofColor::blue);
 
 	//--
 
@@ -38,7 +38,7 @@ void ofApp::setupOsc()
 
 	//----
 
-	oscHelper.setup(ofxSurfingOsc::Master);
+	oscHelper.setup(ofxSurfingOsc::Slave);
 
 	//----
 
@@ -60,8 +60,8 @@ void ofApp::setupOsc()
 		for (int i = 0; i < NUM_BANGS; i++)
 		{
 			string Osc_Address = "/bang/" + tag + ofToString(i + 1);
-			oscHelper.addSender_Bool(bBangs[i], Osc_Address);
-			//oscHelper.addReceiver_Bool(bBangs[i], Osc_Address);
+			//oscHelper.addSender_Bool(bBangs[i], Osc_Address);
+			oscHelper.addReceiver_Bool(bBangs[i], Osc_Address);
 		}
 
 		//--
@@ -71,8 +71,8 @@ void ofApp::setupOsc()
 		for (int i = 0; i < NUM_TOGGLES; i++)
 		{
 			string Osc_Address = "/toggle/" + tag + ofToString(i + 1);
-			oscHelper.addSender_Bool(bToggles[i], Osc_Address);
-			//oscHelper.addReceiver_Bool(bToggles[i], Osc_Address);
+			//oscHelper.addSender_Bool(bToggles[i], Osc_Address);
+			oscHelper.addReceiver_Bool(bToggles[i], Osc_Address);
 		}
 
 		//--
@@ -82,8 +82,8 @@ void ofApp::setupOsc()
 		for (int i = 0; i < NUM_VALUES; i++)
 		{
 			string Osc_Address = "/value/" + tag + ofToString(i + 1);
-			oscHelper.addSender_Float(values[i], Osc_Address);
-			//oscHelper.addReceiver_Float(values[i], Osc_Address);
+			//oscHelper.addSender_Float(values[i], Osc_Address);
+			oscHelper.addReceiver_Float(values[i], Osc_Address);
 		}
 
 		//--
@@ -93,8 +93,8 @@ void ofApp::setupOsc()
 		for (int i = 0; i < NUM_NUMBERS; i++)
 		{
 			string Osc_Address = "/number/" + tag + ofToString(i + 1);
-			oscHelper.addSender_Int(numbers[i], Osc_Address);
-			//oscHelper.addReceiver_Int(numbers[i], Osc_Address);
+			//oscHelper.addSender_Int(numbers[i], Osc_Address);
+			oscHelper.addReceiver_Int(numbers[i], Osc_Address);
 		}
 	}
 
@@ -114,7 +114,7 @@ void ofApp::setupGui()
 {
 	gui.setup("ofApp MASTER");
 	gui.add(oscHelper.bGui); // visible toggle
-	gui.add(bRandom);
+	//gui.add(bRandom);
 	gui.add(bBypass); // bypass on the callbacks, not the receiving itself!
 
 	// Widgets for all the params that will be:
@@ -212,6 +212,7 @@ void ofApp::draw()
 
 	//--
 
+	/*
 	// Timed Randomizer
 	if (bRandom && ofGetFrameNum() % 6 == 0)
 	{
@@ -233,11 +234,13 @@ void ofApp::draw()
 		else if (r < 0.9) numbers[i0] = ofRandom(numbers[i0].getMin(), numbers[i0].getMax());
 		else if (r < 1) numbers[i1] = ofRandom(numbers[i1].getMin(), numbers[i1].getMax());
 	}
+	*/
 }
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key)
 {
+	/*
 	// Make some changes or random to, 
 	// if all is settled correctly, 
 	// auto send OSC messages!
@@ -261,6 +264,7 @@ void ofApp::keyPressed(int key)
 	if (key == 'y') numbers[1] = ofRandom(numbers[1].getMin(), numbers[1].getMax());
 	if (key == 'u') numbers[2] = ofRandom(numbers[2].getMin(), numbers[2].getMax());
 	if (key == 'i') numbers[3] = ofRandom(numbers[3].getMin(), numbers[3].getMax());
+	*/
 }
 
 //--
