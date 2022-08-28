@@ -3,6 +3,7 @@ ofxHistoryPlot
 ofxImGui
 ofxOsc
 ofxPubSubOsc
+ofxSurfingBox
 ofxSurfingHelpers
 ofxSurfingImGui
 ofxSurfingOsc

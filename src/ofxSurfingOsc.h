@@ -32,9 +32,7 @@
 	+		better gui layout/colors. add ofxGuiExtended mode?
 */
 
-
 //--
-
 
 /*
 
@@ -46,7 +44,7 @@
 	// We use a standard template of params. No need to add or local targets param by param.
 	// We just will update our local params on the local callback method, listening to the template params.
 
-	OscHelper.setup(true);
+	oscHelper.setup(true);
 
 	//--
 
@@ -55,14 +53,14 @@
 	// 2. Advanced Workflow
 	// Subscribe all local target params to the controller
 
-	OscHelper.setup(true);
+	oscHelper.setup(true);
 
 	// Here we add all the local parameters (TARGETS) that we want to control from or to receive to.
 	// midi assignments will be made on the addon gui by midi learn engine,
 	// bc it's easier than passing all the notes/cc addresses here.
 
 	//// Subscribe each params
-	OscHelper.setModeFeedback(false); // disabled by default
+	oscHelper.setModeFeedback(false); // disabled by default
 	//// enabled: received OSC/MIDI input messages are auto send to the output OSC too.
 
 */
@@ -77,11 +75,15 @@
 
 // OPTIONAL
 
-#define USE_MODE_INTERNAL_PARAMS // Main 
+// On Master mode / sender. these will not been used.
+#define SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS 
+#define SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS_GUI
+
 //#define USE_PLOTS // Plots
+
 //#define MODE_SLAVE_RECEIVER_PATCHING // Patcher Feature
 
-//#define USE_MIDI // Midi
+//#define USE_MIDI // MIDI //TODO:
 
 //-----------------------
 
@@ -100,21 +102,22 @@
 
 //-----------------------
 
-
+// Patch received signals to some targets (params)
+// that will be processed, mapped, clamped, etc
 #ifdef MODE_SLAVE_RECEIVER_PATCHING
 #include "PatchingManager.h"
 #endif
 
 // OSC
-#include "ofxOscSubscriber.h"
-#include "ofxOscPublisher.h"
+#include "ofxOscSubscriber.h" // in
+#include "ofxOscPublisher.h" // out
 
 //--
 
+#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
 #ifdef USE_PLOTS
 #include "CircleBeat.h"
 #include "BarValue.h"
-#ifdef USE_MODE_INTERNAL_PARAMS
 #include "ofxHistoryPlot.h"
 #endif
 #endif
@@ -150,6 +153,9 @@ public:
 	~ofxSurfingOsc();
 
 	void setup();
+
+private:
+
 	void update(ofEventArgs& args);
 	void draw(ofEventArgs& args);
 	void keyPressed(ofKeyEventArgs& eventArgs);
@@ -177,10 +183,26 @@ public:
 		FullDuplex
 	};
 
+	//--------------------------------------------------------------
+	void setup(SurfOscModes mode) {
+		setMode(mode);
+		this->setup();
+	};
+	
 	void setMode(SurfOscModes mode = FullDuplex);
 
+	//--------------------------------------------------------------
+	void setModeFeedback(bool b) // Enables output mirror sending to of the incoming messages.
+	{
+		bModeFeedback = b;
+	}
+
+public:
+
+	ofParameter<bool> bGui;
+
 private:
-	
+
 	SurfOscModes mode = UNKNOWN;
 
 	void setEnableOscInput(bool b) { bUseOscIn = b; };//must be called before setup. can not be modified on runtime!
@@ -217,6 +239,8 @@ private:
 	string path_AppSettings;
 	string path_OscSettings;
 
+	void setupParams(); // must be called at first before set ports and add params
+
 	//--
 
 	// API
@@ -224,11 +248,15 @@ private:
 public:
 
 	//TODO:
-	void setupParams(); // must be called at first before set ports and add params
 	void setInputPort(int p); // must be called after setupParams is called
 	void setOutputPort(int p); // must be called after setupParams is called
 	void setOutputIp(string ip); // must be called after setupParams is called
+
 	void startup(); // must be called after all params has been added!
+
+	//--
+
+	// Subscribers / Publishers 
 
 	// Senders
 	void addSender_Bool(ofParameter<bool>& b, string address);
@@ -245,6 +273,7 @@ public:
 	//--
 
 #ifdef USE_MIDI
+private:
 	void setupMidi();
 #endif
 
@@ -266,9 +295,7 @@ private:
 
 	void refreshGui();
 
-	//-
-
-	// API
+	//--
 
 public:
 
@@ -297,6 +324,10 @@ public:
 #endif
 	}
 
+	//--
+
+private:
+
 	//--------------------------------------------------------------
 	void setPosition(int x, int y)
 	{
@@ -311,12 +342,6 @@ public:
 	float getHeight()
 	{
 		return gui_Internal.getHeight();
-	}
-
-	//--------------------------------------------------------------
-	void setModeFeedback(bool b) // Enables output mirror sending to of the incoming messages.
-	{
-		bModeFeedback = b;
 	}
 
 private:
@@ -340,13 +365,9 @@ private:
 
 private:
 
-	ofTrueTypeFont myFont;
-	int fontSize;
-
 	std::string str_oscInputAddressesInfo;
 	std::string str_oscOutputAddressesInfo;
 	std::string str_oscAddressesInfo;
-	ofRectangle rectDebug;
 
 	vector <std::string> strs_inputAddresses;
 	vector <std::string> strs_outputAddresses;
@@ -360,14 +381,10 @@ private:
 
 	//--
 
-public:
-
-	ofParameter<bool> bGui;
-
 private:
 
+	ofParameter<bool> bDebug;
 	//ofParameter<bool> bGui_OscHelper;
-	//ofParameter<bool> bDebug;
 
 	ofParameterGroup params_Extra;
 
@@ -387,9 +404,7 @@ private:
 
 	//--
 
-	// All the important settings to store/recall
 	ofParameterGroup params_Osc;
-
 	ofParameterGroup params_OscInput;
 	ofParameterGroup params_OscOutput;
 	ofParameterGroup params_PlotsInput;
@@ -407,10 +422,7 @@ private:
 	ofParameter<string> str_OSC_OutputPort;//not stored
 	ofParameter<string> OSC_OutputIp;//stored
 
-	//--
-
 	ofParameter<bool> bModeFeedback;
-	// enabled: all subscribed OSC input messages are send to OSC out too
 
 	//--
 
@@ -418,7 +430,6 @@ private:
 
 	// Gui
 	ofxPanel gui_Internal;
-
 	ofParameter<glm::vec2> positionGuiInternal;
 
 	//--
@@ -429,7 +440,7 @@ private:
 
 	//TODO:
 	// to implement on connect/disconnect on runtime
-	void setupOscInput();
+	void setupOsc();
 
 	//TODO:
 	void disconnectOscInput();
@@ -438,9 +449,10 @@ private:
 
 	//TODO:
 
+#ifdef USE_MIDI_OUT
+
 private:
 
-#ifdef USE_MIDI_OUT
 	ofxMidiOut midiOut;
 	ofParameter<int> MIDI_OutputPort;
 	ofParameter<string> MIDI_OutPort_name;
@@ -453,39 +465,99 @@ public:
 
 	//----
 
-#ifdef USE_MODE_INTERNAL_PARAMS
+#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
 
-public:
+	//--
 
-	// This is an ugly workaround to created a fixed template of params
-	void setup(bool standardTemplate);
-	// 8 bangs / 8 toggles / 8 floats / 8 ints
+private:
+
+	void setupReceiverSubscribers();
+
+	//--
+
+private:
+	void setupReceiver();
+
+	bool bDone_SetupReceiver = false;
+
+#ifdef MODE_SLAVE_RECEIVER_PATCHING
+private:
+	void updateManager();
+#endif
+
+private:
+	void exitManager();
+
+	//--
+
+////public:
+//private:
+//
+//	//TODO: remove
+//	// This is an ugly workaround to created a fixed template of params
+//	void setup(bool standardTemplate);
+//	// 8 bangs / 8 toggles / 8 float's / 8 int's
+
+	//--
+
+	// Local receivers/targets
+	// for the moment this callbacks are only used to plotting purposes..
+
+	// Bool Bangs
+	ofParameterGroup params_Bangs;
+	ofParameter<bool> bBangs[NUM_BANGS];
+	string bangsNames[NUM_BANGS];
+	void Changed_Tar_Bangs(ofAbstractParameter& e);
+
+	// Bool Toggles
+	ofParameterGroup params_Toggles;
+	ofParameter<bool> bToggles[NUM_TOGGLES];
+	string togglesNames[NUM_TOGGLES];
+	void Changed_Tar_Toggles(ofAbstractParameter& e);
+
+	// Float Values
+	ofParameterGroup params_Values;
+	ofParameter<float> values[NUM_VALUES];
+	string valuesNames[NUM_VALUES];
+	void Changed_Tar_Values(ofAbstractParameter& e);
+
+	ofParameter<float> smoothValues[NUM_VALUES];
+
+	// Int Values
+	ofParameterGroup params_Numbers;
+	ofParameter<int> numbers[NUM_NUMBERS];
+	string numberNames[NUM_NUMBERS];
+	void Changed_Tar_Numbers(ofAbstractParameter& e);
+
+	//--
 
 public:
 
 	ofParameterGroup params_TARGETS;
 
-	// To help ofApp gui builder
-	//----------------------------------------------------
-	ofParameterGroup getParameters_TARGETS()
-	{
-		return params_TARGETS;
-	}
-
-private:
-
-	// Gui panel 
-#ifdef INCLUDE_GUI
-	ofxPanel gui_TARGETS;
-#endif
-
-private:
+	//// To help ofApp gui builder
+	////----------------------------------------------------
+	//ofParameterGroup getParameters_TARGETS()
+	//{
+	//	return params_TARGETS;
+	//}
 
 	//--
 
-#ifdef USE_MODE_INTERNAL_PARAMS
+	// Gui Panel
+	// for Targets
+#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS_GUI
+private:
+	ofxPanel gui_TARGETS;
+	ofParameter<bool> bGui_Targets;
+#endif
+
+	//--
+
 #ifdef USE_PLOTS
-	
+
+private:
+
 	// Plots
 
 	//----------------------------------------------------
@@ -550,64 +622,15 @@ private:
 	BarValue barValues[NUM_VALUES];
 
 #endif
-#endif
-
-	//--
-
-private:
-
-	void setupManager();
-	void updateManager();
-
-#ifdef USE_MODE_INTERNAL_PARAMS
-	void exitManager();
-#endif
-
-	void setupSubscribersManager();
-
-	//--
-
-	// Local receivers/targets
-	// for the moment this callbacks are only used to plotting purposes..
-
-//#define NUM_BANGS 8
-//#define NUM_TOGGLES 8
-//#define NUM_VALUES 8
-//#define NUM_NUMBERS 8
-
-	// Bool bangs
-	ofParameterGroup params_Bangs;
-	ofParameter<bool> bBangs[NUM_BANGS];
-	string bangsNames[NUM_BANGS];
-	void Changed_Tar_Bangs(ofAbstractParameter& e);
-
-	// Bool toggles
-	ofParameterGroup params_Toggles;
-	ofParameter<bool> bToggles[NUM_TOGGLES];
-	string togglesNames[NUM_TOGGLES];
-	void Changed_Tar_Toggles(ofAbstractParameter& e);
-
-	// Float values/sliders
-	ofParameterGroup params_Values;
-	ofParameter<float> values[NUM_VALUES];
-	string valuesNames[NUM_VALUES];
-	void Changed_Tar_Values(ofAbstractParameter& e);
-	ofParameter<float> smoothValues[NUM_VALUES];
-
-	// Int values/numbers
-	ofParameterGroup params_Numbers;
-	ofParameter<int> numbers[NUM_NUMBERS];
-	string numberNames[NUM_NUMBERS];
-	void Changed_Tar_Numbers(ofAbstractParameter& e);
 
 #endif
 
-	//--
+	//----
 
 #ifdef MODE_SLAVE_RECEIVER_PATCHING
 
 public:
-	
+
 	void draw_PatchingManager();
 
 	PatchingManager patchingManager;
@@ -616,9 +639,9 @@ private:
 
 	ofParameter<bool> bGui_PatchingManager;
 
-	//--
-
 #endif
+
+	//----
 
 private:
 

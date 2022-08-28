@@ -18,20 +18,22 @@ public:
 
 	//--
 
-	// Gui local 
+	// Gui Local 
+
 	void setupGui();
 	ofxPanel gui;
-
 	ofParameter<bool> bBypass{ "ByPass", false };
-	ofParameter<bool> bRandom{ "Random", false };
+	ofParameter<bool> bRandom{ "Randomizer", false };
 
 	//--
 
 	// Remote and control
-	void setupOscManager();
+
+	void setupOsc();
 
 	// OSC Input/Output and MIDI
-	ofxSurfingOsc OscHelper;
+
+	ofxSurfingOsc oscHelper;
 	
 	// NOTE:
 	// If you change the OSC ports/out IP 
@@ -44,7 +46,7 @@ public:
 
 	// Local targets aka receivers/senders
 	
-	void setupParamsTargets();
+	void setupTargets();
 
 	//--
 
@@ -55,43 +57,43 @@ public:
 
 	//--
 
-	// Bool bangs / triggers
+	// Bool Bangs / Triggers
 
 #define NUM_BANGS 8
 	ofParameterGroup params_Bangs;
 	ofParameter<bool> bBangs[NUM_BANGS];
 	string bangsNames[NUM_BANGS];
-	void Changed_Params_Bangs(ofAbstractParameter &e);
+	void Changed_Bangs(ofAbstractParameter &e);
 
 	//--
 
-	// Bool toggles / states-on/off
+	// Bool Toggles / States-on/off
 
 #define NUM_TOGGLES 8
 	ofParameterGroup params_Toggles;
 	ofParameter<bool> bToggles[NUM_TOGGLES];
 	string togglesNames[NUM_TOGGLES];
-	void Changed_params_Toggles(ofAbstractParameter &e);
+	void Changed_Toggles(ofAbstractParameter &e);
 
 	//--
 
-	// Float values
+	// Float Values
 
 #define NUM_VALUES 8
 	ofParameterGroup params_Values;
 	ofParameter<float> values[NUM_VALUES];
 	string valuesNames[NUM_VALUES];
-	void Changed_params_Values(ofAbstractParameter &e);
+	void Changed_Values(ofAbstractParameter &e);
 
 	//--
 
-	// Int numbers
+	// Int Numbers
 
 #define NUM_NUMBERS 8
 	ofParameterGroup params_Numbers;
 	ofParameter<int> numbers[NUM_NUMBERS];
 	string numberNames[NUM_NUMBERS];
-	void Changed_params_Numbers(ofAbstractParameter &e);
+	void Changed_Numbers(ofAbstractParameter &e);
 
 	//----
 
