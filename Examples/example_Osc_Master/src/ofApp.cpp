@@ -109,7 +109,10 @@ void ofApp::setupOscManager()
 	//--
 
 	OscHelper.setMode(ofxSurfingOsc::Master);
-	OscHelper.setup();
+	
+	//OscHelper.setup();
+
+	OscHelper.setup(true);
 
 	//OscHelper.setModeFeedback(true); 
 	// disabled by default

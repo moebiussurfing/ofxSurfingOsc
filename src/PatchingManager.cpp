@@ -179,8 +179,8 @@ void PatchingManager::doReset() {
 void PatchingManager::draw() {
 
 	////TODO:
-	////auto p = guiInternal.getPosition();
-	////auto h = guiInternal.getHeight();
+	////auto p = gui_Internal.getPosition();
+	////auto h = gui_Internal.getHeight();
 	//auto p = gui.getPosition();
 	//auto h = gui.getHeight();
 	//setPositionPreview(glm::vec2(p.x + 5, p.y + h + 5));

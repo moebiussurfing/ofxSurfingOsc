@@ -77,11 +77,11 @@
 
 // OPTIONAL
 
-#define USE_MODE_INTERNAL_PARAMS
-
+#define USE_MODE_INTERNAL_PARAMS // Main 
+//#define USE_PLOTS // Plots
 //#define MODE_SLAVE_RECEIVER_PATCHING // Patcher Feature
 
-//#define USE_MIDI
+//#define USE_MIDI // Midi
 
 //-----------------------
 
@@ -111,16 +111,17 @@
 
 //--
 
-#include "ofxSurfingHelpers.h"
-#include "ofxSurfing_ofxGui.h"
+#ifdef USE_PLOTS
 #include "CircleBeat.h"
 #include "BarValue.h"
-
 #ifdef USE_MODE_INTERNAL_PARAMS
 #include "ofxHistoryPlot.h"
 #endif
+#endif
 
-#include "ofxInteractiveRect.h"
+#include "ofxSurfingHelpers.h"
+#include "ofxSurfing_ofxGui.h"
+#include "ofxSurfingBoxInteractive.h"
 #include "TextBoxWidget.h"
 #include "ofxGui.h"
 
@@ -190,11 +191,13 @@ private:
 	TextBoxWidget boxHelp;
 	std::string strHelpInfo = "";
 
+	ofxSurfingBoxInteractive boxPlotsBg;
+
 	//-
 
 	// Settings
 
-	string path_Global = "ofApp/";
+	string path_Global = "ofxSurfingOsc/";
 
 public:
 
@@ -203,6 +206,9 @@ public:
 	{
 		ofxSurfingHelpers::CheckFolder(path_Global);
 		path_Global = s;
+
+		boxPlotsBg.setPathGlobal(path_Global);
+
 	}
 
 private:
@@ -210,9 +216,6 @@ private:
 	// Settings paths
 	string path_AppSettings;
 	string path_OscSettings;
-
-	//TODO: replace with surfingBox
-	ofxInteractiveRect boxPlotsBg = { "Rect_OSC", "ofxSurfingOsc/" };
 
 	//--
 
@@ -293,12 +296,6 @@ public:
 			ofxTextFlow::setShowing(false);
 #endif
 	}
-	////--------------------------------------------------------------
-	//bool getVisible()
-	//{
-	//	const bool b = bGui.get();
-	//	return b;
-	//}
 
 	//--------------------------------------------------------------
 	void setPosition(int x, int y)
@@ -308,12 +305,12 @@ public:
 	//--------------------------------------------------------------
 	glm::vec3 getPosition()
 	{
-		auto p = guiInternal.getPosition();
+		auto p = gui_Internal.getPosition();
 	}
 	//--------------------------------------------------------------
 	float getHeight()
 	{
-		return guiInternal.getHeight();
+		return gui_Internal.getHeight();
 	}
 
 	//--------------------------------------------------------------
@@ -370,7 +367,7 @@ public:
 private:
 
 	//ofParameter<bool> bGui_OscHelper;
-	ofParameter<bool> bGui_Debug;
+	//ofParameter<bool> bDebug;
 
 	ofParameterGroup params_Extra;
 
@@ -420,7 +417,7 @@ private:
 private:
 
 	// Gui
-	ofxPanel guiInternal;
+	ofxPanel gui_Internal;
 
 	ofParameter<glm::vec2> positionGuiInternal;
 
@@ -475,12 +472,6 @@ public:
 		return params_TARGETS;
 	}
 
-	//----------------------------------------------------
-	void setVisiblePlots(bool b)
-	{
-		bGui_Plots = b;
-	}
-
 private:
 
 	// Gui panel 
@@ -492,13 +483,23 @@ private:
 
 	//--
 
+#ifdef USE_MODE_INTERNAL_PARAMS
+#ifdef USE_PLOTS
+	
 	// Plots
+
+	//----------------------------------------------------
+	void setVisiblePlots(bool b)
+	{
+		bGui_Plots = b;
+	}
 
 	// We can select which plots to draw
 	ofParameter<bool> bGui_Plots;
 	ofParameter<bool> bEnableSmoothPlots;
 	ofParameter<float> smoothPlotsPower;
 	ofParameter<bool> bModePlotsMini;
+
 	enum PLOTS_MINI_POS
 	{
 		POS_RIGHT,
@@ -523,8 +524,10 @@ private:
 
 public:
 
+	void updatePlots();
 	void drawPlots(); // only to draw plots. gui draws is disabled and used locally on ofApp
 	void drawPlots(float x, float y, float w, float h);
+	void drawPlots(ofRectangle rect);
 
 private:
 
@@ -541,11 +544,25 @@ private:
 
 	//--
 
+	// Extra widgets
+	CircleBeat bangCircles[NUM_BANGS];
+	CircleBeat togglesCircles[NUM_TOGGLES];
+	BarValue barValues[NUM_VALUES];
+
+#endif
+#endif
+
+	//--
+
 private:
 
 	void setupManager();
 	void updateManager();
+
+#ifdef USE_MODE_INTERNAL_PARAMS
 	void exitManager();
+#endif
+
 	void setupSubscribersManager();
 
 	//--
@@ -562,33 +579,26 @@ private:
 	ofParameterGroup params_Bangs;
 	ofParameter<bool> bBangs[NUM_BANGS];
 	string bangsNames[NUM_BANGS];
-	void Changed_params_TARGET_Bangs(ofAbstractParameter& e);
+	void Changed_Tar_Bangs(ofAbstractParameter& e);
 
 	// Bool toggles
 	ofParameterGroup params_Toggles;
 	ofParameter<bool> bToggles[NUM_TOGGLES];
 	string togglesNames[NUM_TOGGLES];
-	void Changed_params_TARGETS_Toggles(ofAbstractParameter& e);
+	void Changed_Tar_Toggles(ofAbstractParameter& e);
 
 	// Float values/sliders
 	ofParameterGroup params_Values;
 	ofParameter<float> values[NUM_VALUES];
 	string valuesNames[NUM_VALUES];
-	void Changed_params_TARGETS_Values(ofAbstractParameter& e);
+	void Changed_Tar_Values(ofAbstractParameter& e);
 	ofParameter<float> smoothValues[NUM_VALUES];
 
 	// Int values/numbers
 	ofParameterGroup params_Numbers;
 	ofParameter<int> numbers[NUM_NUMBERS];
 	string numberNames[NUM_NUMBERS];
-	void Changed_params_TARGETS_Numbers(ofAbstractParameter& e);
-
-	//--
-
-	// Extra widgets
-	CircleBeat bangCircles[NUM_BANGS];
-	CircleBeat togglesCircles[NUM_TOGGLES];
-	BarValue barValues[NUM_VALUES];
+	void Changed_Tar_Numbers(ofAbstractParameter& e);
 
 #endif
 
