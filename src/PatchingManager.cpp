@@ -68,7 +68,7 @@ void PatchingManager::setup(string name) {
 	gui.setup(name);
 	gui.setPosition(630, 20);
 
-	gui.add(boxPlotsBg.bEditMode);
+	gui.add(boxPlotsBg.bEdit);
 	gui.add(params_Settings);
 
 	//-
@@ -128,7 +128,9 @@ void PatchingManager::setup(string name) {
 
 	// draggable bg
 	{
-		boxPlotsBg.bEditMode.setName("EDIT PREVIEW MANAGER");
+		boxPlotsBg.setName("PatchingManager");
+		boxPlotsBg.setPathGlobal("PatchingManager");
+		boxPlotsBg.bEdit.setName("EDIT PREVIEW MANAGER");
 
 		//// default plots position
 		////ofRectangle r = ofGetCurrentViewport();
@@ -141,14 +143,16 @@ void PatchingManager::setup(string name) {
 		//	boxPlotsBg.setRect(r.getX(), r.getY(), r.getWidth(), r.getHeight());
 		//}
 
-		// draggable rectangle
-		ofColor c0(0, 90);
-		//boxPlotsBg.set
-		boxPlotsBg.setColorEditingHover(c0);
-		boxPlotsBg.setColorEditingMoving(c0);
-		boxPlotsBg.enableEdit();
+		//// draggable rectangle
+		//ofColor c0(0, 90);
+		////boxPlotsBg.set
+		//boxPlotsBg.setColorEditingHover(c0);
+		//boxPlotsBg.setColorEditingMoving(c0);
+		//boxPlotsBg.enableEdit();
 
 		//boxPlotsBg.setAutoSave(true);
+
+		boxPlotsBg.setup();
 	}
 
 	//-
@@ -399,7 +403,7 @@ void PatchingManager::drawPreview() {
 		ofFill();
 		ofPushStyle();
 		ofSetColor(OF_COLOR_BG_PANELS);
-		ofDrawRectRounded(boxPlotsBg, 5);
+		ofDrawRectRounded(boxPlotsBg.getRectangle(), 5);
 		boxPlotsBg.draw();
 		ofPopStyle();
 

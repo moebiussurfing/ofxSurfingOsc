@@ -48,6 +48,8 @@ public:
 	
 	void setupTargets();
 
+	void setupReceivers();
+
 	//--
 
 	// Senders on MASTER mode 

@@ -1,7 +1,7 @@
 #include "ofApp.h"
 
 //--------------------------------------------------------------
-void ofApp::setup() 
+void ofApp::setup()
 {
 	ofSetWindowTitle("OSC | Slave");
 
@@ -43,62 +43,9 @@ void ofApp::setupOsc()
 	//----
 
 	// Link params
-	{
-		// Add OSC targets to the add-on class.
-		// this will subscribe the OSC addresses with/to the target local parameters.
+	setupReceivers();
 
-		// NOTE:
-		// Extra '1/' -> it's an address pattern to 
-		// better adapt to pages or different layouts 
-		// of some controller apps like TouchOSC!
-		string tag = "1/";
-
-		//--
-
-		// Bangs
-
-		for (int i = 0; i < NUM_BANGS; i++)
-		{
-			string Osc_Address = "/bang/" + tag + ofToString(i + 1);
-			//oscHelper.addSender_Bool(bBangs[i], Osc_Address);
-			oscHelper.addReceiver_Bool(bBangs[i], Osc_Address);
-		}
-
-		//--
-
-		// Toggles
-
-		for (int i = 0; i < NUM_TOGGLES; i++)
-		{
-			string Osc_Address = "/toggle/" + tag + ofToString(i + 1);
-			//oscHelper.addSender_Bool(bToggles[i], Osc_Address);
-			oscHelper.addReceiver_Bool(bToggles[i], Osc_Address);
-		}
-
-		//--
-
-		// Values (Float's)
-
-		for (int i = 0; i < NUM_VALUES; i++)
-		{
-			string Osc_Address = "/value/" + tag + ofToString(i + 1);
-			//oscHelper.addSender_Float(values[i], Osc_Address);
-			oscHelper.addReceiver_Float(values[i], Osc_Address);
-		}
-
-		//--
-
-		// Numbers (Int's)
-
-		for (int i = 0; i < NUM_NUMBERS; i++)
-		{
-			string Osc_Address = "/number/" + tag + ofToString(i + 1);
-			//oscHelper.addSender_Int(numbers[i], Osc_Address);
-			oscHelper.addReceiver_Int(numbers[i], Osc_Address);
-		}
-	}
-
-	//--
+	//----
 
 	// Startup
 
@@ -112,7 +59,7 @@ void ofApp::setupOsc()
 //--------------------------------------------------------------
 void ofApp::setupGui()
 {
-	gui.setup("ofApp MASTER");
+	gui.setup("ofApp SLAVE");
 	gui.add(oscHelper.bGui); // visible toggle
 	//gui.add(bRandom);
 	gui.add(bBypass); // bypass on the callbacks, not the receiving itself!
@@ -132,8 +79,8 @@ void ofApp::setupGui()
 }
 
 //--------------------------------------------------------------
-void ofApp::setupTargets() {
-
+void ofApp::setupTargets() 
+{
 	//--
 
 	// 1. Local params
@@ -206,6 +153,63 @@ void ofApp::setupTargets() {
 }
 
 //--------------------------------------------------------------
+void ofApp::setupReceivers()
+{
+	// Add OSC targets to the add-on class.
+	// this will subscribe the OSC addresses with/to the target local parameters.
+
+	// NOTE:
+	// Extra '1/' -> it's an address pattern to 
+	// better adapt to pages or different layouts 
+	// of some controller apps like TouchOSC!
+	string tag = "1/";
+
+	//--
+
+	// Bangs
+
+	for (int i = 0; i < NUM_BANGS; i++)
+	{
+		string Osc_Address = "/bang/" + tag + ofToString(i + 1);
+		//oscHelper.addSender_Bool(bBangs[i], Osc_Address);
+		oscHelper.addReceiver_Bool(bBangs[i], Osc_Address);
+	}
+
+	//--
+
+	// Toggles
+
+	for (int i = 0; i < NUM_TOGGLES; i++)
+	{
+		string Osc_Address = "/toggle/" + tag + ofToString(i + 1);
+		//oscHelper.addSender_Bool(bToggles[i], Osc_Address);
+		oscHelper.addReceiver_Bool(bToggles[i], Osc_Address);
+	}
+
+	//--
+
+	// Values (Float's)
+
+	for (int i = 0; i < NUM_VALUES; i++)
+	{
+		string Osc_Address = "/value/" + tag + ofToString(i + 1);
+		//oscHelper.addSender_Float(values[i], Osc_Address);
+		oscHelper.addReceiver_Float(values[i], Osc_Address);
+	}
+
+	//--
+
+	// Numbers (Int's)
+
+	for (int i = 0; i < NUM_NUMBERS; i++)
+	{
+		string Osc_Address = "/number/" + tag + ofToString(i + 1);
+		//oscHelper.addSender_Int(numbers[i], Osc_Address);
+		oscHelper.addReceiver_Int(numbers[i], Osc_Address);
+	}
+}
+
+//--------------------------------------------------------------
 void ofApp::draw()
 {
 	gui.draw();
@@ -241,8 +245,8 @@ void ofApp::draw()
 void ofApp::keyPressed(int key)
 {
 	/*
-	// Make some changes or random to, 
-	// if all is settled correctly, 
+	// Make some changes or random to,
+	// if all is settled correctly,
 	// auto send OSC messages!
 
 	if (key == '1') bBangs[0] = !bBangs[0];

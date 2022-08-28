@@ -3,11 +3,14 @@
 //
 
 /*
+
 	TODO:
 
+	++		Patching Manager: look @daan example!
 	++		PatchPipeValue class:
 				add extra params parallel to targets, to work as
-				def params appliers to any App.: using enable/disable osc msg,
+				def params appliers to any App: using enable/disable osc msg,
+	
 	++		add mini class receiver with mute channels,
 				plotting and signal filtering, matrix patcher with ImGui
 				split in smaller classes to have a minimal to use copy/paste easy to our ofApp projects?
@@ -15,6 +18,7 @@
 	++		add filter to OSC receivers? using plot? biquad lpf/hpf?
 	++		sort plots by user better
 	++ 		debug output addresses log too on address list
+
 	++		API: we should make a queuer to OSC messages faster:
 				auto assigning the names depending of his type.
 				API like: addBool(); so params are in oscHelper
@@ -22,6 +26,7 @@
 				add method add grouped of params (faster) or any param type (only bool/int/float for now)
 					sequentially adding params splitting on bool/float/int types
 					should use kind of map/pairs/smartPointers/msaOrderedMap to store all added params?
+	
 	+		disabler per project for not include midi?
 	+		add midi out feedback for received subscribed toggles/bool: using ofxParamsMisiSync?
 				https://github.com/NickHardeman/ofxMidiParams/issues/1#issuecomment-630559720
@@ -29,9 +34,8 @@
 	+		add 'connected' toggle, disabler for in/out/feedback,
 				enabler or mute OSC input/output. issue on ofxPubOsc
 	+		get and show local IP ...
-	+		better gui layout/colors. add ofxGuiExtended mode?
-*/
 
+*/
 
 //------------------------------------------------------------------------------------------------
 
@@ -43,13 +47,11 @@
 
 // OPTIONAL
 
-// On Master mode / sender. these will not been used.
+// On Master mode / sender. These will not been used.
 #define SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS 
 #define SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS_GUI
-
-//#define USE_PLOTS // Plots
-
-#define SURF_OSC__USE__RECEIVER_PATCHING_MODE // Patcher Feature
+//#define SURF_OSC__USE__RECEIVER_PLOTS // Plots
+//#define SURF_OSC__USE__RECEIVER_PATCHING_MODE // Patcher Feature
 
 //#define USE_MIDI // MIDI //TODO:
 
@@ -83,7 +85,7 @@
 //--
 
 #ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
-#ifdef USE_PLOTS
+#ifdef SURF_OSC__USE__RECEIVER_PLOTS
 #include "CircleBeat.h"
 #include "BarValue.h"
 #include "ofxHistoryPlot.h"
@@ -103,7 +105,6 @@
 //--
 
 // MIDI
-
 #ifdef USE_MIDI
 #include "ofxMidiParams.h"
 #include "ofxMidi.h"
@@ -191,9 +192,11 @@ private:
 	TextBoxWidget boxHelp;
 	std::string strHelpInfo = "";
 
-	ofxSurfingBoxInteractive boxPlotsBg;
+private:
 
-	//-
+	void buildHelp();
+	
+	//----
 
 	// Settings
 
@@ -207,8 +210,9 @@ public:
 		ofxSurfingHelpers::CheckFolder(path_Global);
 		path_Global = s;
 
+#ifdef SURF_OSC__USE__RECEIVER_PLOTS
 		boxPlotsBg.setPathGlobal(path_Global);
-
+#endif
 	}
 
 private:
@@ -318,8 +322,8 @@ private:
 private:
 
 	ofParameter<bool> bDISABLE_CALLBACKS{ "bDISABLE_CALLBACKS", false };
-	ofParameterGroup params_OscSettings;
 
+	ofParameterGroup params_OscSettings;
 	void Changed_params_SettingsOSC(ofAbstractParameter& e);
 
 private:
@@ -448,27 +452,20 @@ private:
 
 private:
 	
-	void setupReceiver();
+	void setupReceiverTargets();
 	void setupReceiveLogger();
 
 	bool bDone_SetupReceiver = false;
 
 private:
+
 	void exit_InternalParams();
 
 	//--
 
-////public:
-//private:
-//
-//	//TODO: remove
-//	// This is an ugly workaround to created a fixed template of params
-//	void setup(bool standardTemplate);
-//	// 8 bangs / 8 toggles / 8 float's / 8 int's
-
-	//--
-
 	// Local receivers/targets
+
+	// 8 bangs / 8 toggles / 8 float's / 8 int's
 	// for the moment this callbacks are only used to plotting purposes..
 
 	// Bool Bangs
@@ -501,14 +498,16 @@ private:
 
 public:
 
+	//TODO:
+
 	ofParameterGroup params_TARGETS;
 
-	//// To help ofApp gui builder
-	////----------------------------------------------------
-	//ofParameterGroup getParameters_TARGETS()
-	//{
-	//	return params_TARGETS;
-	//}
+	// To help ofApp gui builder
+	//----------------------------------------------------
+	ofParameterGroup getParameters_TARGETS()
+	{
+		return params_TARGETS;
+	}
 
 	//--
 
@@ -522,11 +521,13 @@ private:
 
 	//--
 
-#ifdef USE_PLOTS
+#ifdef SURF_OSC__USE__RECEIVER_PLOTS
+
+	// Plots
 
 private:
 
-	// Plots
+	ofxSurfingBoxInteractive boxPlotsBg;
 
 	//----------------------------------------------------
 	void setVisiblePlots(bool b)
@@ -562,9 +563,10 @@ private:
 	vector<bool> plotsSelected_TARGETS; // array with bool of display state of any plot
 	int numPlostEnabled;
 
-public:
+private:
 
 	void updatePlots();
+
 	void drawPlots(); // only to draw plots. gui draws is disabled and used locally on ofApp
 	void drawPlots(float x, float y, float w, float h);
 	void drawPlots(ofRectangle rect);
@@ -605,10 +607,4 @@ private:
 	ofParameter<bool> bGui_PatchingManager;
 
 #endif
-
-	//----
-
-private:
-
-	void buildHelp();
 };

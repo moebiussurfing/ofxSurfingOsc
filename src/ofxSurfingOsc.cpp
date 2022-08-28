@@ -94,28 +94,13 @@ void ofxSurfingOsc::setup()
 
 	// Plots
 
-#ifdef USE_PLOTS
+#ifdef SURF_OSC__USE__RECEIVER_PLOTS
 	{
+		boxPlotsBg.setPathGlobal(path_Global);
 		boxPlotsBg.setName("Plots");
 		boxPlotsBg.bEdit.setName("EDIT PLOTS");
-		//boxPlotsBg.bEditMode.makeReferenceTo(patchingManager.boxPlotsBg.bEditMode);
+		patchingManager.boxPlotsBg.bEdit.makeReferenceTo(boxPlotsBg.bEdit);
 
-		//// default plots position
-		////ofRectangle r = ofGetCurrentViewport();
-		//if (0)
-		//{
-		//	int w = 300;
-		//	int pad = 30;
-		//	ofRectangle r = ofRectangle(ofGetWidth() - w - 2 * pad, pad, w, ofGetHeight() - 2 * pad);
-		//	boxPlotsBg.setRect(r.getX(), r.getY(), r.getWidth(), r.getHeight());
-		//}
-
-		//ofColor c0(0, 90);
-		//boxPlotsBg.setColorEditingHover(c0);
-		//boxPlotsBg.setColorEditingMoving(c0);
-		//boxPlotsBg.enableEdit();
-
-		boxPlotsBg.setPathGlobal(path_Global);
 		boxPlotsBg.setup();
 	}
 #endif
@@ -129,22 +114,23 @@ void ofxSurfingOsc::setup()
 
 	//--
 
-	setupParams();
-
-	//--
-
 	// Initialize receiver mode when Input is enabled!
 	if (bUseOscIn)
 	{
 		// Setup param Targets
-		setupReceiver();
+		setupReceiverTargets();
 
-		// Subscribe all parameters to OSC incoming messages
+		// Subscribe all parameters
+		// to OSC incoming messages
 		setupReceiverSubscribers();
 
 		// Log incoming messages
 		setupReceiveLogger();
 	}
+
+	//--
+
+	setupParams();
 }
 
 //----------------------------------------------------
@@ -153,6 +139,7 @@ void ofxSurfingOsc::buildHelp() {
 
 	strHelpInfo = "";
 	strHelpInfo += "SURFING OSC \n";
+	strHelpInfo += "\n";
 	strHelpInfo += name;
 	strHelpInfo += "\n";
 	strHelpInfo += "\n";
@@ -171,7 +158,6 @@ void ofxSurfingOsc::buildHelp() {
 		strHelpInfo += "\n";
 	}
 
-	//strHelpInfo += "\n";
 	strHelpInfo += str_oscAddressesInfo;
 
 	boxHelp.setText(strHelpInfo);
@@ -229,21 +215,22 @@ void ofxSurfingOsc::setupOsc()
 void ofxSurfingOsc::setupReceiveLogger()
 {
 	ofLogNotice("ofxSurfingOsc") << (__FUNCTION__);
+
 	if (bUseOscIn)
 	{
 		ofxGetOscSubscriber(OSC_InputPort);
-		// create subscriber binding 26666 explicitly
+		// create subscriber binding explicitly
 
-		//NOTE:
+		// NOTE:
 		// must add [this] into lambda:
-		//https://stackoverflow.com/questions/26903602/an-enclosing-function-local-variable-cannot-be-referenced-in-a-lambda-body-unles
+		// https://stackoverflow.com/questions/26903602/an-enclosing-function-local-variable-cannot-be-referenced-in-a-lambda-body-unles
 
 		ofxSubscribeAllOsc([&](const ofxOscMessageEx& m, bool is_leaked)
 			{
-				bool _b;
-				_b |= bDebug;
+				bool _b = false;
+				_b += bDebug;
 #ifdef USE_TEXT_FLOW
-				_b |= (bGui_Log);
+				_b += (bGui_Log);
 #endif
 
 				if (_b)
@@ -455,11 +442,13 @@ void ofxSurfingOsc::setupParams()
 #endif
 
 #ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
-#ifdef USE_PLOTS
+#ifdef SURF_OSC__USE__RECEIVER_PLOTS
 	bGui_Plots.set("Plots", true);
+
 	bEnableSmoothPlots.set("Smooth", false);
 	smoothPlotsPower.set("Smooth Power", 0.5, 0, 1);
-	bGui_AllPlots.set("All Plots", false);
+
+	bGui_AllPlots.set("All", false);
 	bModePlotsMini.set("Mini", false);
 #endif
 #endif
@@ -473,7 +462,7 @@ void ofxSurfingOsc::setupParams()
 #endif
 
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
-	bGui_PatchingManager.set("Patching Manager", false);
+	bGui_PatchingManager.set("PATCHING MANAGER", false);
 #endif
 
 	//--
@@ -538,16 +527,14 @@ void ofxSurfingOsc::setupParams()
 
 	//--
 
-#ifdef USE_PLOTS
+#ifdef SURF_OSC__USE__RECEIVER_PLOTS
 	params_PlotsInput.setName("PLOTS INPUT");
 	params_PlotsInput.add(bGui_Plots);
-	params_PlotsInput.add(bGui_AllPlots);
 	params_PlotsInput.add(bModePlotsMini);
+	params_PlotsInput.add(bGui_AllPlots);
 	//params_PlotsInput.add(boxPlotsBg.bEditMode);
 	//params_PlotsInput.add(bEnableSmoothPlots);
 	//params_PlotsInput.add(smoothPlotsPower);
-
-	params_Osc.add(params_PlotsInput);
 #endif
 
 	//--
@@ -606,27 +593,31 @@ void ofxSurfingOsc::setupParams()
 	//-
 
 	// Gui
+	{
+		gui_Internal.setup(bGui.getName());
 
-	gui_Internal.setup(bGui.getName());
-	//gui_Internal.add(bGui_OscHelper);
+		// OSC
+		gui_Internal.add(params_Osc);
 
-	// OSC
-	gui_Internal.add(params_Osc);
-
-	// Midi
+		// Midi
 #ifdef USE_MIDI
-	gui_Internal.add(bGui_MIDI);
-	gui_Internal.add(params_MIDI);
+		gui_Internal.add(bGui_MIDI);
+		gui_Internal.add(params_MIDI);
 #endif
 
-	gui_Internal.add(params_Extra);
+#ifdef SURF_OSC__USE__RECEIVER_PLOTS
+		gui_Internal.add(params_PlotsInput);
+#endif
 
-	// Position
-	positionGuiInternal.set("GUI POSITION",
-		glm::vec2(500, 500),
-		glm::vec2(0, 0),
-		glm::vec2(ofGetWidth(), ofGetHeight()));
-	gui_Internal.setPosition(positionGuiInternal.get().x, positionGuiInternal.get().y);
+		gui_Internal.add(params_Extra);
+
+		// Position
+		positionGuiInternal.set("GUI POSITION",
+			glm::vec2(500, 500),
+			glm::vec2(0, 0),
+			glm::vec2(ofGetWidth(), ofGetHeight()));
+		gui_Internal.setPosition(positionGuiInternal.get().x, positionGuiInternal.get().y);
+	}
 
 	//--
 
@@ -641,14 +632,13 @@ void ofxSurfingOsc::setupParams()
 
 	//--
 
-	// Settings
+	// Params Settings
 
 	// Not into gui: just for store/recall and callbacks
 
 	params_AppSettings.setName("Osc_AppSettings");
 	params_AppSettings.add(positionGuiInternal);
-	params_AppSettings.add(bDebug);
-	//params_AppSettings.add(bGui_OscHelper);
+	params_AppSettings.add(params_Extra);
 
 #ifdef USE_TEXT_FLOW
 	params_AppSettings.add(bGui_Log);
@@ -676,16 +666,14 @@ void ofxSurfingOsc::setupParams()
 	params_AppSettings.add(bGui_PatchingManager);
 #endif
 
+	//--
+
 	// Plots
 
+#ifdef SURF_OSC__USE__RECEIVER_PLOTS
 	params_AppSettings.add(params_PlotsInput);
-
-	/*
-	params_AppSettings.add(bGui_Plots);
-	params_AppSettings.add(bGui_AllPlots);
-	params_AppSettings.add(bModePlotsMini);
 	//params_AppSettings.add(bEnableSmoothPlots);//crashes
-	*/
+#endif
 
 	//--
 
@@ -801,7 +789,7 @@ void ofxSurfingOsc::update()
 #endif
 #endif
 
-#ifdef USE_PLOTS
+#ifdef SURF_OSC__USE__RECEIVER_PLOTS
 	updatePlots();
 #endif
 }
@@ -839,7 +827,7 @@ void ofxSurfingOsc::draw()
 	//--
 
 #ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
-#ifdef USE_PLOTS
+#ifdef SURF_OSC__USE__RECEIVER_PLOTS
 	if (bGui_Plots)
 	{
 		drawPlots();
@@ -1250,7 +1238,6 @@ void ofxSurfingOsc::Changed_params(ofAbstractParameter& e)
 
 	//--
 
-
 	//TODO:
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
 	if (name == bGui_PatchingManager.getName())
@@ -1265,7 +1252,8 @@ void ofxSurfingOsc::Changed_params(ofAbstractParameter& e)
 	//--
 
 	// Smooth
-#ifdef USE_PLOTS
+
+#ifdef SURF_OSC__USE__RECEIVER_PLOTS
 	if (name == bEnableSmoothPlots.getName())
 	{
 		int _start = NUM_BANGS + NUM_TOGGLES;
@@ -1418,7 +1406,7 @@ void ofxSurfingOsc::refreshGui()
 	if (bUseOscOut) go.getGroup(params_OscOutput.getName()).minimize();
 	if (bUseOscIn) go.getGroup(params_OscInput.getName()).minimize();
 
-#ifdef USE_PLOTS
+#ifdef SURF_OSC__USE__RECEIVER_PLOTS
 	go.getGroup(params_PlotsInput.getName()).minimize();
 	go.minimize();
 #endif
@@ -1515,15 +1503,8 @@ void ofxSurfingOsc::noteOut(int note, bool state)
 
 #ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
 
-////--------------------------------------------------------------
-//void ofxSurfingOsc::setup(bool standardTemplate) 
-//{
-//	setup();
-//	setupReceiver();
-//}
-
 //--------------------------------------------------------------
-void ofxSurfingOsc::setupReceiver()
+void ofxSurfingOsc::setupReceiverTargets()
 {
 	ofLogNotice("ofxSurfingOsc") << (__FUNCTION__);
 
@@ -1531,7 +1512,7 @@ void ofxSurfingOsc::setupReceiver()
 
 	// Plots
 
-#ifdef USE_PLOTS
+#ifdef SURF_OSC__USE__RECEIVER_PLOTS
 
 	//// colors
 	//colorBangs = ofColor::aquamarine;
@@ -1539,7 +1520,7 @@ void ofxSurfingOsc::setupReceiver()
 	//colorValues = ofColor::cyan;
 	//colorNumbers = ofColor::deepSkyBlue;
 
-	//// greys
+	//// grays
 	//int _min = 0;
 	//int _max = 128;
 	//colorBangs = ofColor((int)ofMap(0, 0, 1, _min, _max));
@@ -1581,9 +1562,9 @@ void ofxSurfingOsc::setupReceiver()
 
 		// Plots
 
-#ifdef USE_PLOTS
-		plots_TARGETS.push_back(graph);
+#ifdef SURF_OSC__USE__RECEIVER_PLOTS
 		ofxHistoryPlot* graph = addGraph(_name, 1.0f, colorBangs, 0);
+		plots_TARGETS.push_back(graph);
 
 		//beatCircles
 		bangCircles[i].setColor(colorBangs);
@@ -1608,7 +1589,7 @@ void ofxSurfingOsc::setupReceiver()
 
 		// Plots
 
-#ifdef USE_PLOTS
+#ifdef SURF_OSC__USE__RECEIVER_PLOTS
 		ofxHistoryPlot* graph = addGraph(_name, 1.0f, colorToggles, 0);
 		plots_TARGETS.push_back(graph);
 
@@ -1636,7 +1617,7 @@ void ofxSurfingOsc::setupReceiver()
 
 		// Plots
 
-#ifdef USE_PLOTS
+#ifdef SURF_OSC__USE__RECEIVER_PLOTS
 		ofxHistoryPlot* graph = addGraph(_name, 1.0f, colorValues, 2, false);// no smooth
 		plots_TARGETS.push_back(graph);
 
@@ -1664,7 +1645,7 @@ void ofxSurfingOsc::setupReceiver()
 
 		// Plots
 
-#ifdef USE_PLOTS
+#ifdef SURF_OSC__USE__RECEIVER_PLOTS
 		ofxHistoryPlot* graph = addGraph(_name, _max, colorNumbers, 0);
 		plots_TARGETS.push_back(graph);
 #endif
@@ -1674,7 +1655,7 @@ void ofxSurfingOsc::setupReceiver()
 	//--
 
 	// Customize label and selected plots
-#ifdef USE_PLOTS
+#ifdef SURF_OSC__USE__RECEIVER_PLOTS
 	customizePlots_TARGETS();
 #endif
 
@@ -1718,7 +1699,7 @@ void ofxSurfingOsc::setupReceiverSubscribers()
 {
 	ofLogNotice("ofxSurfingOsc") << (__FUNCTION__);
 
-	setModeFeedback(false); // disabled by default
+	//setModeFeedback(false); // disabled by default
 	// When enabled, all received OSC/MIDI input messages 
 	// are auto send to the output OSC too, as mirroring.
 
@@ -1800,7 +1781,7 @@ void ofxSurfingOsc::Changed_Tar_Bangs(ofAbstractParameter& e) // preset load/tri
 			ofLogVerbose("ofxSurfingOsc") << (__FUNCTION__) << "BANGS\t[" << ofToString(i + 1) << "] " << "BANG";
 
 			// Plot
-#ifdef USE_PLOTS
+#ifdef SURF_OSC__USE__RECEIVER_PLOTS
 			//plots_TARGETS[i]->update(1);
 			bangCircles[i].bang();
 #endif
@@ -1826,7 +1807,7 @@ void ofxSurfingOsc::Changed_Tar_Toggles(ofAbstractParameter& e)
 			ofLogVerbose("ofxSurfingOsc") << (__FUNCTION__) << "TOGGLE\t[" << ofToString(i + 1) << "] " << (b ? "ON" : "OFF");
 
 			// Plot
-#ifdef USE_PLOTS
+#ifdef SURF_OSC__USE__RECEIVER_PLOTS
 			// first toggle (eg: gist note)
 			if (b) { togglesCircles[i].bang(); }
 #endif
@@ -1890,7 +1871,7 @@ void ofxSurfingOsc::exit_InternalParams()
 
 #ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
 
-#ifdef USE_PLOTS
+#ifdef SURF_OSC__USE__RECEIVER_PLOTS
 //--------------------------------------------------------------
 void ofxSurfingOsc::customizePlots_TARGETS() {
 
@@ -1904,7 +1885,7 @@ void ofxSurfingOsc::customizePlots_TARGETS() {
 
 	// Customize special plots
 
-	// template is for my audioanalyzer
+	// template is for my audio analyzer
 	int _i;
 	int _start;
 

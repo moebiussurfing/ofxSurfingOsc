@@ -11,7 +11,8 @@
 #include "BarValue.h"
 #include "CircleBeat.h"
 
-#include "ofxInteractiveRect.h"
+//#include "ofxInteractiveRect.h"
+#include "ofxSurfingBoxInteractive.h"
 
 // ranges
 //float inputMinRange = 0;
@@ -151,7 +152,8 @@ public:
 
 public:
 
-	ofxInteractiveRect boxPlotsBg = { "OSC_Manager", "ofxOSC_Manager/" };
+	//ofxInteractiveRect boxPlotsBg = { "OSC_Manager", "ofxOSC_Manager/" };
+	ofxSurfingBoxInteractive boxPlotsBg;
 
 public:
 
