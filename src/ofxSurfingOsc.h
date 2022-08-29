@@ -79,8 +79,9 @@
 #endif
 
 // OSC
-#include "ofxOscSubscriber.h" // in
-#include "ofxOscPublisher.h" // out
+#include "ofxPubSubOsc.h"
+//#include "ofxOscSubscriber.h" // in
+//#include "ofxOscPublisher.h" // out
 
 //--
 
@@ -258,7 +259,7 @@ private:
 
 private:
 
-	void Changed_params(ofAbstractParameter& e);
+	void Changed_Params(ofAbstractParameter& e);
 
 	//TODO:
 	// new feature
@@ -324,7 +325,7 @@ private:
 	ofParameter<bool> bDISABLE_CALLBACKS{ "bDISABLE_CALLBACKS", false };
 
 	ofParameterGroup params_OscSettings;
-	void Changed_params_SettingsOSC(ofAbstractParameter& e);
+	void Changed_ParamsOsc(ofAbstractParameter& e);
 
 private:
 
