@@ -6,13 +6,12 @@ PatchingManager::PatchingManager() {
 
 //--------------------------------------------------------------
 PatchingManager::~PatchingManager() {
-	saveParams(params_Settings, path_Global + "/" + path_Settings);
+	exit();
 }
 
 //--------------------------------------------------------------
-void PatchingManager::setup(string name) {
-	params_Settings.setName(name);
-
+void PatchingManager::setup(string name)
+{
 	ofParameterGroup _gBangs{ "BANGS" };
 	ofParameterGroup _gToggles{ "TOGGLES" };
 	ofParameterGroup _gValues{ "VALUES" };
@@ -50,38 +49,57 @@ void PatchingManager::setup(string name) {
 		pipeNumbers[i].setRangeOutput(0, 1000);
 	}
 
-	// grouped
-	params_Settings.add(_gBangs);
-	params_Settings.add(_gToggles);
-	params_Settings.add(_gValues);
-	params_Settings.add(_gNumbers);
+	//--
 
-	//-
+	// grouped
+
+	params_Targets.setName("TARGETS");
+
+	params_Targets.add(_gBangs);
+	params_Targets.add(_gToggles);
+	params_Targets.add(_gValues);
+	params_Targets.add(_gNumbers);
+
+	//--
 
 	// preview
-	setupPreview();
-	refreshPreviewLayout();
 
-	//-
+	setupPreview();
+	refreshPreview();
+
+	//--
+
+	bLock.set("Lock", false); // link preview to gui
+
+	//--
 
 	// gui
-	gui.setup(name);
-	gui.setPosition(630, 20);
 
-	gui.add(boxPlotsBg.bEdit);
-	gui.add(params_Settings);
+	gui_Internal.setup(name);
+	gui_Internal.add(boxPlotsBg.bGui);
+	gui_Internal.add(bLock);
+	gui_Internal.add(params_Targets);
 
-	//-
+	// Position
 
-	// minimize
-	auto &g = gui.getGroup(name);
-	auto &gb = g.getGroup("BANGS");
+	positionGui_Internal.set("Gui Position Internal",
+		glm::vec2(550, 10),
+		glm::vec2(0, 0),
+		glm::vec2(ofGetWidth(), ofGetHeight()));
+	gui_Internal.setPosition(positionGui_Internal.get().x, positionGui_Internal.get().y);
+
+	//--
+
+	// Minimize
+
+	auto& g = gui_Internal.getGroup(params_Targets.getName());
+	auto& gb = g.getGroup("BANGS");
 	gb.minimize();
-	auto &gt = g.getGroup("TOGGLES");
+	auto& gt = g.getGroup("TOGGLES");
 	gt.minimize();
-	auto &gv = g.getGroup("VALUES");
+	auto& gv = g.getGroup("VALUES");
 	gv.minimize();
-	auto &gn = g.getGroup("NUMBERS");
+	auto& gn = g.getGroup("NUMBERS");
 	gn.minimize();
 
 	for (int i = 0; i < NUM_BANGS; i++)
@@ -105,67 +123,65 @@ void PatchingManager::setup(string name) {
 		gn.getGroup(name).minimize();
 	}
 
-	//-
+	//--
 
 	//TODO:
-	// must learn handle lambda listeners
+	// Must learn handle lambda listeners
 	// workflow
 	// engine to manage all the other channels solo/enable states
+
 	for (int i = 0; i < NUM_BANGS; i++)
 	{
 		listeners.push(pipeBangs[i].solo.newListener([&](ofParameter<bool> b) {
 			ofLogNotice(__FUNCTION__) << "SOLO BANG " << ofToString(b.getName()) << (b ? " ON" : " OFF");
 			ofLogNotice(__FUNCTION__) << ofToString(i) << endl;//?a random i?
-		}));
+			}));
 	}
+
 	for (int i = 0; i < NUM_VALUES; i++)
 	{
 		listeners.push(pipeValues[i].solo.newListener([this](ofParameter<bool> b) {
 			ofLogNotice(__FUNCTION__) << "SOLO VALUES " << ofToString(b.getName()) << (b ? " ON" : " OFF");
-		}));
+			}));
 	}
+
 	//--
 
-	// draggable bg
+	// Draggable Bg
 	{
-		boxPlotsBg.setName("PatchingManager");
-		boxPlotsBg.setPathGlobal("PatchingManager");
+		boxPlotsBg.bGui.setName("Preview");
 		boxPlotsBg.bEdit.setName("EDIT PREVIEW MANAGER");
-
-		//// default plots position
-		////ofRectangle r = ofGetCurrentViewport();
-		//// init
-		//if (0)
-		//{
-		//	int w = 300;
-		//	int pad = 30;
-		//	ofRectangle r = ofRectangle(ofGetWidth() - w - 2 * pad, pad, w, ofGetHeight() - 2 * pad);
-		//	boxPlotsBg.setRect(r.getX(), r.getY(), r.getWidth(), r.getHeight());
-		//}
-
-		//// draggable rectangle
-		//ofColor c0(0, 90);
-		////boxPlotsBg.set
-		//boxPlotsBg.setColorEditingHover(c0);
-		//boxPlotsBg.setColorEditingMoving(c0);
-		//boxPlotsBg.enableEdit();
-
-		//boxPlotsBg.setAutoSave(true);
-
+		boxPlotsBg.setName("PatchingManager");
+		boxPlotsBg.setPathGlobal(path_Global);
 		boxPlotsBg.setup();
 	}
 
-	//-
+	//--
 
-	// settings
-	loadParams(params_Settings, path_Global + "/" + path_Settings);
+	// Settings
+
+	params_Settings.setName(name);
+	params_Settings.add(positionGui_Internal);
+	params_Settings.add(boxPlotsBg.bGui);
+	params_Settings.add(bLock);
+	params_Settings.add(params_Targets);
+
+	ofxSurfingHelpers::loadGroup(params_Settings, path_Global + "/" + path_Settings);
+	gui_Internal.setPosition(positionGui_Internal.get().x, positionGui_Internal.get().y);
 }
 
 //--------------------------------------------------------------
-void PatchingManager::update() {
+void PatchingManager::update()
+{
 	for (int i = 0; i < NUM_VALUES; i++)
 	{
 		pipeValues[i].update();
+	}
+
+	//TODO:
+	for (int i = 0; i < NUM_NUMBERS; i++)
+	{
+		pipeNumbers[i].update();
 	}
 
 	for (int i = 0; i < NUM_BANGS; i++)
@@ -182,30 +198,38 @@ void PatchingManager::doReset() {
 //--------------------------------------------------------------
 void PatchingManager::draw() {
 
-	////TODO:
-	////auto p = gui_Internal.getPosition();
-	////auto h = gui_Internal.getHeight();
-	//auto p = gui.getPosition();
-	//auto h = gui.getHeight();
-	//setPositionPreview(glm::vec2(p.x + 5, p.y + h + 5));
+	if (bLock)
+	{
+		//// bottom
+		//auto p = gui_Internal.getPosition();
+		//auto h = gui_Internal.getHeight();
+
+		// right
+		auto p = gui_Internal.getShape().getTopRight();
+
+		setPositionPreview(glm::vec2(p.x + 0, p.y));
+	}
 
 	//--
 
-	if (bVisiblePreview) 
+	if (bVisiblePreview)
 	{
-		gui.draw();
+		gui_Internal.draw();
 
 		//-
 
 		//TODO:
 		recalculate();
 
-		drawPreview();
+		if (boxPlotsBg.bGui) drawPreview();
 	}
 }
 
 //--------------------------------------------------------------
-void PatchingManager::exit() {
+void PatchingManager::exit()
+{
+	positionGui_Internal = gui_Internal.getPosition();
+	ofxSurfingHelpers::saveGroup(params_Settings, path_Global + "/" + path_Settings);
 }
 
 //TODO:
@@ -238,36 +262,12 @@ void PatchingManager::recalculate()
 	//}
 }
 
-//--------------------------------------------------------------
-void PatchingManager::loadParams(ofParameterGroup& g, string path)
-{
-	ofLogNotice(__FUNCTION__) << "--------------------------------------------------------------";
-	ofLogNotice(__FUNCTION__) << path;
-
-	ofXml settings;
-	settings.load(path);
-	ofLogNotice(__FUNCTION__) << "params: \n" << settings.toString();
-	ofDeserialize(settings, g);
-}
-
-//--------------------------------------------------------------
-void PatchingManager::saveParams(ofParameterGroup& g, string path)
-{
-	ofLogNotice(__FUNCTION__) << "--------------------------------------------------------------";
-	ofLogNotice(__FUNCTION__) << path;
-
-	ofXml settings;
-	ofSerialize(settings, g);
-	ofLogNotice(__FUNCTION__) << "params: \n" << settings.toString();
-	settings.save(path);
-}
-
 //--
 
-// mini mixer
+// Mini mixer
 
 //--------------------------------------------------------------
-void PatchingManager::refreshPreviewLayout() {
+void PatchingManager::refreshPreview() {
 
 	float x = boxPlotsBg.getX();
 	float y = boxPlotsBg.getY();
@@ -326,8 +326,6 @@ void PatchingManager::refreshPreviewLayout() {
 //--------------------------------------------------------------
 void PatchingManager::setupPreview() {
 
-	//--
-
 	for (int i = 0; i < NUM_BANGS; i++)
 	{
 		previewBangs[i].setColor(ofColor::green);
@@ -350,23 +348,25 @@ void PatchingManager::setupPreview() {
 
 	//--
 
-	// customize
-	previewBangs[0].setColor(ofColor::green);
-	previewBangs[1].setColor(ofColor::red);
-	previewBangs[2].setColor(ofColor::orange);
-	previewValues[0].setColor(ofColor::red);
-	previewValues[1].setColor(ofColor::orange);
-	previewValues[7].setColor(ofColor::lightPink);
-
-	//--
+	// Customize
+	if (bCustomTemplate) 
+	{
+		previewBangs[0].setColor(ofColor::green);
+		previewBangs[1].setColor(ofColor::red);
+		previewBangs[2].setColor(ofColor::orange);
+		previewValues[0].setColor(ofColor::red);
+		previewValues[1].setColor(ofColor::orange);
+		previewValues[7].setColor(ofColor::lightPink);
+	}
 }
 
 //TODO:
 //--------------------------------------------------------------
-void PatchingManager::updatePreview() {
-
+void PatchingManager::updatePreview()
+{
 	//TODO:
-	// default customize to params min/max
+	// Default customize to params min/max.
+
 	for (int i = 0; i < NUM_VALUES; i++)
 	{
 		previewValues[i].setValueMin(pipeValues[i].minOutput);
@@ -380,10 +380,19 @@ void PatchingManager::updatePreview() {
 	}
 
 	//TODO:
-	// customize
-	// bpm
-	previewValues[7].setValueMin(40);
-	previewValues[7].setValueMax(300);
+	// Customize
+	// Bpm
+	if (bCustomTemplate)
+	{
+		previewValues[7].setValueMin(40);
+		previewValues[7].setValueMax(300);
+	}
+}
+
+//--------------------------------------------------------------
+void PatchingManager::setPositionPreview(glm::vec2 position)
+{
+	boxPlotsBg.setPosition(position.x, position.y);
 }
 
 //--------------------------------------------------------------
@@ -393,13 +402,13 @@ void PatchingManager::drawPreview() {
 	updatePreview();
 
 	//TODO:
-	refreshPreviewLayout();
+	refreshPreview();
 
 	//-
 
 	ofPushStyle();
 	{
-		// bg box
+		// Bg box
 		ofFill();
 		ofPushStyle();
 		ofSetColor(OF_COLOR_BG_PANELS);
@@ -409,7 +418,7 @@ void PatchingManager::drawPreview() {
 
 		//-
 
-		// widgets
+		// Widgets
 
 		for (int i = 0; i < NUM_BANGS; i++)
 		{

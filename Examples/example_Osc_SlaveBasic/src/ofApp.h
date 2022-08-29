@@ -13,7 +13,6 @@ public:
 
 	void setup();
 	void draw();
-
 	void setupGui();
 	ofxPanel gui;
 
@@ -21,6 +20,5 @@ public:
 	ofxSurfingOsc oscHelper;
 
 	ofxWindowApp w;
-
 	string name;
 };

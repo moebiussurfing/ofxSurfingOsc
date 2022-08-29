@@ -1,18 +1,24 @@
 #pragma once
 
-// TODO: swap euro filter to biquad
+/*
+
+	Fix Number previews
+	Swap euro filter to biquad
+
+*/
+
+//--
+
 
 #include "ofMain.h"
 
-#include "ofxGui.h"
 #include "PatchPipe.h"
-
+#include "ofxGui.h"
+#include "ofxSurfingHelpers.h"
+#include "ofxSurfingBoxInteractive.h"
 #include "ofxSurfingHelpers.h"
 #include "BarValue.h"
 #include "CircleBeat.h"
-
-//#include "ofxInteractiveRect.h"
-#include "ofxSurfingBoxInteractive.h"
 
 // ranges
 //float inputMinRange = 0;
@@ -29,11 +35,12 @@
 
 #define OF_COLOR_BG_PANELS ofColor(0, 220)
 
+//--
 
 class PatchPipeBool
 {
-
 public:
+
 	double frequency;
 
 	PatchPipeBool::PatchPipeBool() {};
@@ -129,7 +136,14 @@ public:
 	}
 };
 
-//----
+
+//-----------
+
+
+#define NUM_BANGS 8
+#define NUM_TOGGLES 8
+#define NUM_VALUES 8
+#define NUM_NUMBERS 8
 
 class PatchingManager
 {
@@ -141,51 +155,54 @@ public:
 	void setup(string name);
 	void update();
 	void draw();
-	void exit();
 
-	void doReset();
+	void setPositionPreview(glm::vec2 position);
 
-	ofEventListeners listeners;
-	void recalculate();
-
-	ofParameterGroup params_Settings;
-
-public:
-
-	//ofxInteractiveRect boxPlotsBg = { "OSC_Manager", "ofxOSC_Manager/" };
 	ofxSurfingBoxInteractive boxPlotsBg;
-
-public:
-
-	// Patching Manager
-
-#define NUM_BANGS 8
-#define NUM_TOGGLES 8
-#define NUM_VALUES 8
-#define NUM_NUMBERS 8
 
 	PatchPipeBool pipeBangs[NUM_BANGS];
 	PatchPipeBool pipeToggles[NUM_TOGGLES];
 	PatchPipeValue pipeValues[NUM_VALUES];
 	PatchPipeValue pipeNumbers[NUM_NUMBERS];
 
-	ofxPanel gui;
-
-	//-
-
-	string path_Settings = "PatchingManager.xml";
-	string path_Global = "ofxSurfingOsc/Patching";
-
+	//--------------------------------------------------------------
 	void setPathGlobal(string s)
 	{
-		ofxSurfingHelpers::CheckFolder(path_Global);
 		path_Global = s;
+		ofxSurfingHelpers::CheckFolder(path_Global);
 	}
 
-	void loadParams(ofParameterGroup& g, string path);
-	void saveParams(ofParameterGroup& g, string path);
+	//--
 
-	//-
+private:
+
+	void exit();
+
+	void recalculate();
+	void doReset();
+
+	ofEventListeners listeners;
+
+	ofParameterGroup params_Settings;
+	ofParameterGroup params_Targets;
+
+	ofxPanel gui_Internal;
+	
+	ofParameter<glm::vec2> positionGui_Internal;
+
+	//ofParameter<bool> bGui;
+	ofParameter<bool> bLock;
+
+private:
+
+	//--
+
+	string path_Settings = "PatchingManager";
+	string path_Global = "ofxSurfingOsc/Patching";
+	
+	bool bCustomTemplate = false;
+
+	//--
 
 	// Preview
 	int hSlider = 100;//not used
@@ -195,11 +212,14 @@ public:
 	float gapratio = 0.01f;//->used responsive
 
 	bool bVisiblePreview = true;
-	void setVisiblePreview(bool b) {
+	//--------------------------------------------------------------
+	void setVisiblePreview(bool b)
+	{
 		bVisiblePreview = b;
 	}
+
 	void setupPreview();
-	void refreshPreviewLayout();
+	void refreshPreview();
 	void updatePreview();
 	void drawPreview();
 

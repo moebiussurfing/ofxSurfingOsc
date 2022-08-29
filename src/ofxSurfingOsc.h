@@ -50,8 +50,8 @@
 // On Master mode / sender. These will not been used.
 #define SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS 
 #define SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS_GUI
-//#define SURF_OSC__USE__RECEIVER_PLOTS // Plots
-//#define SURF_OSC__USE__RECEIVER_PATCHING_MODE // Patcher Feature
+#define SURF_OSC__USE__RECEIVER_PATCHING_MODE // Patcher
+#define SURF_OSC__USE__RECEIVER_PLOTS // Plots
 
 //#define USE_MIDI // MIDI //TODO:
 
@@ -64,7 +64,7 @@
 //--
 
 //TODO:
-//-> duplicated into the patching manager class!
+// Duplicated into the patching manager class!
 #define NUM_BANGS 8 
 #define NUM_TOGGLES 8
 #define NUM_VALUES 8
@@ -497,6 +497,10 @@ private:
 
 	//--
 
+	bool bCustomTemplate = false;
+
+	//--
+
 public:
 
 	//TODO:
@@ -541,7 +545,7 @@ private:
 	ofParameter<bool> bGui_Plots;
 	ofParameter<bool> bEnableSmoothPlots;
 	ofParameter<float> smoothPlotsPower;
-	ofParameter<bool> bModePlotsMini;
+	ofParameter<bool> bPlotsMini;
 
 	enum PLOTS_MINI_POS
 	{
@@ -562,8 +566,8 @@ private:
 
 	ofParameter<bool> bGui_AllPlots;
 	const int NUM_PLOTS = NUM_BANGS + NUM_TOGGLES + NUM_VALUES + NUM_NUMBERS;
-	vector<bool> plotsSelected_TARGETS; // array with bool of display state of any plot
-	int numPlostEnabled;
+	vector<bool> plots_Selected; // array with bool of display state of any plot
+	int numPlotsEnable;
 
 private:
 
@@ -576,15 +580,15 @@ private:
 private:
 
 	ofxHistoryPlot* addGraph(string varName, float max, ofColor color, int precision, bool _smooth = false);
-	vector<ofxHistoryPlot*>plots_TARGETS;
+	vector<ofxHistoryPlot*>plots_Targets;
 	ofColor colorValues, colorNumbers, colorBangs, colorToggles;
 
-	void customizePlots_TARGETS();
+	void customizePlots();
 
-	float wPlotsView;
-	float hPlotsView;
-	float xPlotsView;
-	float yPlotsView;
+	//float wPlotsView;
+	//float hPlotsView;
+	//float xPlotsView;
+	//float yPlotsView;
 
 	//--
 
@@ -600,13 +604,11 @@ private:
 	//----
 
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
-
 private:
-
 	PatchingManager patchingManager;
 	void update_PatchingManager();
 	void draw_PatchingManager();
 	ofParameter<bool> bGui_PatchingManager;
-
 #endif
+
 };
