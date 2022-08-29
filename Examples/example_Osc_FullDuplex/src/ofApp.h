@@ -1,5 +1,7 @@
 #pragma once
 
+//#define USE_local_Targets
+
 #include "ofMain.h"
 
 #include "ofxSurfingOsc.h"
@@ -22,10 +24,11 @@ public:
 
 	void setupGui();
 	ofxPanel gui;
-	ofParameter<bool> bBypass{ "ByPass", false };
-	ofParameter<bool> bRandom{ "Randomizer", false };
 
-	string name;
+#ifdef USE_local_Targets
+	ofParameter<bool> bBypass{ "ByPass", false };
+	//ofParameter<bool> bRandom{ "Randomizer", false };
+#endif
 
 	//--
 
@@ -46,9 +49,13 @@ public:
 
 	//--
 
-	// Local targets aka receivers/senders
-	
+	// Local targets 
+	// aka receivers/senders
+
+#ifdef USE_local_Targets
+
 	void setupTargets();
+	void setupReceivers();
 
 	//--
 
@@ -96,6 +103,8 @@ public:
 	ofParameter<int> numbers[NUM_NUMBERS];
 	string numberNames[NUM_NUMBERS];
 	void Changed_Numbers(ofAbstractParameter &e);
+
+#endif
 
 	//----
 

@@ -3,17 +3,17 @@
 //--------------------------------------------------------------
 void ofApp::setup()
 {
-	name = "OSC | Master";
+	ofSetWindowTitle("OSC | Slave");
 
-	ofSetWindowTitle(name);
-
-	ofSetBackgroundColor(ofColor::yellow);
+	ofSetBackgroundColor(ofColor::blue);
 
 	//--
 
+#ifdef USE_local_Targets
 	// 1. (Targets) Controllers
 	// Creates the sender params
 	setupTargets();
+#endif
 
 	// 2. OSC Publisher params 
 	// to send remote control OSC/MIDI
@@ -40,67 +40,16 @@ void ofApp::setupOsc()
 
 	//----
 
-	oscHelper.setup(ofxSurfingOsc::Master);
+	oscHelper.setup(ofxSurfingOsc::Slave);
 
 	//----
 
 	// Link params
-	{
-		// Add OSC targets to the add-on class.
-		// this will subscribe the OSC addresses with/to the target local parameters.
+#ifdef USE_local_Targets
+	setupReceivers();
+#endif
 
-		// NOTE:
-		// Extra '1/' -> it's an address pattern to 
-		// better adapt to pages or different layouts 
-		// of some controller apps like TouchOSC!
-		string tag = "1/";
-
-		//--
-
-		// Bangs
-
-		for (int i = 0; i < NUM_BANGS; i++)
-		{
-			string Osc_Address = "/bang/" + tag + ofToString(i + 1);
-			oscHelper.addSender_Bool(bBangs[i], Osc_Address);
-			//oscHelper.addReceiver_Bool(bBangs[i], Osc_Address);
-		}
-
-		//--
-
-		// Toggles
-
-		for (int i = 0; i < NUM_TOGGLES; i++)
-		{
-			string Osc_Address = "/toggle/" + tag + ofToString(i + 1);
-			oscHelper.addSender_Bool(bToggles[i], Osc_Address);
-			//oscHelper.addReceiver_Bool(bToggles[i], Osc_Address);
-		}
-
-		//--
-
-		// Values (Float's)
-
-		for (int i = 0; i < NUM_VALUES; i++)
-		{
-			string Osc_Address = "/value/" + tag + ofToString(i + 1);
-			oscHelper.addSender_Float(values[i], Osc_Address);
-			//oscHelper.addReceiver_Float(values[i], Osc_Address);
-		}
-
-		//--
-
-		// Numbers (Int's)
-
-		for (int i = 0; i < NUM_NUMBERS; i++)
-		{
-			string Osc_Address = "/number/" + tag + ofToString(i + 1);
-			oscHelper.addSender_Int(numbers[i], Osc_Address);
-			//oscHelper.addReceiver_Int(numbers[i], Osc_Address);
-		}
-	}
-
-	//--
+	//----
 
 	// Startup
 
@@ -114,10 +63,14 @@ void ofApp::setupOsc()
 //--------------------------------------------------------------
 void ofApp::setupGui()
 {
-	gui.setup("ofApp " + name);
+	gui.setup("ofApp SLAVE");
 	gui.add(oscHelper.bGui); // visible toggle
-	gui.add(bRandom);
+
+#ifdef USE_local_Targets
+	//gui.add(bRandom);
 	gui.add(bBypass); // bypass on the callbacks, not the receiving itself!
+
+	//--
 
 	// Widgets for all the params that will be:
 	// 1. Updating when receiving OSC/MIDI messages 
@@ -128,14 +81,19 @@ void ofApp::setupGui()
 	// addReceiver/addSender -> OSC in/out
 	gui.add(params_Targets);
 
+	//--
+	 
 	// Customize
 	gui.getGroup(params_Targets.getName()).minimize();
+#endif
+
 	gui.setPosition(10, 10);
 }
 
+#ifdef USE_local_Targets
 //--------------------------------------------------------------
-void ofApp::setupTargets() {
-
+void ofApp::setupTargets() 
+{
 	//--
 
 	// 1. Local params
@@ -208,12 +166,71 @@ void ofApp::setupTargets() {
 }
 
 //--------------------------------------------------------------
+void ofApp::setupReceivers()
+{
+	// Add OSC targets to the add-on class.
+	// this will subscribe the OSC addresses with/to the target local parameters.
+
+	// NOTE:
+	// Extra '1/' -> it's an address pattern to 
+	// better adapt to pages or different layouts 
+	// of some controller apps like TouchOSC!
+	string tag = "1/";
+
+	//--
+
+	// Bangs
+
+	for (int i = 0; i < NUM_BANGS; i++)
+	{
+		string Osc_Address = "/bang/" + tag + ofToString(i + 1);
+		//oscHelper.addSender_Bool(bBangs[i], Osc_Address);
+		oscHelper.addReceiver_Bool(bBangs[i], Osc_Address);
+	}
+
+	//--
+
+	// Toggles
+
+	for (int i = 0; i < NUM_TOGGLES; i++)
+	{
+		string Osc_Address = "/toggle/" + tag + ofToString(i + 1);
+		//oscHelper.addSender_Bool(bToggles[i], Osc_Address);
+		oscHelper.addReceiver_Bool(bToggles[i], Osc_Address);
+	}
+
+	//--
+
+	// Values (Float's)
+
+	for (int i = 0; i < NUM_VALUES; i++)
+	{
+		string Osc_Address = "/value/" + tag + ofToString(i + 1);
+		//oscHelper.addSender_Float(values[i], Osc_Address);
+		oscHelper.addReceiver_Float(values[i], Osc_Address);
+	}
+
+	//--
+
+	// Numbers (Int's)
+
+	for (int i = 0; i < NUM_NUMBERS; i++)
+	{
+		string Osc_Address = "/number/" + tag + ofToString(i + 1);
+		//oscHelper.addSender_Int(numbers[i], Osc_Address);
+		oscHelper.addReceiver_Int(numbers[i], Osc_Address);
+	}
+}
+#endif
+
+//--------------------------------------------------------------
 void ofApp::draw()
 {
 	gui.draw();
 
 	//--
 
+	/*
 	// Timed Randomizer
 	if (bRandom && ofGetFrameNum() % 6 == 0)
 	{
@@ -235,13 +252,15 @@ void ofApp::draw()
 		else if (r < 0.9) numbers[i0] = ofRandom(numbers[i0].getMin(), numbers[i0].getMax());
 		else if (r < 1) numbers[i1] = ofRandom(numbers[i1].getMin(), numbers[i1].getMax());
 	}
+	*/
 }
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key)
 {
-	// Make some changes or random to, 
-	// if all is settled correctly, 
+	/*
+	// Make some changes or random to,
+	// if all is settled correctly,
 	// auto send OSC messages!
 
 	if (key == '1') bBangs[0] = !bBangs[0];
@@ -263,10 +282,12 @@ void ofApp::keyPressed(int key)
 	if (key == 'y') numbers[1] = ofRandom(numbers[1].getMin(), numbers[1].getMax());
 	if (key == 'u') numbers[2] = ofRandom(numbers[2].getMin(), numbers[2].getMax());
 	if (key == 'i') numbers[3] = ofRandom(numbers[3].getMin(), numbers[3].getMax());
+	*/
 }
 
 //--
 
+#ifdef USE_local_Targets
 // Local callbacks
 // All the params that 
 // we will send and/or receive OSC/MIDI changes.
@@ -338,12 +359,15 @@ void ofApp::Changed_Numbers(ofAbstractParameter& e)
 		}
 	}
 }
+#endif
 
 //--------------------------------------------------------------
 void ofApp::exit()
 {
+#ifdef USE_local_Targets
 	ofRemoveListener(params_Bangs.parameterChangedE(), this, &ofApp::Changed_Bangs);
 	ofRemoveListener(params_Toggles.parameterChangedE(), this, &ofApp::Changed_Toggles);
 	ofRemoveListener(params_Values.parameterChangedE(), this, &ofApp::Changed_Values);
 	ofRemoveListener(params_Numbers.parameterChangedE(), this, &ofApp::Changed_Numbers);
+#endif
 }

@@ -307,7 +307,7 @@ private:
 	//--------------------------------------------------------------
 	void setPosition(int x, int y)
 	{
-		positionGuiInternal = glm::vec2(x, y);
+		positionGui_Internal = glm::vec2(x, y);
 	}
 	//--------------------------------------------------------------
 	glm::vec3 getPosition()
@@ -325,7 +325,7 @@ private:
 	ofParameter<bool> bDISABLE_CALLBACKS{ "bDISABLE_CALLBACKS", false };
 
 	ofParameterGroup params_OscSettings;
-	void Changed_ParamsOsc(ofAbstractParameter& e);
+	void Changed_Params_Osc(ofAbstractParameter& e);
 
 private:
 
@@ -406,7 +406,7 @@ private:
 
 	// Gui
 	ofxPanel gui_Internal;
-	ofParameter<glm::vec2> positionGuiInternal;
+	ofParameter<glm::vec2> positionGui_Internal;
 
 	//--
 
@@ -501,13 +501,13 @@ public:
 
 	//TODO:
 
-	ofParameterGroup params_TARGETS;
+	ofParameterGroup params_Targets;
 
 	// To help ofApp gui builder
 	//----------------------------------------------------
 	ofParameterGroup getParameters_TARGETS()
 	{
-		return params_TARGETS;
+		return params_Targets;
 	}
 
 	//--
@@ -516,7 +516,8 @@ public:
 	// for Targets
 #ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS_GUI
 private:
-	ofxPanel gui_TARGETS;
+	ofxPanel gui_Targets;
+	ofParameter<glm::vec2> positionGui_Targets;
 	ofParameter<bool> bGui_Targets;
 #endif
 
