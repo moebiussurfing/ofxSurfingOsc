@@ -1090,20 +1090,6 @@ void ofxSurfingOsc::addSender_Bool(ofParameter<bool>& p, string address)
 	strs_outputAddresses.push_back(address);
 }
 
-////--------------------------------------------------------------
-//void ofxSurfingOsc::addSender_Void(ofParameter<void>& p, string address)
-//{
-//	if (!bUseOscOut) {
-//		ofLogError("ofxSurfingOsc") << (__FUNCTION__);
-//		ofLogError("ofxSurfingOsc") << 
-//			"OSC Output is disabled. That param " << p.getName() << " will not be registered!";
-//		return;
-//	}
-//
-//	ofxPublishOsc(OSC_OutputIp, OSC_OutputPort, address, p);
-//	strs_outputAddresses.push_back(address);
-//}
-
 //----
 
 // Callbacks
@@ -1522,7 +1508,7 @@ void ofxSurfingOsc::setupReceiverTargets()
 
 		bangCircles[i].setColor(colorBangs);
 		bangCircles[i].setLocked(true);
-		bangCircles[i].setEnableBorder(false);
+		bangCircles[i].setEnableBorder(true);
 #endif
 	}
 
@@ -1551,7 +1537,7 @@ void ofxSurfingOsc::setupReceiverTargets()
 
 		togglesCircles[i].setColor(colorToggles);
 		togglesCircles[i].setLocked(true);
-		togglesCircles[i].setEnableBorder(false);
+		togglesCircles[i].setEnableBorder(true);
 		togglesCircles[i].setToggleMode(true);
 #endif
 	}
@@ -1842,12 +1828,12 @@ void ofxSurfingOsc::Changed_Tar_Bangs(ofAbstractParameter& e) // preset load/tri
 			//plotsTargets[i]->update(1);
 			bangCircles[i].bang();
 
-			int _start = 0;
-			plotsTargets[_start + i]->update(true);
-#endif
 			//TODO:
 			// instant off
 			bBangs[i] = false;
+			int _start = 0;
+			plotsTargets[_start + i]->update(true);
+#endif
 
 			return;
 		}
