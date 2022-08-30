@@ -1090,19 +1090,19 @@ void ofxSurfingOsc::addSender_Bool(ofParameter<bool>& p, string address)
 	strs_outputAddresses.push_back(address);
 }
 
-//--------------------------------------------------------------
-void ofxSurfingOsc::addSender_Void(ofParameter<void>& p, string address)
-{
-	if (!bUseOscOut) {
-		ofLogError("ofxSurfingOsc") << (__FUNCTION__);
-		ofLogError("ofxSurfingOsc") << 
-			"OSC Output is disabled. That param " << p.getName() << " will not be registered!";
-		return;
-	}
-
-	ofxPublishOsc(OSC_OutputIp, OSC_OutputPort, address, p);
-	strs_outputAddresses.push_back(address);
-}
+////--------------------------------------------------------------
+//void ofxSurfingOsc::addSender_Void(ofParameter<void>& p, string address)
+//{
+//	if (!bUseOscOut) {
+//		ofLogError("ofxSurfingOsc") << (__FUNCTION__);
+//		ofLogError("ofxSurfingOsc") << 
+//			"OSC Output is disabled. That param " << p.getName() << " will not be registered!";
+//		return;
+//	}
+//
+//	ofxPublishOsc(OSC_OutputIp, OSC_OutputPort, address, p);
+//	strs_outputAddresses.push_back(address);
+//}
 
 //----
 
