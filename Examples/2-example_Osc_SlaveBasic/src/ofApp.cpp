@@ -15,6 +15,7 @@ void ofApp::setup()
 //--------------------------------------------------------------
 void ofApp::setupOsc()
 {
+	oscHelper.setCustomTemplate(true);
 	oscHelper.setup(ofxSurfingOsc::Slave);
 	oscHelper.startup();
 }

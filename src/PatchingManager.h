@@ -46,7 +46,7 @@ public:
 	PatchPipeBool::PatchPipeBool() {};
 	PatchPipeBool::~PatchPipeBool() {};
 
-	void setup(string name) 
+	void setup(string name)
 	{
 		params.setName(name);
 		params.add(input.set("INPUT", false));
@@ -54,7 +54,7 @@ public:
 		params.add(solo.set("SOLO", false));
 		params.add(output.set("OUTPUT", false));
 
-		params.add(enableSmooth.set("SMOOTH ENABLE", false));
+		params.add(bSmooth.set("SMOOTH ENABLE", false));
 		params.add(smoothVal.set("SMOOTH POWER", 0.1, 0.01, 1));
 
 		// exclude
@@ -62,17 +62,17 @@ public:
 		output.setSerializable(false);
 		solo.setSerializable(false);
 
-		listeners.push(enable.newListener([&](bool &b) {
+		listeners.push(enable.newListener([&](bool& b) {
 			recalculate();
-		}));
+			}));
 
-		listeners.push(solo.newListener([&](bool &b) {
+		listeners.push(solo.newListener([&](bool& b) {
 			recalculate();
-		}));
+			}));
 
-		listeners.push(input.newListener([&](bool &b) {
+		listeners.push(input.newListener([&](bool& b) {
 			recalculate();
-		}));
+			}));
 
 		//TODO:
 		// filter oneEuro
@@ -91,7 +91,7 @@ public:
 
 	//TODO:
 	ofxOneEuroFilter filter;
-	ofParameter<bool> enableSmooth;
+	ofParameter<bool> bSmooth;
 	ofParameter<float> smoothVal;
 
 	//-
@@ -99,11 +99,11 @@ public:
 	ofEventListeners listeners;
 
 	//TODO:
-	void update() 
+	void update()
 	{
-		if (enable) 
+		if (enable)
 		{
-			if (enableSmooth) 
+			if (bSmooth)
 			{
 				// oneEuro
 				float tempIn = (input ? 1.0 : 0.0);
@@ -114,18 +114,18 @@ public:
 		}
 	}
 
-	void recalculate() 
+	void recalculate()
 	{
 		if (enable)
 		{
-			if (!enableSmooth)
+			if (!bSmooth)
 			{
 				output = input;
 			}
 		}
 
 		// oneEuro
-		if (enableSmooth)
+		if (bSmooth)
 		{
 			filter.setMinCutoff(smoothVal * frequency);
 			//filter.setBeta(smoothVal);
@@ -187,20 +187,30 @@ private:
 	ofParameterGroup params_Targets;
 
 	ofxPanel gui_Internal;
-	
+
 	ofParameter<glm::vec2> positionGui_Internal;
 
 	//ofParameter<bool> bGui;
 	ofParameter<bool> bLock;
 
+	float _rounded = 3;
+
+public:
+
+	//--------------------------------------------------------------
+	void setCustomTemplate(bool b)
+	{
+		bCustomTemplate = b;
+	}
+
 private:
+
+	bool bCustomTemplate = false;
 
 	//--
 
 	string path_Settings = "PatchingManager";
 	string path_Global = "ofxSurfingOsc/Patching";
-	
-	bool bCustomTemplate = false;
 
 	//--
 
@@ -211,11 +221,11 @@ private:
 	int gapy = 10;//not used
 	float gapratio = 0.01f;//->used responsive
 
-	bool bVisiblePreview = true;
+	bool bGui_Preview = true;
 	//--------------------------------------------------------------
 	void setVisiblePreview(bool b)
 	{
-		bVisiblePreview = b;
+		bGui_Preview = b;
 	}
 
 	void setupPreview();
@@ -223,10 +233,10 @@ private:
 	void updatePreview();
 	void drawPreview();
 
-	BarValue previewValues[NUM_VALUES];
-	BarValue previewNumbers[NUM_NUMBERS];
 	CircleBeat previewBangs[NUM_BANGS];
 	CircleBeat previewToggles[NUM_TOGGLES];
+	BarValue previewValues[NUM_VALUES];
+	BarValue previewNumbers[NUM_NUMBERS];
 
 	//ofEventListeners listeners;
 };

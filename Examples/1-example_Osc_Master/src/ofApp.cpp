@@ -63,7 +63,6 @@ void ofApp::setupOsc()
 		{
 			string Osc_Address = "/bang/" + tag + ofToString(i + 1);
 			oscHelper.addSender_Bool(bBangs[i], Osc_Address);
-			//oscHelper.addReceiver_Bool(bBangs[i], Osc_Address);
 		}
 
 		//--
@@ -74,7 +73,6 @@ void ofApp::setupOsc()
 		{
 			string Osc_Address = "/toggle/" + tag + ofToString(i + 1);
 			oscHelper.addSender_Bool(bToggles[i], Osc_Address);
-			//oscHelper.addReceiver_Bool(bToggles[i], Osc_Address);
 		}
 
 		//--
@@ -85,7 +83,6 @@ void ofApp::setupOsc()
 		{
 			string Osc_Address = "/value/" + tag + ofToString(i + 1);
 			oscHelper.addSender_Float(values[i], Osc_Address);
-			//oscHelper.addReceiver_Float(values[i], Osc_Address);
 		}
 
 		//--
@@ -96,7 +93,6 @@ void ofApp::setupOsc()
 		{
 			string Osc_Address = "/number/" + tag + ofToString(i + 1);
 			oscHelper.addSender_Int(numbers[i], Osc_Address);
-			//oscHelper.addReceiver_Int(numbers[i], Osc_Address);
 		}
 	}
 

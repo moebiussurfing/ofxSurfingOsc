@@ -41,17 +41,17 @@ void PatchingManager::setup(string name)
 	for (int i = 0; i < NUM_NUMBERS; i++)
 	{
 		string name = "NUMBER_" + ofToString(i + 1);
-		pipeNumbers[i].setup(name, false);
+		pipeNumbers[i].setup(name, false);//not normalized
 		_gNumbers.add(pipeNumbers[i].params);
 
-		// customize all ranges
+		// Customize all ranges
 		pipeNumbers[i].setRangeInput(0, 1000);
 		pipeNumbers[i].setRangeOutput(0, 1000);
 	}
 
 	//--
 
-	// grouped
+	// Grouped
 
 	params_Targets.setName("TARGETS");
 
@@ -62,7 +62,7 @@ void PatchingManager::setup(string name)
 
 	//--
 
-	// preview
+	// Preview
 
 	setupPreview();
 	refreshPreview();
@@ -73,7 +73,7 @@ void PatchingManager::setup(string name)
 
 	//--
 
-	// gui
+	// Gui
 
 	gui_Internal.setup(name);
 	gui_Internal.add(boxPlotsBg.bGui);
@@ -107,41 +107,50 @@ void PatchingManager::setup(string name)
 		string name = pipeBangs[i].params.getName();
 		gb.getGroup(name).minimize();
 	}
+
 	for (int i = 0; i < NUM_TOGGLES; i++)
 	{
 		string name = pipeToggles[i].params.getName();
 		gt.getGroup(name).minimize();
 	}
+
 	for (int i = 0; i < NUM_VALUES; i++)
 	{
 		string name = pipeValues[i].params.getName();
 		gv.getGroup(name).minimize();
+		auto& ge = gv.getGroup(name).getGroup("EXTRA");
+		ge.getGroup("MAP").minimize();
+		ge.minimize();
 	}
+
 	for (int i = 0; i < NUM_NUMBERS; i++)
 	{
 		string name = pipeNumbers[i].params.getName();
 		gn.getGroup(name).minimize();
+		auto& ge = gn.getGroup(name).getGroup("EXTRA");
+		ge.getGroup("MAP").minimize();
+		ge.minimize();
 	}
 
 	//--
 
 	//TODO:
 	// Must learn handle lambda listeners
-	// workflow
-	// engine to manage all the other channels solo/enable states
+	// Workflow
+	// Engine to manage all the other channels solo/enable states
 
 	for (int i = 0; i < NUM_BANGS; i++)
 	{
 		listeners.push(pipeBangs[i].solo.newListener([&](ofParameter<bool> b) {
-			ofLogNotice(__FUNCTION__) << "SOLO BANG " << ofToString(b.getName()) << (b ? " ON" : " OFF");
-			ofLogNotice(__FUNCTION__) << ofToString(i) << endl;//?a random i?
+			ofLogNotice("ofxSurfingOsc") << ("PatchingManager") << "SOLO BANG " << ofToString(b.getName()) << (b ? " ON" : " OFF");
+			ofLogNotice("ofxSurfingOsc") << ("PatchingManager") << ofToString(i) << endl;//?a random i?
 			}));
 	}
 
 	for (int i = 0; i < NUM_VALUES; i++)
 	{
 		listeners.push(pipeValues[i].solo.newListener([this](ofParameter<bool> b) {
-			ofLogNotice(__FUNCTION__) << "SOLO VALUES " << ofToString(b.getName()) << (b ? " ON" : " OFF");
+			ofLogNotice("ofxSurfingOsc") << ("PatchingManager") << "SOLO VALUES " << ofToString(b.getName()) << (b ? " ON" : " OFF");
 			}));
 	}
 
@@ -173,6 +182,17 @@ void PatchingManager::setup(string name)
 //--------------------------------------------------------------
 void PatchingManager::update()
 {
+	////TODO:
+	//for (int i = 0; i < NUM_BANGS; i++)
+	//{
+	//	pipeBangs[i].update();
+	//}
+
+	for (int i = 0; i < NUM_TOGGLES; i++)
+	{
+		pipeToggles[i].update();
+	}
+
 	for (int i = 0; i < NUM_VALUES; i++)
 	{
 		pipeValues[i].update();
@@ -183,16 +203,11 @@ void PatchingManager::update()
 	{
 		pipeNumbers[i].update();
 	}
-
-	for (int i = 0; i < NUM_BANGS; i++)
-	{
-		pipeBangs[i].update();
-	}
 }
 
 //--------------------------------------------------------------
 void PatchingManager::doReset() {
-
+	//TODO:
 }
 
 //--------------------------------------------------------------
@@ -200,11 +215,11 @@ void PatchingManager::draw() {
 
 	if (bLock)
 	{
-		//// bottom
+		//// Bottom
 		//auto p = gui_Internal.getPosition();
 		//auto h = gui_Internal.getHeight();
 
-		// right
+		// Top right
 		auto p = gui_Internal.getShape().getTopRight();
 
 		setPositionPreview(glm::vec2(p.x + 0, p.y));
@@ -212,24 +227,17 @@ void PatchingManager::draw() {
 
 	//--
 
-	if (bVisiblePreview)
+	if (bGui_Preview)
 	{
 		gui_Internal.draw();
 
 		//-
 
 		//TODO:
-		recalculate();
+		recalculate();//?
 
 		if (boxPlotsBg.bGui) drawPreview();
 	}
-}
-
-//--------------------------------------------------------------
-void PatchingManager::exit()
-{
-	positionGui_Internal = gui_Internal.getPosition();
-	ofxSurfingHelpers::saveGroup(params_Settings, path_Global + "/" + path_Settings);
 }
 
 //TODO:
@@ -339,16 +347,20 @@ void PatchingManager::setupPreview() {
 	for (int i = 0; i < NUM_VALUES; i++)
 	{
 		previewValues[i].setColor(ofColor::red);
+		previewValues[i].setRounded(_rounded);
 	}
 
 	for (int i = 0; i < NUM_NUMBERS; i++)
 	{
 		previewNumbers[i].setColor(ofColor::yellow);
+		previewNumbers[i].setRounded(_rounded);
 	}
 
 	//--
 
 	// Customize
+	// Template is for my ofxSoundAnalyzer add-on
+
 	if (bCustomTemplate) 
 	{
 		previewBangs[0].setColor(ofColor::green);
@@ -443,4 +455,12 @@ void PatchingManager::drawPreview() {
 		}
 	}
 	ofPopStyle();
+}
+
+//--------------------------------------------------------------
+void PatchingManager::exit()
+{
+	positionGui_Internal = gui_Internal.getPosition();
+
+	ofxSurfingHelpers::saveGroup(params_Settings, path_Global + "/" + path_Settings);
 }

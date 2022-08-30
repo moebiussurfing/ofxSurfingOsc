@@ -498,8 +498,21 @@ private:
 	//--
 
 	bool bCustomTemplate = false;
-
+	// when is enabled. all the plots will be drawn.
+	// can't be selective drawing only tre selected!
 	//--
+
+public:
+
+	//--------------------------------------------------------------
+	void setCustomTemplate(bool b)
+	{
+		bCustomTemplate = b;
+
+#ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
+		patchingManager.setCustomTemplate(b);
+#endif
+	}
 
 public:
 
@@ -543,9 +556,11 @@ private:
 
 	// We can select which plots to draw
 	ofParameter<bool> bGui_Plots;
-	ofParameter<bool> bEnableSmoothPlots;
-	ofParameter<float> smoothPlotsPower;
 	ofParameter<bool> bPlotsMini;
+
+	// smooth
+	ofParameter<bool> bSmoothPlots;
+	ofParameter<float> smoothPlotsPower;
 
 	enum PLOTS_MINI_POS
 	{
@@ -565,30 +580,25 @@ public:
 private:
 
 	ofParameter<bool> bGui_AllPlots;
-	const int NUM_PLOTS = NUM_BANGS + NUM_TOGGLES + NUM_VALUES + NUM_NUMBERS;
-	vector<bool> plots_Selected; // array with bool of display state of any plot
-	int numPlotsEnable;
+	const int amount_Plots_Targets = NUM_BANGS + NUM_TOGGLES + NUM_VALUES + NUM_NUMBERS;
+	vector<bool> plots_Targets_Visible; // array with bool of display state of any plot
+	int amountPlotsTargetsVisible = 0;
 
 private:
 
 	void updatePlots();
 
-	void drawPlots(); // only to draw plots. gui draws is disabled and used locally on ofApp
-	void drawPlots(float x, float y, float w, float h);
-	void drawPlots(ofRectangle rect);
+	void draw_Plots(); // only to draw plots. gui draws is disabled and used locally on ofApp
+	void draw_Plots(float x, float y, float w, float h);
+	void draw_Plots(ofRectangle rect);
 
 private:
 
-	ofxHistoryPlot* addGraph(string varName, float max, ofColor color, int precision, bool _smooth = false);
+	ofxHistoryPlot* addGraph(string varName, float min, float max, ofColor color, int precision, bool _smooth = false);
 	vector<ofxHistoryPlot*>plots_Targets;
 	ofColor colorValues, colorNumbers, colorBangs, colorToggles;
 
-	void customizePlots();
-
-	//float wPlotsView;
-	//float hPlotsView;
-	//float xPlotsView;
-	//float yPlotsView;
+	void setupPlotsCustomize();
 
 	//--
 
@@ -596,6 +606,8 @@ private:
 	CircleBeat bangCircles[NUM_BANGS];
 	CircleBeat togglesCircles[NUM_TOGGLES];
 	BarValue barValues[NUM_VALUES];
+	BarValue barNumbers[NUM_VALUES];
+	float _rounded = 3;
 
 #endif
 
