@@ -6,5 +6,6 @@ ofxPubSubOsc
 ofxSurfingBox
 ofxSurfingHelpers
 ofxSurfingImGui
-ofxSurfingOsc
 ofxWindowApp
+ofxGui
+ofxSurfingOsc

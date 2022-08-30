@@ -563,3 +563,4 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 Examples/example_Osc_Master/enc_temp_folder/308f7844c05fdcde28b5f31334ed236/ofxSurfingOsc.cpp
+Examples/3-example_Osc_SlavePatching/enc_temp_folder/a31e81c960dbf9a8ca592b540fc45ec/ofxSurfingOsc.cpp

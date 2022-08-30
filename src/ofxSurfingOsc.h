@@ -242,6 +242,7 @@ public:
 	// or addReceiver when performing our app as a Slave app / receiver.
 
 	// Senders
+	void addSender_Void(ofParameter<void>& b, string address);
 	void addSender_Bool(ofParameter<bool>& b, string address);
 	void addSender_Float(ofParameter<float>& f, string address);
 	void addSender_Int(ofParameter<int>& i, string address);
