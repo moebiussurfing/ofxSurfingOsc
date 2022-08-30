@@ -10,7 +10,7 @@
 	++		PatchPipeValue class:
 				add extra params parallel to targets, to work as
 				def params appliers to any App: using enable/disable osc msg,
-	
+
 	++		add mini class receiver with mute channels,
 				plotting and signal filtering, matrix patcher with ImGui
 				split in smaller classes to have a minimal to use copy/paste easy to our ofApp projects?
@@ -26,7 +26,7 @@
 				add method add grouped of params (faster) or any param type (only bool/int/float for now)
 					sequentially adding params splitting on bool/float/int types
 					should use kind of map/pairs/smartPointers/msaOrderedMap to store all added params?
-	
+
 	+		disabler per project for not include midi?
 	+		add midi out feedback for received subscribed toggles/bool: using ofxParamsMisiSync?
 				https://github.com/NickHardeman/ofxMidiParams/issues/1#issuecomment-630559720
@@ -51,7 +51,7 @@
 #define SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS 
 #define SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS_GUI
 #define SURF_OSC__USE__RECEIVER_PATCHING_MODE // Patcher
-#define SURF_OSC__USE__RECEIVER_PLOTS // Plots
+#define SURF_OSC__USE__RECEIVER_PLOTS // Plots. Only used on Slave mode
 
 //#define USE_MIDI // MIDI //TODO:
 
@@ -156,13 +156,15 @@ public:
 		setMode(mode);
 		this->setup();
 	};
-	
-	void setMode(SurfOscModes mode = FullDuplex); // set mode before call setup
 
-	void setup();// must setMode before
+	void setMode(SurfOscModes mode = FullDuplex); // set mode before call setup. requires manually call setup!
 
-	void startup(); // must be called after all params has been added!
+	void setup();// must setMode before.
 
+	void startup(); // must be called after setup and all target params has been added (or not)!
+
+	// Warning: must fix or look for a workaround
+	// to allow change ports on runtime!
 	void setInputPort(int p); // must be called after setupParams is called
 	void setOutputPort(int p); // must be called after setupParams is called
 	void setOutputIp(string ip); // must be called after setupParams is called
@@ -180,7 +182,7 @@ public:
 	void setName(string n) { name = n; };
 
 private:
-	
+
 	string name = "";
 
 	SurfOscModes mode = UNKNOWN;
@@ -196,7 +198,7 @@ private:
 private:
 
 	void buildHelp();
-	
+
 	//----
 
 	// Settings
@@ -233,6 +235,11 @@ public:
 	//--
 
 	// Subscribers / Publishers 
+	// 
+	// Pass local ofParams (from ofApp) 
+	// with an associated Osc address to link to.
+	// will use addSender when performing a Master app / sender,
+	// or addReceiver when performing our app as a Slave app / receiver.
 
 	// Senders
 	void addSender_Bool(ofParameter<bool>& b, string address);
@@ -260,14 +267,6 @@ private:
 private:
 
 	void Changed_Params(ofAbstractParameter& e);
-
-	//TODO:
-	// new feature
-	//store all params on a vector to allow more possibilities
-	//e.g: get all subscribed parameters from ofApp and auto-create a gui panel
-	//e.g: add group parameters, add all type parameters with the same function
-	//vector <ofAbstractParameter> paramsAbstract;
-	//void listParams();
 
 	void refreshGui();
 
@@ -452,7 +451,7 @@ private:
 	//--
 
 private:
-	
+
 	void setupReceiverTargets();
 	void setupReceiveLogger();
 
@@ -520,12 +519,12 @@ public:
 
 	ofParameterGroup params_Targets;
 
-	// To help ofApp gui builder
-	//----------------------------------------------------
-	ofParameterGroup getParameters_TARGETS()
-	{
-		return params_Targets;
-	}
+	//// To help ofApp gui builder
+	////----------------------------------------------------
+	//ofParameterGroup getParameters_Targets()
+	//{
+	//	return params_Targets;
+	//}
 
 	//--
 
@@ -581,24 +580,26 @@ private:
 
 	ofParameter<bool> bGui_AllPlots;
 	const int amount_Plots_Targets = NUM_BANGS + NUM_TOGGLES + NUM_VALUES + NUM_NUMBERS;
-	vector<bool> plots_Targets_Visible; // array with bool of display state of any plot
+	vector<bool> plotsTargets_Visible; // array with bool of display state of any plot
 	int amountPlotsTargetsVisible = 0;
 
 private:
 
 	void updatePlots();
 
-	void draw_Plots(); // only to draw plots. gui draws is disabled and used locally on ofApp
-	void draw_Plots(float x, float y, float w, float h);
-	void draw_Plots(ofRectangle rect);
+	void drawPlots(); // only to draw plots. gui draws is disabled and used locally on ofApp
+	void drawPlots(float x, float y, float w, float h);
+	void drawPlots(ofRectangle rect);
 
 private:
 
 	ofxHistoryPlot* addGraph(string varName, float min, float max, ofColor color, int precision, bool _smooth = false);
-	vector<ofxHistoryPlot*>plots_Targets;
+
+	vector<ofxHistoryPlot*>plotsTargets;
+
 	ofColor colorValues, colorNumbers, colorBangs, colorToggles;
 
-	void setupPlotsCustomize();
+	void setupPlots();
 
 	//--
 
@@ -616,11 +617,42 @@ private:
 	//----
 
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
-private:
+
+public:
+
 	PatchingManager patchingManager;
-	void update_PatchingManager();
-	void draw_PatchingManager();
+
+private:
+
+	void updatePatchingManager();
+	void drawPatchingManager();
 	ofParameter<bool> bGui_PatchingManager;
+
+	// API getters for the out of the patching engine
+
+public:
+
+	//--------------------------------------------------------------
+	bool getOutBang(int i) const {
+		if (i > NUM_BANGS - 1) return false;
+		return (bool) patchingManager.pipeBangs[i].output.get();
+	}
+	//--------------------------------------------------------------
+	bool getOutToggle(int i) const {
+		if (i > NUM_TOGGLES - 1) return false;
+		return (bool) patchingManager.pipeToggles[i].output.get();
+	}
+	//--------------------------------------------------------------
+	float getOutValue(int i)const {
+		if (i > NUM_VALUES - 1) return -1;
+		return (float) patchingManager.pipeValues[i].output.get();
+	}
+	//--------------------------------------------------------------
+	int getOutNumbers(int i) const {
+		if (i > NUM_NUMBERS - 1) return -1;
+		return (int) patchingManager.pipeNumbers[i].output.get();
+	}
+
 #endif
 
 };

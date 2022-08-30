@@ -2,10 +2,19 @@
 
 #include "ofMain.h"
 
+/*
+
+NOTE how must be the directives on "ofxSurfingOsc.h"
+#define SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
+#define SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS_GUI
+#define SURF_OSC__USE__RECEIVER_PATCHING_MODE // Patcher
+#define SURF_OSC__USE__RECEIVER_PLOTS // Plots. Only used on Slave mode
+
+*/
+
 //----
 
-#define DEBUG_LOCAL_TARGETS // -> Debug local targets
-//#define OFX_DISPLAY_VALUES // -> Debug targets
+//#define USE_GET_INTERNAL_TARGETS // Get Targets from the add-on
 
 //----
 
@@ -22,14 +31,6 @@
 
 #include "ofxGui.h"
 
-#ifdef DEBUG_LOCAL_TARGETS
-#define NUM_VALUES 8
-#endif
-
-#ifdef OFX_DISPLAY_VALUES
-#include "ofxDisplayValues.h"
-#endif
-
 #include "ofxWindowApp.h"
 
 //--------------------------------------------------------------
@@ -41,45 +42,35 @@ public:
 	void update();
 	void draw();
 	void exit();
-	void keyPressed(int key);
 
 	//--
 
-	ofxSurfingOsc OscHelper;
+	ofxSurfingOsc oscHelper;
 
 	//--
 
-	void setupOscManager();
-	void Changed_Params_TARGETS(ofAbstractParameter &e);
+	void setupOsc();
 	ofParameter<bool> bBypass{ "ByPass", false };
+
+#ifdef USE_GET_INTERNAL_TARGETS 
+	void Changed_Targets(ofAbstractParameter &e);
+#endif
 
 	// Gui
 	ofxPanel gui;
 
 	//--
 
-#ifdef OFX_DISPLAY_VALUES
+	// Local Targets / Receivers
+	// Where we receive the variables
+	// from the add-on.
 
-	void setupDebugger();
-
-#endif
-
-	//--
-
-	// Local targets 
-	// Where we receive the variables from the add-on.
-
-#ifdef DEBUG_LOCAL_TARGETS
-
-	bool bangs[NUM_VALUES];
-	bool toggles[NUM_VALUES];
+	bool bangs[NUM_BANGS];
+	bool toggles[NUM_TOGGLES];
 	float values[NUM_VALUES];
-	int numbers[NUM_VALUES];
+	int numbers[NUM_NUMBERS];
 
-	void doRandom();
-	void doUpdateTargets();
-
-#endif
+	void doGetInternalTargets();
 
 	//-
 
