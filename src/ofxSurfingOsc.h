@@ -6,6 +6,8 @@
 
 	TODO:
 
+	+		
+
 	++		Patching Manager: look @daan example!
 	++		PatchPipeValue class:
 				add extra params parallel to targets, to work as
@@ -47,13 +49,17 @@
 
 // OPTIONAL
 
-// On Master mode / sender. These will not been used.
-#define SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS 
-#define SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS_GUI
-#define SURF_OSC__USE__RECEIVER_PATCHING_MODE // Patcher
-#define SURF_OSC__USE__RECEIVER_PLOTS // Plots. Only used on Slave mode
+//// On Master mode / sender, 
+//// these internal targets and plots will  
+//// not bee probably used/useful.
+//// And can be disabled/commented!
+//// ofxHistoryPlot can be then removed. 
+//#define SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS 
+//#define SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS_GUI
+//#define SURF_OSC__USE__RECEIVER_PATCHING_MODE // Patcher
+//#define SURF_OSC__USE__RECEIVER_PLOTS // Plots. Only used on Slave mode
 
-//#define USE_MIDI // MIDI //TODO:
+//#define USE_MIDI // MIDI //TODO: WIP
 
 //-----------------------
 
@@ -80,8 +86,6 @@
 
 // OSC
 #include "ofxPubSubOsc.h"
-//#include "ofxOscSubscriber.h" // in
-//#include "ofxOscPublisher.h" // out
 
 //--
 
@@ -194,6 +198,12 @@ private:
 
 	TextBoxWidget boxHelp;
 	std::string strHelpInfo = "";
+	std::string strHelpInfoExtra = "";
+
+public:
+	void setHelpInfoExtra(string s) {
+		strHelpInfoExtra = s;
+	}
 
 private:
 
@@ -243,18 +253,37 @@ public:
 	// will use addSender when performing a Master app / sender,
 	// or addReceiver when performing our app as a Slave app / receiver.
 
-	// Senders
-	//void addSender_Void(ofParameter<void>& b, string address);
-	void addSender_Bool(ofParameter<bool>& b, string address);
-	void addSender_Float(ofParameter<float>& f, string address);
-	void addSender_Int(ofParameter<int>& i, string address);
-
 	// Receivers
 	void addReceiver_Bool(ofParameter<bool>& b, string address);
 	void addReceiver_Float(ofParameter<float>& f, string address);
 	void addReceiver_Int(ofParameter<int>& i, string address);
 
 	//void addReceiver(ofAbstractParameter &e, string address);//TODO:
+
+	// Senders
+	//void addSender_Void(ofParameter<void>& b, string address);
+	void addSender_Bool(ofParameter<bool>& b, string address);
+	void addSender_Float(ofParameter<float>& f, string address);
+	void addSender_Int(ofParameter<int>& i, string address);
+
+	//--
+
+	// Out Enablers
+	private:
+	ofParameterGroup params_EnablersOut{ "Out Enablers" };
+	vector<ofParameter<bool>> bEnableSenders;
+	void Changed_Params_EnablersOut(ofAbstractParameter& e);
+	vector<string> addresses_bEnableSenders;
+	public:
+	ofParameter<bool>& getOutEnabler(int i){ 
+		if (i > bEnableSenders.size() - 1) return ofParameter<bool>();//error
+
+		return bEnableSenders[i];
+	}
+
+	int getOutEnablersSize() {
+		return bEnableSenders.size();
+	}
 
 	//--
 
@@ -361,9 +390,6 @@ private:
 
 private:
 
-	ofParameter<bool> bDebug;
-	//ofParameter<bool> bGui_OscHelper;
-
 	ofParameterGroup params_Extra;
 
 	//--
@@ -389,6 +415,10 @@ private:
 
 	//--
 
+	// Exposed / useful for external GUI like ImGui 
+
+public:
+
 	ofParameter<bool> bEnableOsc;
 
 	ofParameter<bool> bEnableOsc_Input;//not stored
@@ -402,6 +432,15 @@ private:
 
 	ofParameter<bool> bModeFeedback;
 
+	ofParameter<bool>bHelp;
+	ofParameter<bool> bDebug;
+
+	// Disables ofxGui. useful when using external gui like ImGui.
+	//--------------------------------------------------------------
+	void disableGuiInternal() {
+		bGuiInternalEnabled = false;
+	}
+
 	//--
 
 private:
@@ -409,6 +448,7 @@ private:
 	// Gui
 	ofxPanel gui_Internal;
 	ofParameter<glm::vec2> positionGui_Internal;
+	bool bGuiInternalEnabled = true;
 
 	//--
 
@@ -699,6 +739,7 @@ private:
 
 	//----
 
+#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
 
 public:
@@ -712,6 +753,8 @@ private:
 	ofParameter<bool> bGui_PatchingManager;
 
 	// API getters for the out of the patching engine
+
+	//--
 
 public:
 
@@ -736,11 +779,107 @@ public:
 		return (int)patchingManager.pipeNumbers[i].output.get();
 	}
 
-#endif
-
 	//--
 
 	ofParameter<bool> bRandom;
 	void doTesterRandom();
 
+#endif
+#endif
+
+	//--
+
+public:
+
+	// To get Osc settings 
+	// bc sometimes will use external 
+	// extra senders/receivers maybe.
+	//--------------------------------------------------------------
+	int getOutPort() const {
+		return OSC_OutputPort.get();
+	}
+	//--------------------------------------------------------------
+	string getOutIp() const {
+		return OSC_OutputIp.get();
+	}
+	//--------------------------------------------------------------
+	int getInPort() const {
+		return OSC_InputPort.get();
+	}
+
+	//--------------------------------------------------------------
+	bool getOutEnabled() const {
+		return bEnableOsc_Output.get();
+	}
+	//--------------------------------------------------------------
+	bool getInEnabled() const {
+		return bEnableOsc_Input.get();
+	}
+
 };
+
+
+/*
+* 
+* EXAMPLE SNIPPET
+* 
+ 	oscHelper.disableGuiInternal();
+	oscHelper.setup(ofxSurfingOsc::Master);
+
+	// custom
+	oscHelper.bGui.setName("OSC");
+	string s += "/beat";
+	oscHelper.setHelpInfoExtra(s);
+
+	// register
+	string Osc_Address;
+	string tag = "1/";
+	Osc_Address = "/bpm";
+	oscHelper.addSender_Float(bpm, Osc_Address);
+
+	oscHelper.startup();
+
+	//-
+
+	// ui
+	ui.addWindowSpecial(oscHelper.bGui);
+	ui.Add(oscHelper.bGui, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
+	if (oscHelper.bGui) drawImGui_Osc();
+
+//--------------------------------------------------------------
+void ofxSurfingBeatSync::drawImGui_Osc()
+{
+	if (ui.BeginWindowSpecial(oscHelper.bGui))
+	{
+		ui.AddLabelHuge("OSC");
+		//if (!ui.bMinimize) ui.AddLabelBig("OUT");
+		ui.AddSpacing();
+
+		ui.Add(oscHelper.bEnableOsc_Output, OFX_IM_TOGGLE);
+		if (oscHelper.bEnableOsc_Output) {
+			if (!ui.bMinimize)
+			{
+				//ui.AddLabelBig(ofToString(oscHelper.OSC_OutputPort));
+				ui.Add(oscHelper.OSC_OutputPort, OFX_IM_DRAG);
+				ui.Add(oscHelper.OSC_OutputIp, OFX_IM_TEXT_INPUT);
+			}
+			ui.AddSpacingSeparated();
+
+			if (!ui.bMinimize) ui.AddLabelBig("ENABLERS");
+			SurfingGuiTypes s = OFX_IM_TOGGLE_SMALL;
+			for (int i = 0; i < oscHelper.getOutEnablersSize(); i++) {
+				ui.Add(oscHelper.getOutEnabler(i), s);
+			}
+			ui.Add(bEnable_Beat, s);
+			ui.Add(bEnable_Bang_0, s);
+			ui.Add(bEnable_Bang_1, s);
+		}
+
+		ui.AddSpacingSeparated();
+
+		ui.Add(oscHelper.bHelp, OFX_IM_TOGGLE_ROUNDED_MINI);
+		ui.EndWindowSpecial();
+	}
+}
+
+*/
