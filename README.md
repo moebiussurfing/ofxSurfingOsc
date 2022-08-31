@@ -4,17 +4,20 @@ ofxSurfingOsc
 ![Stage: beta](https://img.shields.io/badge/-alpha-red)
 
 # Overview
-**ofxSurfingOsc** is a predefined Osc Manager as a template of a combo for Master / Slave apps.
+A predefined Osc Manager as a template for a two sides apps: Master / Slave.
 
 ## Screenshot
 ![](Capture.PNG)
 
 ## Features
 - Predefined common template.
-- 8 bool bangs, 8 bool toggles, 8 float values, 8 int numbers.
+- 8 Bool Bangs, 8 Bool Toggles, 8 Float Values, 8 Int Numbers.
 - Internal params with GUI.
 - Persistent settings.
 - Plots.
+- WIP: Customize template disable not used channels.
+- WIP: Smoothing plots.
+- WIP: Patching system to assign channels for different target params, with map and clamp ranges.
 
 ## Usage
 Look Examples.
@@ -49,7 +52,7 @@ TODO:
 
 ## Author
 An add-on by **@moebiusSurfing**  
-*( ManuMolina ) 2019-2021*  
+*( ManuMolina ) 2019-2022*  
 
 ### Contact / Follow
 <p>
