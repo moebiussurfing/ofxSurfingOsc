@@ -226,6 +226,8 @@ private:
 
 	void setupParams(); // must be called at first before set ports and add params
 
+	void setupGui();
+
 	//--
 
 	// API
@@ -580,6 +582,8 @@ public:
 private:
 
 	ofParameter<bool> bGui_AllPlots;
+	//only used if bCustomTemplate active. bc then we dont have any picked channels! 
+
 	const int amount_Plots_Targets = NUM_BANGS + NUM_TOGGLES + NUM_VALUES + NUM_NUMBERS;
 	vector<bool> plotsTargets_Visible; // array with bool of display state of any plot
 	int amountPlotsTargetsVisible = 0;
@@ -591,6 +595,84 @@ private:
 	void drawPlots(); // only to draw plots. gui draws is disabled and used locally on ofApp
 	void drawPlots(float x, float y, float w, float h);
 	void drawPlots(ofRectangle rect);
+
+public:
+
+	enum plotTarget
+	{
+		plotTarget_Bang = 0,
+		plotTarget_Toggle,
+		plotTarget_Value,
+		plotTarget_Number
+	};
+
+	struct plotStyle
+	{
+		plotTarget target;
+		ofColor color;
+		int index;//starting at 1 instead of 0
+		string name;
+		glm::vec2 range = glm::vec2(-1, -1);//min, max
+	};
+
+	void setupPlotCustom(plotStyle style)
+	{
+		// BeatCircles
+		if (style.target == plotTarget_Bang)
+		{
+			int _start = 0;
+			int _i = _start + style.index;//related to style
+			ofColor _c = style.color;
+			plotsTargets[_i - 1]->setVariableName(style.name);
+			plotsTargets[_i - 1]->setColor(_c);
+			plotsTargets_Visible[_i - 1] = true;
+			bangCircles[_i - 1].setColor(_c);
+		}
+
+		// Toggles
+		if (style.target == plotTarget_Toggle)
+		{
+			int _start = NUM_BANGS;
+			int _i = _start + style.index;//related to style
+			ofColor _c = style.color;
+			plotsTargets[_i - 1]->setVariableName(style.name);
+			plotsTargets[_i - 1]->setColor(_c);
+			plotsTargets_Visible[_i - 1] = true;
+			togglesCircles[_i - 1 - _start].setColor(_c);
+		}
+
+		// Values
+		if (style.target == plotTarget_Value)
+		{
+			int _start = NUM_BANGS + NUM_TOGGLES;
+			int _i = _start + style.index;//related to style
+			float _min = style.range.x;
+			float _max = style.range.y;
+			ofColor _c = style.color;
+			plotsTargets[_i - 1]->setVariableName(style.name);
+			plotsTargets[_i - 1]->setColor(_c);
+			plotsTargets_Visible[_i - 1] = true;
+			valuesBar[_i - 1 - _start].setColor(_c);
+			if (_min != -1 && _max != -1) plotsTargets[_i - 1]->setRange(_min, _max);
+		}
+
+		// Numbers
+		if (style.target == plotTarget_Number)
+		{
+			int _start = NUM_BANGS + NUM_TOGGLES + NUM_VALUES;
+			int _i = _start + style.index;//related to style
+			int _min = style.range.x;
+			int _max = style.range.y;
+			ofColor _c = style.color;
+			plotsTargets[_i - 1]->setVariableName(style.name);
+			plotsTargets[_i - 1]->setColor(_c);
+			plotsTargets_Visible[_i - 1] = true;
+			numbersBars[_i - 1 - _start].setColor(_c);
+			if (_min != -1 && _max != -1) plotsTargets[_i - 1]->setRange(_min, _max);
+		}
+	}
+
+	//--
 
 private:
 
@@ -607,9 +689,9 @@ private:
 	// Extra widgets
 	CircleBeat bangCircles[NUM_BANGS];
 	CircleBeat togglesCircles[NUM_TOGGLES];
-	BarValue barValues[NUM_VALUES];
-	BarValue barNumbers[NUM_VALUES];
-	float _rounded = 3;
+	BarValue valuesBar[NUM_VALUES];
+	BarValue numbersBars[NUM_VALUES];
+	float _rounded = 0;
 
 #endif
 
@@ -636,24 +718,29 @@ public:
 	//--------------------------------------------------------------
 	bool getOutBang(int i) const {
 		if (i > NUM_BANGS - 1) return false;
-		return (bool) patchingManager.pipeBangs[i].output.get();
+		return (bool)patchingManager.pipeBangs[i].output.get();
 	}
 	//--------------------------------------------------------------
 	bool getOutToggle(int i) const {
 		if (i > NUM_TOGGLES - 1) return false;
-		return (bool) patchingManager.pipeToggles[i].output.get();
+		return (bool)patchingManager.pipeToggles[i].output.get();
 	}
 	//--------------------------------------------------------------
 	float getOutValue(int i)const {
 		if (i > NUM_VALUES - 1) return -1;
-		return (float) patchingManager.pipeValues[i].output.get();
+		return (float)patchingManager.pipeValues[i].output.get();
 	}
 	//--------------------------------------------------------------
 	int getOutNumbers(int i) const {
 		if (i > NUM_NUMBERS - 1) return -1;
-		return (int) patchingManager.pipeNumbers[i].output.get();
+		return (int)patchingManager.pipeNumbers[i].output.get();
 	}
 
 #endif
+
+	//--
+
+	ofParameter<bool> bRandom;
+	void doTesterRandom();
 
 };

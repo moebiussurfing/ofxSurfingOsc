@@ -61,7 +61,7 @@ public:
 
 	// Bool Bangs / Triggers
 
-#define NUM_BANGS 8
+//#define NUM_BANGS 8
 	ofParameterGroup params_Bangs;
 	ofParameter<bool> bBangs[NUM_BANGS];
 	string bangsNames[NUM_BANGS];
@@ -71,7 +71,7 @@ public:
 
 	// Bool Toggles / States-on/off
 
-#define NUM_TOGGLES 8
+//#define NUM_TOGGLES 8
 	ofParameterGroup params_Toggles;
 	ofParameter<bool> bToggles[NUM_TOGGLES];
 	string togglesNames[NUM_TOGGLES];
@@ -81,7 +81,7 @@ public:
 
 	// Float Values
 
-#define NUM_VALUES 8
+//#define NUM_VALUES 8
 	ofParameterGroup params_Values;
 	ofParameter<float> values[NUM_VALUES];
 	string valuesNames[NUM_VALUES];
@@ -91,7 +91,7 @@ public:
 
 	// Int Numbers
 
-#define NUM_NUMBERS 8
+//#define NUM_NUMBERS 8
 	ofParameterGroup params_Numbers;
 	ofParameter<int> numbers[NUM_NUMBERS];
 	string numberNames[NUM_NUMBERS];

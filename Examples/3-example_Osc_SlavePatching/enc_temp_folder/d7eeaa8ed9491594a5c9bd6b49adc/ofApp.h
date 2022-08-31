@@ -56,7 +56,7 @@ public:
 
 	// Local Targets / Receivers
 	// Where we receive the variables
-	// directly from the add-on.
+	// from the add-on.
 
 	bool bangs[NUM_BANGS];
 	bool toggles[NUM_TOGGLES];

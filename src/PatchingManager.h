@@ -193,7 +193,7 @@ private:
 	//ofParameter<bool> bGui;
 	ofParameter<bool> bLock;
 
-	float _rounded = 3;
+	float _rounded = 0;
 
 public:
 

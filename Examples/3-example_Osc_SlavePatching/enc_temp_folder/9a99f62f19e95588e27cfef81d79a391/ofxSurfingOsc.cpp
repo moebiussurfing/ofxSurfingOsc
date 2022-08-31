@@ -114,7 +114,7 @@ void ofxSurfingOsc::setup()
 		boxPlotsBg.setup();
 
 		// constraint min size
-		glm::vec2 shape(200, 400);
+		glm::vec2 shape(205, 400);
 		boxPlotsBg.setRectConstraintMin(shape);
 	}
 #endif

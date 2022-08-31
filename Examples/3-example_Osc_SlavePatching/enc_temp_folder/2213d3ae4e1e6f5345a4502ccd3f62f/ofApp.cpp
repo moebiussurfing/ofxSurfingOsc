@@ -13,16 +13,13 @@ void ofApp::setup() {
 //--------------------------------------------------------------
 void ofApp::setupOsc()
 {
-	// An internal and hardcoded example 
-	// of a custom template with only some params enabled and customized.
 	//oscHelper.setCustomTemplate(true);
-
 	oscHelper.setup(ofxSurfingOsc::Slave);
 	
+	//oscHelper.setInputPort(54321);// 
 	//TODO: Notice that not working bC its overwritten on startup by loading settings.
 	// Currently we need to use the GUI, that restart the app to update settings.
-	// PORT and IP can't be change during runtime!
-	//oscHelper.setInputPort(54321); 
+	// Port and ip can't be change during runtime!
 
 	oscHelper.startup();
 
