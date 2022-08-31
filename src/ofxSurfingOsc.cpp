@@ -370,7 +370,7 @@ void ofxSurfingOsc::startup()
 
 	refreshGui();
 
-	//TODO: queue enablers
+	// Out Enablers
 	if (bUseOscOut && bGuiInternalEnabled)
 	{
 		auto& go = gui_Internal.getGroup(params_Osc.getName());
@@ -645,6 +645,8 @@ void ofxSurfingOsc::setupParams()
 	params_AppSettings.add(params_PlotsInput);
 	//params_AppSettings.add(bSmoothPlots);//crashes
 #endif
+
+	//params_AppSettings.add(bGui);
 
 	//--
 
