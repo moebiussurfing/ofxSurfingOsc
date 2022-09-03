@@ -6,7 +6,7 @@
 
 	TODO:
 
-	+		
+	+
 
 	++		Patching Manager: look @daan example!
 	++		PatchPipeValue class:
@@ -61,6 +61,8 @@
 
 //#define USE_MIDI // MIDI //TODO: WIP
 
+#define USE_IM_GUI
+
 //-----------------------
 
 //#define USE_TEXT_FLOW // Logging..
@@ -78,8 +80,14 @@
 
 //-----------------------
 
+#ifdef USE_IM_GUI
+#include "ofxSurfingImGui.h"
+//#include "OscImGui.h"
+//#include "OscImGui.cpp"
+#endif
+
 // Patch received signals to some targets (params)
-// that will be processed, mapped, clamped, etc
+// That will be processed, mapped, clamped, etc.
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
 #include "PatchingManager.h"
 #endif
@@ -120,6 +128,149 @@
 
 class ofxSurfingOsc
 {
+	//--------
+
+#ifdef USE_IM_GUI
+
+//private:
+public:
+
+	ofxSurfingGui* ui;
+
+public:
+
+	//--------------------------------------------------------------
+	void setUiPtr(ofxSurfingGui* _ui) {
+		ui = _ui;
+	}
+
+public:
+
+	//void drawImGui();
+	///*
+	//--------------------------------------------------------------
+	void drawImGui()
+	{
+		if (ui == nullptr) return;
+
+		//if (ui->BeginWindowSpecial(bGui))
+		bool bIsSpecial = (ui->getModeSpecial() == IM_GUI_MODE_WINDOWS_SPECIAL_ORGANIZER);
+		bool b;
+		if (bIsSpecial) b = ui->BeginWindowSpecial(bGui);
+		else b = ui->BeginWindow(bGui);
+
+		if (b)
+		{
+			ui->AddLabelHuge("OSC");
+			ui->AddSpacing();
+
+			ui->Add(ui->bMinimize, OFX_IM_TOGGLE_ROUNDED);
+			ui->AddSpacingSeparated();
+
+			//--
+
+			// In
+
+			if (bUseOscIn)
+			{
+				if (!ui->bMinimize) ui->AddLabelBig("IN");
+				ui->Add(bEnableOsc_Input, OFX_IM_TOGGLE);
+				if (bEnableOsc_Input)
+				{
+					if (!ui->bMinimize)
+					{
+						string tt = "Must restart the app \nto update these settings!";
+						ui->Add(OSC_InputPort, OFX_IM_DRAG);
+						ui->AddTooltip(tt);
+					}
+
+					//TODO: implement
+					/*
+					if (getInEnablersSize() != 0) ui->AddSpacingSeparated();
+
+					//if (!ui->bMinimize) ui->AddLabelBig("ENABLERS");
+					SurfingGuiTypes s = OFX_IM_TOGGLE_SMALL;
+					for (int i = 0; i < getInEnablersSize(); i++) {
+						ui->Add(getInEnabler(i), s);
+					}
+					*/
+
+					// Enablers
+					//ui->Add(bEnable_Beat, s);
+					//ui->Add(bEnable_Bang_0, s);
+					//ui->Add(bEnable_Bang_1, s);
+				}
+			}
+
+			//--
+
+			// Out
+
+			if (bUseOscOut)
+			{
+				if (bUseOscIn) ui->AddSpacingSeparated();
+
+				if (!ui->bMinimize) ui->AddLabelBig("OUT");
+				ui->Add(bEnableOsc_Output, OFX_IM_TOGGLE);
+				if (bEnableOsc_Output)
+				{
+					if (!ui->bMinimize)
+					{
+						string tt = "Must restart the app \nto update these settings!";
+						//ui->AddLabelBig(ofToString(OSC_OutputPort));
+						ui->Add(OSC_OutputPort, OFX_IM_DRAG);
+						ui->AddTooltip(tt);
+						ui->Add(OSC_OutputIp, OFX_IM_TEXT_INPUT);
+						ui->AddTooltip(tt);
+					}
+
+					if (getOutEnablersSize() != 0) ui->AddSpacingSeparated();
+
+					//if (!ui->bMinimize) ui->AddLabelBig("ENABLERS");
+					SurfingGuiTypes s = OFX_IM_TOGGLE_SMALL;
+					for (int i = 0; i < getOutEnablersSize(); i++) {
+						ui->Add(getOutEnabler(i), s);
+					}
+
+					//ui->Add(bEnable_Beat, s);
+					//ui->Add(bEnable_Bang_0, s);
+					//ui->Add(bEnable_Bang_1, s);
+				}
+			}
+
+			//--
+
+			if (!ui->bMinimize)
+			{
+				ui->AddSpacingSeparated();
+
+				ui->Add(bDebug, OFX_IM_TOGGLE_ROUNDED_MINI);
+				if (bGui_InternalAllowed) ui->Add(bGui_Internal, OFX_IM_TOGGLE_ROUNDED_MINI);
+				ui->Add(bHelp, OFX_IM_TOGGLE_ROUNDED_MINI);
+			}
+
+			glm::vec2 p = ui->getWindowShape().getBottomLeft();
+			//float w = ui->getWindowShape().getWidth();
+			//w = (w / 2.f) - (boxHelp.getRectangle().getWidth() / 2.f);
+			//p += glm::vec2(w, 0);
+			p += glm::vec2(-11, -9);
+			boxHelp.setPosition(p.x, p.y);
+
+			//--
+
+			if (bIsSpecial) ui->EndWindowSpecial();
+			else ui->EndWindow();
+		}
+
+		//--
+
+		ui->DrawWindowLogIfEnabled();
+	}
+	//*/
+
+#endif
+
+	//--------
 
 public:
 
@@ -165,8 +316,13 @@ public:
 
 	void setup();// must setMode before.
 
-	void startup(); // must be called after setup and all target params has been added (or not)!
+private:
+	
+	void initiate(); // must be called after setup and all target params has been added (or not)!
+	void startupDelayed();
 
+public:
+	
 	// Warning: must fix or look for a workaround
 	// to allow change ports on runtime!
 	void setInputPort(int p); // must be called after setupParams is called
@@ -182,6 +338,7 @@ public:
 public:
 
 	ofParameter<bool> bGui;
+	ofParameter<bool> bGui_Internal;
 
 	void setName(string n) { name = n; };
 
@@ -268,21 +425,53 @@ public:
 
 	//--
 
-	// Out Enablers
-	private:
-	ofParameterGroup params_EnablersOut{ "Out Enablers" };
-	vector<ofParameter<bool>> bEnableSenders;
-	void Changed_Params_EnablersOut(ofAbstractParameter& e);
-	vector<string> addresses_bEnableSenders;
-	public:
-	ofParameter<bool>& getOutEnabler(int i){ 
-		if (i > bEnableSenders.size() - 1) return ofParameter<bool>();//error
+	// In Enablers
 
-		return bEnableSenders[i];
+	//TODO:
+private:
+
+	ofParameterGroup params_EnablerIns{ "In Enablers" };
+	vector<ofParameter<bool>> bEnablerIns;
+	void Changed_Params_EnablerIns(ofAbstractParameter& e);
+	vector<string> addresses_bEnablerIns;
+
+	//--
+
+	// Out Enablers
+
+private:
+
+	ofParameterGroup params_EnablerOuts{ "Out Enablers" };
+	vector<ofParameter<bool>> bEnablerOuts;
+	void Changed_Params_EnablersOut(ofAbstractParameter& e);
+	vector<string> addresses_bEnablerOuts;
+
+public:
+
+	// Out
+	//--------------------------------------------------------------
+	ofParameter<bool>& getOutEnabler(int i) {
+		if (i > bEnablerOuts.size() - 1) return ofParameter<bool>();//error
+
+		return bEnablerOuts[i];
 	}
 
+	//--------------------------------------------------------------
 	int getOutEnablersSize() {
-		return bEnableSenders.size();
+		return bEnablerOuts.size();
+	}
+
+	// In
+	//--------------------------------------------------------------
+	ofParameter<bool>& getInEnabler(int i) {
+		if (i > bEnablerIns.size() - 1) return ofParameter<bool>();//error
+
+		return bEnablerIns[i];
+	}
+
+	//--------------------------------------------------------------
+	int getInEnablersSize() {
+		return bEnablerIns.size();
 	}
 
 	//--
@@ -437,8 +626,16 @@ public:
 
 	// Disables ofxGui. useful when using external gui like ImGui.
 	//--------------------------------------------------------------
+	void disableGuiInternalAllow() {
+		bGui_InternalAllowed = false;
+	}
+	//--------------------------------------------------------------
 	void disableGuiInternal() {
-		bGuiInternalEnabled = false;
+		bGui_Internal = false;
+	}
+	//--------------------------------------------------------------
+	void setGuiInternal(bool b) {
+		bGui_Internal = b;
 	}
 
 	//--
@@ -448,7 +645,7 @@ private:
 	// Gui
 	ofxPanel gui_Internal;
 	ofParameter<glm::vec2> positionGui_Internal;
-	bool bGuiInternalEnabled = true;
+	bool bGui_InternalAllowed = true;
 
 	//--
 
@@ -458,7 +655,7 @@ private:
 
 	//TODO:
 	// to implement on connect/disconnect on runtime
-	void setupOsc();
+	void setup_Osc();
 
 	//TODO:
 	void disconnectOscInput();
@@ -481,9 +678,22 @@ public:
 
 #endif
 
-	//----
+	//----	
+
+	void setupReceiveLogger();
 
 #ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
+
+public:
+
+	//--------------------------------------------------------------
+	void setCustomTemplate(bool b)
+	{
+		bCustomTemplate = b;
+
+		patchingManager.setCustomTemplate(b);
+		//ofLogError("ofxSurfingOsc") << "Requires SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS and SURF_OSC__USE__RECEIVER_PATCHING_MODE";
+	}
 
 	//--
 
@@ -496,7 +706,6 @@ private:
 private:
 
 	void setupReceiverTargets();
-	void setupReceiveLogger();
 
 	bool bDone_SetupReceiver = false;
 
@@ -543,18 +752,6 @@ private:
 	// when is enabled. all the plots will be drawn.
 	// can't be selective drawing only tre selected!
 	//--
-
-public:
-
-	//--------------------------------------------------------------
-	void setCustomTemplate(bool b)
-	{
-		bCustomTemplate = b;
-
-#ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
-		patchingManager.setCustomTemplate(b);
-#endif
-	}
 
 public:
 
@@ -820,10 +1017,10 @@ public:
 
 
 /*
-* 
+*
 * EXAMPLE SNIPPET
-* 
- 	oscHelper.disableGuiInternal();
+*
+	oscHelper.disableGuiInternalAllow();
 	oscHelper.setup(ofxSurfingOsc::Master);
 
 	// custom

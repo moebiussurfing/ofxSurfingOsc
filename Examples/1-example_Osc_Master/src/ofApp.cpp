@@ -104,7 +104,7 @@ void ofApp::setupOsc()
 	// parameters are already added,
 	// to finish initialization process!
 
-	oscHelper.startup();
+	// oscHelper.startup();
 }
 
 //--------------------------------------------------------------

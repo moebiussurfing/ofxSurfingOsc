@@ -15,9 +15,10 @@ void ofApp::setup()
 //--------------------------------------------------------------
 void ofApp::setupOsc()
 {
-	oscHelper.setCustomTemplate(true);
+	oscHelper.setGuiInternal(true);
+	//oscHelper.setCustomTemplate(true);
 	oscHelper.setup(ofxSurfingOsc::Slave);
-	oscHelper.startup();
+	// oscHelper.startup();
 }
 
 //--------------------------------------------------------------
@@ -25,6 +26,7 @@ void ofApp::setupGui()
 {
 	gui.setup("ofApp " + name);
 	gui.add(oscHelper.bGui); // visible toggle
+	gui.add(oscHelper.bGui_Internal); // visible toggle
 	gui.setPosition(10, 10);
 }
 

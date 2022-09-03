@@ -24,7 +24,7 @@ void ofApp::setupOsc()
 	// PORT and IP can't be change during runtime!
 	//oscHelper.setInputPort(54321); 
 
-	oscHelper.startup();
+	// oscHelper.startup();
 
 	//--
 
