@@ -46,9 +46,9 @@
 //						ui->Add(getOutEnabler(i), s);
 //					}
 //					/*
-//					ui->Add(bEnable_Beat, s);
-//					ui->Add(bEnable_Bang_0, s);
-//					ui->Add(bEnable_Bang_1, s);
+//					ui->Add(bBeat, s);
+//					ui->Add(bBang_0, s);
+//					ui->Add(bBang_1, s);
 //					*/
 //				}
 //			}

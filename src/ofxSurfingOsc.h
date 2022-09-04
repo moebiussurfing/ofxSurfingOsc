@@ -56,7 +56,7 @@
 // ofxHistoryPlot can be then removed. 
 #define SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS 
 #define SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS_GUI
-//#define SURF_OSC__USE__RECEIVER_PATCHING_MODE // Patcher
+#define SURF_OSC__USE__RECEIVER_PATCHING_MODE // Patcher
 //#define SURF_OSC__USE__RECEIVER_PLOTS // Plots. Only used on Slave mode
 
 //#define USE_MIDI // MIDI //TODO: WIP
@@ -167,6 +167,9 @@ public:
 
 				ui->Add(ui->bMinimize, OFX_IM_TOGGLE_ROUNDED);
 				ui->AddSpacingSeparated();
+				
+				ui->Add(bGui_Targets, OFX_IM_TOGGLE_ROUNDED);
+				ui->AddSpacingSeparated();
 
 				//--
 
@@ -197,9 +200,9 @@ public:
 						*/
 
 						// Enablers
-						//ui->Add(bEnable_Beat, s);
-						//ui->Add(bEnable_Bang_0, s);
-						//ui->Add(bEnable_Bang_1, s);
+						//ui->Add(bBeat, s);
+						//ui->Add(bBang_0, s);
+						//ui->Add(bBang_1, s);
 					}
 				}
 
@@ -233,9 +236,9 @@ public:
 							ui->Add(getOutEnabler(i), s);
 						}
 
-						//ui->Add(bEnable_Beat, s);
-						//ui->Add(bEnable_Bang_0, s);
-						//ui->Add(bEnable_Bang_1, s);
+						//ui->Add(bBeat, s);
+						//ui->Add(bBang_0, s);
+						//ui->Add(bBang_1, s);
 					}
 				}
 
@@ -245,6 +248,7 @@ public:
 				{
 					ui->AddSpacingSeparated();
 
+					ui->Add(bRandom, OFX_IM_TOGGLE_ROUNDED_MINI);
 					ui->Add(bDebug, OFX_IM_TOGGLE_ROUNDED_MINI);
 					if (bGui_InternalAllowed) ui->Add(bGui_Internal, OFX_IM_TOGGLE_ROUNDED_MINI);
 					ui->Add(bHelp, OFX_IM_TOGGLE_ROUNDED_MINI);
@@ -745,19 +749,16 @@ private:
 	// for the moment this callbacks are only used to plotting purposes..
 
 	// Bool Bangs
-	ofParameterGroup params_Bangs;
 	ofParameter<bool> bBangs[NUM_BANGS];
 	string bangsNames[NUM_BANGS];
 	void Changed_Tar_Bangs(ofAbstractParameter& e);
 
 	// Bool Toggles
-	ofParameterGroup params_Toggles;
 	ofParameter<bool> bToggles[NUM_TOGGLES];
 	string togglesNames[NUM_TOGGLES];
 	void Changed_Tar_Toggles(ofAbstractParameter& e);
 
 	// Float Values
-	ofParameterGroup params_Values;
 	ofParameter<float> values[NUM_VALUES];
 	string valuesNames[NUM_VALUES];
 	void Changed_Tar_Values(ofAbstractParameter& e);
@@ -765,7 +766,6 @@ private:
 	ofParameter<float> smoothValues[NUM_VALUES];
 
 	// Int Values
-	ofParameterGroup params_Numbers;
 	ofParameter<int> numbers[NUM_NUMBERS];
 	string numberNames[NUM_NUMBERS];
 	void Changed_Tar_Numbers(ofAbstractParameter& e);
@@ -782,6 +782,10 @@ public:
 	//TODO:
 
 	ofParameterGroup params_Targets;
+	ofParameterGroup params_Bangs;
+	ofParameterGroup params_Toggles;
+	ofParameterGroup params_Values;
+	ofParameterGroup params_Numbers;
 
 	//// To help ofApp gui builder
 	////----------------------------------------------------
@@ -1097,9 +1101,9 @@ void ofxSurfingBeatSync::drawImGui_Osc()
 			for (int i = 0; i < oscHelper.getOutEnablersSize(); i++) {
 				ui.Add(oscHelper.getOutEnabler(i), s);
 			}
-			ui.Add(bEnable_Beat, s);
-			ui.Add(bEnable_Bang_0, s);
-			ui.Add(bEnable_Bang_1, s);
+			ui.Add(bBeat, s);
+			ui.Add(bBang_0, s);
+			ui.Add(bBang_1, s);
 		}
 
 		ui.AddSpacingSeparated();

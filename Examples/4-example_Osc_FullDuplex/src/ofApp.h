@@ -25,11 +25,6 @@ public:
 	void setupGui();
 	ofxPanel gui;
 
-#ifdef USE_local_Targets
-	ofParameter<bool> bBypass{ "ByPass", false };
-	//ofParameter<bool> bRandom{ "Randomizer", false };
-#endif
-
 	//--
 
 	// Remote and control
@@ -53,6 +48,9 @@ public:
 	// aka receivers/senders
 
 #ifdef USE_local_Targets
+
+	ofParameter<bool> bBypass{ "ByPass", false };
+	//ofParameter<bool> bRandom{ "Randomizer", false };
 
 	void setupTargets();
 	void setupReceivers();

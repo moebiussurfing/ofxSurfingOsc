@@ -469,9 +469,7 @@ void ofxSurfingOsc::setupParams()
 #endif
 
 #ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
-#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS_GUI
 	bGui_Targets.set("OSC TARGETS", true);
-#endif
 #endif
 
 #ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
@@ -502,9 +500,7 @@ void ofxSurfingOsc::setupParams()
 
 	params_Extra.setName("Extra");
 #ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
-#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS_GUI
 	if (bDone_SetupReceiver) params_Extra.add(bGui_Targets);
-#endif
 #endif
 	params_Extra.add(bKeys);
 	params_Extra.add(boxHelp.bGui);
@@ -892,18 +888,19 @@ void ofxSurfingOsc::update()
 
 	//--
 
-	// when activated bDebug, plot input subscribed addresses
-	static bool _bDebug = !bDebug;
-	if (bDebug != _bDebug)
+	// When activated bDebug, 
+	// Log input subscribed addresses
+	//if (ofGetFrameNum() % 600 == 0)
+	static bool _bDebug=false;// = !bDebug;
+	if (bDebug != _bDebug) // changed
 	{
 		_bDebug = bDebug;
-		//if (ofGetFrameNum() % 600 == 0)
-		if (bDebug)
+		if (bDebug) 
 		{
 			// In
 			if (bUseOscIn)
 			{
-				auto si = "OSC IN \n" + ofToString(ofxGetSubscribedAddresses(OSC_InputPort));
+				auto si = "OSC IN \n\n" + ofToString(ofxGetSubscribedAddresses(OSC_InputPort)) + "\n\n";
 				ofLogNotice("ofxSurfingOsc") << "OSC IN  Addresses: " << ofToString(si);
 
 #ifdef USE_IM_GUI
@@ -911,10 +908,12 @@ void ofxSurfingOsc::update()
 #endif	
 			}
 
+			//--
+
 			// Out
 			if (bUseOscOut)
 			{
-				auto so = "OSC OUT \n" + ofToString(ofxGetPublishedAddresses(OSC_OutputIp.get(), OSC_OutputPort));
+				auto so = "OSC OUT \n\n" + ofToString(ofxGetPublishedAddresses(OSC_OutputIp.get(), OSC_OutputPort)) + "\n\n";
 				ofLogNotice("ofxSurfingOsc") << "OSC OUT Addresses: " << ofToString(so);
 
 #ifdef USE_IM_GUI
@@ -922,7 +921,13 @@ void ofxSurfingOsc::update()
 #endif
 			}
 		}
+	}
 
+	//--
+
+	// Random
+	if (bDebug)
+	{
 #ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
 		if (bUseOscIn)
 		{
@@ -966,7 +971,7 @@ void ofxSurfingOsc::draw()
 		if (bGui_Plots)
 		{
 			drawPlots();
-		}
+}
 #endif
 #endif
 
@@ -1330,7 +1335,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 		ofxTextFlow::setShowing(bGui_LogFlow);
 
 		return;
-	}
+}
 #endif
 
 	//--
@@ -1549,7 +1554,7 @@ void ofxSurfingOsc::refreshGui()
 	else
 	{
 		gm.minimize();
-	}
+}
 #endif
 
 	//--
@@ -1601,7 +1606,7 @@ void ofxSurfingOsc::keyPressed(ofKeyEventArgs& eventArgs)
 #ifdef USE_TEXT_FLOW
 	else if (key == OF_KEY_BACKSPACE) {
 		ofxTextFlow::clear();
-	}
+}
 #endif
 }
 
