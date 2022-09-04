@@ -347,6 +347,8 @@ void ofxSurfingOsc::startupDelayed()
 			}
 
 			str_oscAddressesInfo += str_oscInputAddressesInfo;
+
+			ofAddListener(params_EnablerIns.parameterChangedE(), this, &ofxSurfingOsc::Changed_Params_EnablerIns);
 		}
 
 		if (bUseOscOut)
@@ -382,7 +384,42 @@ void ofxSurfingOsc::startupDelayed()
 
 		//--
 
+		// Gui Internal
+		if (bGui_InternalAllowed /*&& bGui_Internal*/)
+		{
+			refreshGui();
+		}
+
+		//--
+
 		buildHelp();
+	}
+
+	//--
+
+	// Queue enabler toggles into gui
+	if (bGui_InternalAllowed)
+	{
+		// Out Enablers
+		if (bUseOscOut)
+		{
+			auto& g = gui_Internal.getGroup(params_Osc.getName());
+			auto& gout = g.getGroup(params_OscOutput.getName());
+			gout.add(params_EnablerOuts);
+			gout.minimize();
+			if (getOutEnablersSize() != 0) gout.getGroup(params_EnablerOuts.getName()).minimize();
+		}
+
+		//TODO:
+		// In Enablers
+		if (bUseOscIn)
+		{
+			auto& g = gui_Internal.getGroup(params_Osc.getName());
+			auto& gin = g.getGroup(params_OscInput.getName());
+			gin.add(params_EnablerIns);
+			gin.minimize();
+			if (getInEnablersSize() != 0) gin.getGroup(params_EnablerIns.getName()).minimize();
+		}
 	}
 }
 
@@ -452,7 +489,7 @@ void ofxSurfingOsc::setupParams()
 #endif
 
 #ifdef USE_TEXT_FLOW
-	bGui_Log.set("Log", false);
+	bGui_LogFlow.set("LogFlow", false);
 #endif
 
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
@@ -535,7 +572,7 @@ void ofxSurfingOsc::setupParams()
 	if (bUseOscOut) params_Osc.add(params_OscOutput);
 
 #ifdef USE_TEXT_FLOW
-	params_Osc.add(bGui_Log);
+	params_Osc.add(bGui_LogFlow);
 #endif
 
 	//--
@@ -623,7 +660,7 @@ void ofxSurfingOsc::setupParams()
 #endif
 
 #ifdef USE_TEXT_FLOW
-	params_AppSettings.add(bGui_Log);
+	params_AppSettings.add(bGui_LogFlow);
 #endif
 
 	params_AppSettings.add(params_Extra);
@@ -805,41 +842,26 @@ void ofxSurfingOsc::Changed_Params_EnablerIns(ofAbstractParameter& e)
 		if (name == bEnablerIns[i].getName())
 		{
 			string a = addresses_bEnablerIns[i];
-			/*
-			if (bEnablerIns[i].get()) ofxGetOscPublisher(OSC_OutputIp.get(), OSC_OutputPort.get()).resumePublish(a);
-			else ofxGetOscPublisher(OSC_OutputIp.get(), OSC_OutputPort.get()).stopPublishTemporary(a);
-			*/
 
+			bool b = bEnablerIns[i].get();
+			//ofxGetOscSubscriber(OSC_InputPort.get()).setEnable(b);
+
+			if (b)
+			{
+				//ofxGetOscSubscriber(OSC_InputPort.get()).subscribe(a);
+
+				//ofxSubscribeOsc(OSC_InputPort.get(), a);
+				//ofxUnsubscribeOSC(int port, const string & address);
+				//ofxGetOscSubscriberActive
+			}
+			else
+			{
+				//ofxUnsubscribeOsc(OSC_InputPort.get(), a);
+				//ofxGetOscSubscriber(OSC_InputPort.get()).unsubscribe(a);
+
+				//ofxUnsubscribeOsc(OSC_InputPort.get(), a);
+			}
 			return;
-		}
-	}
-
-	//--
-
-	// Gui Internal
-	if (bGui_InternalAllowed && bGui_Internal)
-	{
-		refreshGui();
-
-		// Out Enablers
-		if (bUseOscOut)
-		{
-			auto& g = gui_Internal.getGroup(params_Osc.getName());
-			auto& gout = g.getGroup(params_OscOutput.getName());
-			gout.add(params_EnablerOuts);
-			gout.minimize();
-			if (getOutEnablersSize() != 0) gout.getGroup(params_EnablerOuts.getName()).minimize();
-		}
-
-		//TODO:
-		// In Enablers
-		if (bUseOscIn)
-		{
-			auto& g = gui_Internal.getGroup(params_Osc.getName());
-			auto& gin = g.getGroup(params_OscInput.getName());
-			gin.add(params_EnablerIns);
-			gin.minimize();
-			if (getInEnablersSize() != 0) gin.getGroup(params_EnablerIns.getName()).minimize();
 		}
 	}
 }
@@ -870,15 +892,19 @@ void ofxSurfingOsc::update()
 
 	//--
 
-	if (bDebug)
+	// when activated bDebug, plot input subscribed addresses
+	static bool _bDebug = !bDebug;
+	if (bDebug != _bDebug)
 	{
-		if (ofGetFrameNum() % 600 == 0)
+		_bDebug = bDebug;
+		//if (ofGetFrameNum() % 600 == 0)
+		if (bDebug)
 		{
 			// In
 			if (bUseOscIn)
 			{
-				auto si = "OSC IN \t" + ofToString(ofxGetSubscribedAddresses(OSC_InputPort));
-				ofLogNotice("ofxSurfingOsc") << "In  Addresses: " << ofToString(si);
+				auto si = "OSC IN \n" + ofToString(ofxGetSubscribedAddresses(OSC_InputPort));
+				ofLogNotice("ofxSurfingOsc") << "OSC IN  Addresses: " << ofToString(si);
 
 #ifdef USE_IM_GUI
 				ui->AddToLog(ofToString(si));
@@ -888,8 +914,8 @@ void ofxSurfingOsc::update()
 			// Out
 			if (bUseOscOut)
 			{
-				auto so = "OSC OUT \t" + ofToString(ofxGetPublishedAddresses(OSC_OutputIp.get(), OSC_OutputPort));
-				ofLogNotice("ofxSurfingOsc") << "Out Addresses: " << ofToString(so);
+				auto so = "OSC OUT \n" + ofToString(ofxGetPublishedAddresses(OSC_OutputIp.get(), OSC_OutputPort));
+				ofLogNotice("ofxSurfingOsc") << "OSC OUT Addresses: " << ofToString(so);
 
 #ifdef USE_IM_GUI
 				ui->AddToLog(ofToString(so));
@@ -950,10 +976,11 @@ void ofxSurfingOsc::draw()
 
 #ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS 
 #ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS_GUI
-	if (bGui_Targets && bDone_SetupReceiver)
-	{
-		gui_Targets.draw();
-	}
+	if (bGui_InternalAllowed && bGui_Internal)
+		if (bGui_Targets && bDone_SetupReceiver)
+		{
+			gui_Targets.draw();
+		}
 #endif 
 #endif
 
@@ -961,47 +988,6 @@ void ofxSurfingOsc::draw()
 
 	// GUI Internal
 	if (bGui_InternalAllowed && bGui_Internal) gui_Internal.draw();
-
-	//--
-
-	/*
-
-	auto p = gui_Internal.getPosition();
-	auto w = gui_Internal.getWidth();
-	auto h = gui_Internal.getHeight();
-
-	// OSC debug
-
-	// Show all subscribed addresses
-	if (bDebug)
-	{
-		//if (bGui_OscHelper && bEnableOsc)
-		if (bEnableOsc)
-		{
-			ofPushMatrix();
-
-			ofTranslate(p.x + 15, p.y + 25 + h); // bottom of the gui panel
-			//ofTranslate(p.x + w + 10, p.y + 16); // right
-
-			if (myFont.isLoaded())
-			{
-				ofPushStyle();
-				ofSetColor(0);
-				ofFill();
-				ofDrawRectRounded(rectDebug, 3.0f);
-				ofSetColor(255);
-				myFont.drawString(str_oscAddressesInfo, 0, 0);
-				ofPopStyle();
-			}
-			else
-			{
-				ofDrawBitmapStringHighlight(str_oscAddressesInfo, 0, 0);
-			}
-
-			ofPopMatrix();
-		}
-	}
-	*/
 
 	//--
 
@@ -1070,10 +1056,14 @@ void ofxSurfingOsc::exit()
 #ifdef USE_MIDI
 	ofRemoveListener(params_MIDI.parameterChangedE(), this, &ofxSurfingOsc::Changed_Params);
 #endif
-	if (bGui_InternalAllowed && bGui_Internal) positionGui_Internal = gui_Internal.getPosition();
+
+	if (bGui_InternalAllowed && bGui_Internal)
+	{
+		positionGui_Internal = gui_Internal.getPosition();
 #ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS_GUI
-	positionGui_Targets = gui_Targets.getPosition();
+		positionGui_Targets = gui_Targets.getPosition();
 #endif
+	}
 
 	ofxSurfingHelpers::saveGroup(params_AppSettings, path_Global + "/" + path_AppSettings);
 	ofxSurfingHelpers::saveGroup(params_OscSettings, path_Global + "/" + path_OscSettings);
@@ -1087,6 +1077,11 @@ void ofxSurfingOsc::exit()
 	if (bUseOscOut)
 	{
 		ofRemoveListener(params_EnablerOuts.parameterChangedE(), this, &ofxSurfingOsc::Changed_Params_EnablersOut);
+	}
+
+	if (bUseOscIn)
+	{
+		ofRemoveListener(params_EnablerIns.parameterChangedE(), this, &ofxSurfingOsc::Changed_Params_EnablerIns);
 	}
 
 	//--
@@ -1330,9 +1325,9 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 	if (false) {}
 
 #ifdef USE_TEXT_FLOW
-	else if (name == bGui_Log.getName())
+	else if (name == bGui_LogFlow.getName())
 	{
-		ofxTextFlow::setShowing(bGui_Log);
+		ofxTextFlow::setShowing(bGui_LogFlow);
 
 		return;
 	}
@@ -1508,11 +1503,11 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 	//--
 
 #ifdef USE_TEXT_FLOW
-	if (name == bGui_Log.getName())
+	if (name == bGui_LogFlow.getName())
 	{
 		// workflow
-		if (bGui_Log) bGui_OscHelper = true;
-		//if (!bGui_OscHelper && bGui_Log) bGui_OscHelper = true;
+		if (bGui_LogFlow) bGui_OscHelper = true;
+		//if (!bGui_OscHelper && bGui_LogFlow) bGui_OscHelper = true;
 
 		return;
 	}
@@ -1524,15 +1519,14 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 	{
 		if (bGui_InternalAllowed && bGui_Internal)
 			gui_Internal.setPosition(positionGui_Internal.get().x, positionGui_Internal.get().y);
-
 		return;
 	}
 
 #ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS_GUI
 	if (name == positionGui_Targets.getName())
 	{
-		gui_Targets.setPosition(positionGui_Targets.get().x, positionGui_Targets.get().y);
-
+		if (bGui_InternalAllowed && bGui_Internal)
+			gui_Targets.setPosition(positionGui_Targets.get().x, positionGui_Targets.get().y);
 		return;
 	}
 #endif
@@ -1562,7 +1556,8 @@ void ofxSurfingOsc::refreshGui()
 
 	auto& go = gui_Internal.getGroup(params_Osc.getName());
 	go.minimize();
-	if (bUseOscOut) {
+	if (bUseOscOut)
+	{
 		auto& gout = go.getGroup(params_OscOutput.getName());
 		gout.minimize();
 		//if (getOutEnablersSize() != 0) gout.getGroup(params_EnablerOuts.getName()).minimize();
@@ -1831,7 +1826,6 @@ void ofxSurfingOsc::setupReceiverTargets()
 #ifdef SURF_OSC__USE__RECEIVER_PLOTS
 		ofxHistoryPlot* graph = addGraph(_name, _min, _max, colorNumbers, 0);
 		plotsTargets.push_back(graph);
-#endif
 
 		// Bars
 
@@ -1840,6 +1834,7 @@ void ofxSurfingOsc::setupReceiverTargets()
 		numbersBars[i].setRounded(_rounded);
 		numbersBars[i].setValueMax(_max);
 		numbersBars[i].setValueMin(_min);
+#endif
 	}
 
 	ofAddListener(params_Numbers.parameterChangedE(), this, &ofxSurfingOsc::Changed_Tar_Numbers);
@@ -1979,16 +1974,17 @@ void ofxSurfingOsc::setupReceiveLogger()
 				bool _b = false;
 				_b += bDebug;
 #ifdef USE_TEXT_FLOW
-				_b += (bGui_Log);
+				_b += (bGui_LogFlow);
 #endif
-
 				if (_b)
 				{
+					bool bskip = false;
+					// workaround to ignore booleans false
+
 					// Unrecognized message: 
 					// Display on the bottom of the screen
 
 					string msgString;
-
 					msgString = "";
 					msgString += "OSC IN \t";
 					msgString += m.getAddress();
@@ -2006,7 +2002,11 @@ void ofxSurfingOsc::setupReceiveLogger()
 						// Make sure we get the right type
 						if (m.getArgType(i) == OFXOSC_TYPE_INT32)
 						{
-							msgString += ofToString(m.getArgAsInt32(i));
+							if (m.getArgAsInt32(i) == 0)bskip = true;
+							//ignore bools arg as it is a bang
+							if (m.getArgAsInt32(i) != 1) {
+								msgString += ofToString(m.getArgAsInt32(i));
+							}
 						}
 						else if (m.getArgType(i) == OFXOSC_TYPE_FLOAT)
 						{
@@ -2038,7 +2038,7 @@ void ofxSurfingOsc::setupReceiveLogger()
 					ofLogNotice("ofxSurfingOsc") << "OSC \t" << msgString;
 
 #ifdef USE_IM_GUI
-					ui->AddToLog(msgString);
+					if (!bskip) ui->AddToLog(msgString);
 #endif
 
 #ifdef USE_TEXT_FLOW

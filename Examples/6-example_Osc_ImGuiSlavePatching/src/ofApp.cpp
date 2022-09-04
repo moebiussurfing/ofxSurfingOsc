@@ -17,6 +17,7 @@ void ofApp::setup()
 	params.add(bEnable_Bang_1);
 
 	psettings.add(oscHelper.bGui);
+	psettings.add(oscHelper.bGui_Targets);
 	psettings.add(ui.bLog);
 	ofxSurfingHelpers::loadGroup(psettings);
 }
@@ -67,6 +68,7 @@ void ofApp::draw()
 		if (ui.BeginWindow(name))
 		{
 			ui.Add(oscHelper.bGui, OFX_IM_TOGGLE_ROUNDED);
+			ui.Add(oscHelper.bGui_Targets, OFX_IM_TOGGLE_ROUNDED);
 			ui.Add(ui.bLog, OFX_IM_TOGGLE_ROUNDED_SMALL);
 			ui.AddSpacingBigSeparated();
 

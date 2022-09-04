@@ -49,13 +49,13 @@
 
 // OPTIONAL
 
-//// On Master mode / sender, 
-//// these internal targets and plots will  
-//// not bee probably used/useful.
-//// And can be disabled/commented!
-//// ofxHistoryPlot can be then removed. 
-//#define SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS 
-//#define SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS_GUI
+// On Master mode / sender, 
+// these internal targets and plots will  
+// not bee probably used/useful.
+// And can be disabled/commented!
+// ofxHistoryPlot can be then removed. 
+#define SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS 
+#define SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS_GUI
 //#define SURF_OSC__USE__RECEIVER_PATCHING_MODE // Patcher
 //#define SURF_OSC__USE__RECEIVER_PLOTS // Plots. Only used on Slave mode
 
@@ -153,113 +153,136 @@ public:
 	{
 		if (ui == nullptr) return;
 
-		//if (ui->BeginWindowSpecial(bGui))
-		bool bIsSpecial = (ui->getModeSpecial() == IM_GUI_MODE_WINDOWS_SPECIAL_ORGANIZER);
-		bool b;
-		if (bIsSpecial) b = ui->BeginWindowSpecial(bGui);
-		else b = ui->BeginWindow(bGui);
-
-		if (b)
 		{
-			ui->AddLabelHuge("OSC");
-			ui->AddSpacing();
+			//if (ui->BeginWindowSpecial(bGui))
+			bool bIsSpecial = (ui->getModeSpecial() == IM_GUI_MODE_WINDOWS_SPECIAL_ORGANIZER);
+			bool b;
+			if (bIsSpecial) b = ui->BeginWindowSpecial(bGui);
+			else b = ui->BeginWindow(bGui);
 
-			ui->Add(ui->bMinimize, OFX_IM_TOGGLE_ROUNDED);
-			ui->AddSpacingSeparated();
-
-			//--
-
-			// In
-
-			if (bUseOscIn)
+			if (b)
 			{
-				if (!ui->bMinimize) ui->AddLabelBig("IN");
-				ui->Add(bEnableOsc_Input, OFX_IM_TOGGLE);
-				if (bEnableOsc_Input)
-				{
-					if (!ui->bMinimize)
-					{
-						string tt = "Must restart the app \nto update these settings!";
-						ui->Add(OSC_InputPort, OFX_IM_DRAG);
-						ui->AddTooltip(tt);
-					}
+				ui->AddLabelHuge("OSC");
+				ui->AddSpacing();
 
-					//TODO: implement
-					/*
-					if (getInEnablersSize() != 0) ui->AddSpacingSeparated();
-
-					//if (!ui->bMinimize) ui->AddLabelBig("ENABLERS");
-					SurfingGuiTypes s = OFX_IM_TOGGLE_SMALL;
-					for (int i = 0; i < getInEnablersSize(); i++) {
-						ui->Add(getInEnabler(i), s);
-					}
-					*/
-
-					// Enablers
-					//ui->Add(bEnable_Beat, s);
-					//ui->Add(bEnable_Bang_0, s);
-					//ui->Add(bEnable_Bang_1, s);
-				}
-			}
-
-			//--
-
-			// Out
-
-			if (bUseOscOut)
-			{
-				if (bUseOscIn) ui->AddSpacingSeparated();
-
-				if (!ui->bMinimize) ui->AddLabelBig("OUT");
-				ui->Add(bEnableOsc_Output, OFX_IM_TOGGLE);
-				if (bEnableOsc_Output)
-				{
-					if (!ui->bMinimize)
-					{
-						string tt = "Must restart the app \nto update these settings!";
-						//ui->AddLabelBig(ofToString(OSC_OutputPort));
-						ui->Add(OSC_OutputPort, OFX_IM_DRAG);
-						ui->AddTooltip(tt);
-						ui->Add(OSC_OutputIp, OFX_IM_TEXT_INPUT);
-						ui->AddTooltip(tt);
-					}
-
-					if (getOutEnablersSize() != 0) ui->AddSpacingSeparated();
-
-					//if (!ui->bMinimize) ui->AddLabelBig("ENABLERS");
-					SurfingGuiTypes s = OFX_IM_TOGGLE_SMALL;
-					for (int i = 0; i < getOutEnablersSize(); i++) {
-						ui->Add(getOutEnabler(i), s);
-					}
-
-					//ui->Add(bEnable_Beat, s);
-					//ui->Add(bEnable_Bang_0, s);
-					//ui->Add(bEnable_Bang_1, s);
-				}
-			}
-
-			//--
-
-			if (!ui->bMinimize)
-			{
+				ui->Add(ui->bMinimize, OFX_IM_TOGGLE_ROUNDED);
 				ui->AddSpacingSeparated();
 
-				ui->Add(bDebug, OFX_IM_TOGGLE_ROUNDED_MINI);
-				if (bGui_InternalAllowed) ui->Add(bGui_Internal, OFX_IM_TOGGLE_ROUNDED_MINI);
-				ui->Add(bHelp, OFX_IM_TOGGLE_ROUNDED_MINI);
+				//--
+
+				// In
+
+				if (bUseOscIn)
+				{
+					if (!ui->bMinimize) ui->AddLabelBig("IN");
+					ui->Add(bEnableOsc_Input, OFX_IM_TOGGLE);
+					if (bEnableOsc_Input)
+					{
+						if (!ui->bMinimize)
+						{
+							string tt = "Must restart the app \nto update these settings!";
+							ui->Add(OSC_InputPort, OFX_IM_DRAG);
+							ui->AddTooltip(tt);
+						}
+
+						//TODO: implement
+						/*
+						if (getInEnablersSize() != 0) ui->AddSpacingSeparated();
+
+						//if (!ui->bMinimize) ui->AddLabelBig("ENABLERS");
+						SurfingGuiTypes s = OFX_IM_TOGGLE_SMALL;
+						for (int i = 0; i < getInEnablersSize(); i++) {
+							ui->Add(getInEnabler(i), s);
+						}
+						*/
+
+						// Enablers
+						//ui->Add(bEnable_Beat, s);
+						//ui->Add(bEnable_Bang_0, s);
+						//ui->Add(bEnable_Bang_1, s);
+					}
+				}
+
+				//--
+
+				// Out
+
+				if (bUseOscOut)
+				{
+					if (bUseOscIn) ui->AddSpacingSeparated();
+
+					if (!ui->bMinimize) ui->AddLabelBig("OUT");
+					ui->Add(bEnableOsc_Output, OFX_IM_TOGGLE);
+					if (bEnableOsc_Output)
+					{
+						if (!ui->bMinimize)
+						{
+							string tt = "Must restart the app \nto update these settings!";
+							//ui->AddLabelBig(ofToString(OSC_OutputPort));
+							ui->Add(OSC_OutputPort, OFX_IM_DRAG);
+							ui->AddTooltip(tt);
+							ui->Add(OSC_OutputIp, OFX_IM_TEXT_INPUT);
+							ui->AddTooltip(tt);
+						}
+
+						if (getOutEnablersSize() != 0) ui->AddSpacingSeparated();
+
+						//if (!ui->bMinimize) ui->AddLabelBig("ENABLERS");
+						SurfingGuiTypes s = OFX_IM_TOGGLE_SMALL;
+						for (int i = 0; i < getOutEnablersSize(); i++) {
+							ui->Add(getOutEnabler(i), s);
+						}
+
+						//ui->Add(bEnable_Beat, s);
+						//ui->Add(bEnable_Bang_0, s);
+						//ui->Add(bEnable_Bang_1, s);
+					}
+				}
+
+				//--
+
+				if (!ui->bMinimize)
+				{
+					ui->AddSpacingSeparated();
+
+					ui->Add(bDebug, OFX_IM_TOGGLE_ROUNDED_MINI);
+					if (bGui_InternalAllowed) ui->Add(bGui_Internal, OFX_IM_TOGGLE_ROUNDED_MINI);
+					ui->Add(bHelp, OFX_IM_TOGGLE_ROUNDED_MINI);
+				}
+
+				glm::vec2 p = ui->getWindowShape().getBottomLeft();
+				//float w = ui->getWindowShape().getWidth();
+				//w = (w / 2.f) - (boxHelp.getRectangle().getWidth() / 2.f);
+				//p += glm::vec2(w, 0);
+				p += glm::vec2(-11, -9);
+				boxHelp.setPosition(p.x, p.y);
+
+				//--
+
+				if (bIsSpecial) ui->EndWindowSpecial();
+				else ui->EndWindow();
 			}
+		}
 
-			glm::vec2 p = ui->getWindowShape().getBottomLeft();
-			//float w = ui->getWindowShape().getWidth();
-			//w = (w / 2.f) - (boxHelp.getRectangle().getWidth() / 2.f);
-			//p += glm::vec2(w, 0);
-			p += glm::vec2(-11, -9);
-			boxHelp.setPosition(p.x, p.y);
+		//--
 
-			//--
+		{
+			bool bIsSpecial = (ui->getModeSpecial() == IM_GUI_MODE_WINDOWS_SPECIAL_ORGANIZER);
+			bool b;
+			if (bIsSpecial) b = ui->BeginWindowSpecial(bGui_Targets);
+			else b = ui->BeginWindow(bGui_Targets);
+			if (b) 
+			{
+				if (bUseOscIn)
+				{
+					ui->AddGroup(params_Targets);
+				}
 
-			if (bIsSpecial) ui->EndWindowSpecial();
-			else ui->EndWindow();
+				//--
+
+				if (bIsSpecial) ui->EndWindowSpecial();
+				else ui->EndWindow();
+			}
 		}
 
 		//--
@@ -317,12 +340,12 @@ public:
 	void setup();// must setMode before.
 
 private:
-	
+
 	void initiate(); // must be called after setup and all target params has been added (or not)!
 	void startupDelayed();
 
 public:
-	
+
 	// Warning: must fix or look for a workaround
 	// to allow change ports on runtime!
 	void setInputPort(int p); // must be called after setupParams is called
@@ -472,7 +495,7 @@ public:
 	//--------------------------------------------------------------
 	int getInEnablersSize() {
 		return bEnablerIns.size();
-	}
+}
 
 	//--
 
@@ -501,7 +524,7 @@ public:
 		bGui = b;
 
 #ifdef USE_TEXT_FLOW
-		if (b && bGui_Log)
+		if (b && bGui_LogFlow)
 			ofxTextFlow::setShowing(true);
 		else if (!b)
 			ofxTextFlow::setShowing(false);
@@ -513,7 +536,7 @@ public:
 		bGui = !bGui;
 
 #ifdef USE_TEXT_FLOW
-		if (bGui && bGui_Log)
+		if (bGui && bGui_LogFlow)
 			ofxTextFlow::setShowing(true);
 		else if (!bGui)
 			ofxTextFlow::setShowing(false);
@@ -584,7 +607,7 @@ private:
 	//--
 
 #ifdef USE_TEXT_FLOW
-	ofParameter<bool> bGui_Log;
+	ofParameter<bool> bGui_LogFlow;
 #endif
 
 #ifdef USE_MIDI
@@ -690,9 +713,10 @@ public:
 	void setCustomTemplate(bool b)
 	{
 		bCustomTemplate = b;
-
+#ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
 		patchingManager.setCustomTemplate(b);
 		//ofLogError("ofxSurfingOsc") << "Requires SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS and SURF_OSC__USE__RECEIVER_PATCHING_MODE";
+#endif
 	}
 
 	//--
@@ -774,14 +798,15 @@ public:
 private:
 	ofxPanel gui_Targets;
 	ofParameter<glm::vec2> positionGui_Targets;
+public:
 	ofParameter<bool> bGui_Targets;
 #endif
 
 	//--
 
-#ifdef SURF_OSC__USE__RECEIVER_PLOTS
-
 	// Plots
+
+#ifdef SURF_OSC__USE__RECEIVER_PLOTS
 
 private:
 
@@ -928,6 +953,7 @@ private:
 	CircleBeat togglesCircles[NUM_TOGGLES];
 	BarValue valuesBar[NUM_VALUES];
 	BarValue numbersBars[NUM_VALUES];
+
 	float _rounded = 0;
 
 #endif
@@ -937,6 +963,7 @@ private:
 	//----
 
 #ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
+
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
 
 public:
@@ -976,12 +1003,15 @@ public:
 		return (int)patchingManager.pipeNumbers[i].output.get();
 	}
 
+#endif
+
 	//--
+
+private:
 
 	ofParameter<bool> bRandom;
 	void doTesterRandom();
 
-#endif
 #endif
 
 	//--
