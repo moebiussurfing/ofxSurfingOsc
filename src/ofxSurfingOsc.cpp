@@ -984,6 +984,21 @@ void ofxSurfingOsc::update()
 		}
 #endif
 	}
+
+	//TODO:
+	// Timed off. Required bc ofxPubSubOsc sends one state per frame.
+	int dur = 50;
+	auto t = ofGetElapsedTimeMillis();
+	for (int i = 0; i < NUM_BANGS; i++)
+	{
+		if (bBangs[i] && (t - t_bBangs[i] > dur))
+		{
+			bBangs[i] = false;
+
+			int _start = 0;
+			plotsTargets[_start + i]->update(false);
+		}
+	}
 }
 
 //--------------------------------------------------------------
@@ -1296,6 +1311,7 @@ void ofxSurfingOsc::addSender_Bool(ofParameter<bool>& p, string address)
 		return;
 	}
 
+	//ofxPublishOscIf(p.get(), OSC_OutputIp, OSC_OutputPort, address, p);
 	ofxPublishOsc(OSC_OutputIp, OSC_OutputPort, address, p);
 	strs_outputAddresses.push_back(address);
 
@@ -1374,7 +1390,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 		ofxTextFlow::setShowing(bGui_LogFlow);
 
 		return;
-	}
+}
 #endif
 
 	//--
@@ -1518,7 +1534,7 @@ void ofxSurfingOsc::refreshGui()
 	else
 	{
 		gm.minimize();
-	}
+}
 #endif
 
 	//--
@@ -1570,7 +1586,7 @@ void ofxSurfingOsc::keyPressed(ofKeyEventArgs& eventArgs)
 #ifdef USE_TEXT_FLOW
 	else if (key == OF_KEY_BACKSPACE) {
 		ofxTextFlow::clear();
-	}
+}
 #endif
 }
 
@@ -1633,42 +1649,8 @@ void ofxSurfingOsc::setupTargets()
 {
 	ofLogNotice("ofxSurfingOsc") << (__FUNCTION__);
 
-	//--
-
-	// Plots
-
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
-
-	// Plots Colors
-
-	// 0. Mono
-	int a = 200;
-	colorBangs = ofColor(ofColor::yellow, a);
-	colorToggles = ofColor(ofColor::yellow, a);
-	colorValues = ofColor(ofColor::yellow, a);
-	colorNumbers = ofColor(ofColor::yellow, a);
-
-	//// 1. Colors
-	//colorBangs = ofColor::green;
-	//colorToggles = ofColor::yellow;
-	//colorValues = ofColor::red;
-	//colorNumbers = ofColor::blue;
-
-	//// 2. Dark
-	//int _dark = 24;
-	//colorBangs = ofColor(_dark);
-	//colorToggles = ofColor(_dark);
-	//colorValues = ofColor(_dark);
-	//colorNumbers = ofColor(_dark);
-
-	//// 3. Grays
-	//int _min = 0;
-	//int _max = 128;
-	//colorBangs = ofColor((int)ofMap(0, 0, 1, _min, _max));
-	//colorToggles = ofColor((int)ofMap(0.2, 0, 1, _min, _max));
-	//colorValues = ofColor((int)ofMap(0.7, 0, 1, _min, _max));
-	//colorNumbers = ofColor((int)ofMap(1, 0, 1, _min, _max));
-
+	setupPlotsColors();
 #endif
 
 	//--
@@ -2107,11 +2089,15 @@ void ofxSurfingOsc::Changed_Tar_Bangs(ofAbstractParameter& e) // preset load/tri
 			//plotsTargets[i]->update(1);
 			bangRects[i].bang();
 
-			//TODO:
-			// instant off
-			bBangs[i] = false;
-			int _start = 0;
-			plotsTargets[_start + i]->update(true);
+			////TODO:
+			//// instant off
+			//bBangs[i] = false;
+			//int _start = 0;
+			//plotsTargets[_start + i]->update(true);
+			
+			//TODO: 
+			// Timed off. Required bc ofxPubSubOsc sends one state per frame.
+			t_bBangs[i] = ofGetElapsedTimeMillis();
 #endif
 
 			return;
@@ -2203,8 +2189,53 @@ void ofxSurfingOsc::exit_Targets()
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 
 //--------------------------------------------------------------
+void ofxSurfingOsc::setupPlotsColors()
+{
+	//--
+
+	// Plots Colors
+
+	//// 0. Mono
+	//int a = 200;
+	//colorBangs = ofColor(ofColor::yellow, a);
+	//colorToggles = ofColor(ofColor::yellow, a);
+	//colorValues = ofColor(ofColor::yellow, a);
+	//colorNumbers = ofColor(ofColor::yellow, a);
+
+	//// 1. Colors
+	//colorBangs = ofColor::green;
+	//colorToggles = ofColor::yellow;
+	//colorValues = ofColor::red;
+	//colorNumbers = ofColor::blue;
+
+	//// 2. Dark
+	//int _dark = 24;
+	//colorBangs = ofColor(_dark);
+	//colorToggles = ofColor(_dark);
+	//colorValues = ofColor(_dark);
+	//colorNumbers = ofColor(_dark);
+
+	// 3. White
+	int c = 200;
+	colorBangs = ofColor(c);
+	colorToggles = ofColor(c);
+	colorValues = ofColor(c);
+	colorNumbers = ofColor(c);
+
+	//// 4. Grays
+	//int _min = 0;
+	//int _max = 128;
+	//colorBangs = ofColor((int)ofMap(0, 0, 1, _min, _max));
+	//colorToggles = ofColor((int)ofMap(0.2, 0, 1, _min, _max));
+	//colorValues = ofColor((int)ofMap(0.7, 0, 1, _min, _max));
+	//colorNumbers = ofColor((int)ofMap(1, 0, 1, _min, _max));
+}
+
+//--------------------------------------------------------------
 void ofxSurfingOsc::setupPlots()
 {
+	//--
+
 	//TODO:
 	// Custom template
 

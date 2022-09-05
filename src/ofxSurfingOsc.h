@@ -51,14 +51,19 @@
 
 #define SURF_OSC__USE__TARGETS_INTERNAL_PARAMS 
 #define SURF_OSC__USE__TARGETS_INTERNAL_PARAMS_GUI
-#define SURF_OSC__USE__TARGETS_INTERNAL_PLOTS // Plots. Requires Targets
-//#define SURF_OSC__USE__RECEIVER_PATCHING_MODE // Patcher. Requires receiver / Slave mode and Targets.
 
-//--
+// Plots. Requires above Targets enabled
+#define SURF_OSC__USE__TARGETS_INTERNAL_PLOTS 
+
+// Patcher. Requires receiver / Slave mode and Targets.
+#define SURF_OSC__USE__RECEIVER_PATCHING_MODE 
+
+//----
 
 //#define USE_MIDI // MIDI //TODO: WIP
 
-#define USE_IM_GUI
+#define USE_IM_GUI // replaces ofxGui
+// When disabled you must disable the ofxSurfingOsc/src/ImGui/ folder
 
 //-----------------------
 
@@ -780,6 +785,8 @@ public:
 	ofParameter<float> values[NUM_VALUES];
 	ofParameter<int> numbers[NUM_NUMBERS];
 
+	int t_bBangs[NUM_BANGS];
+
 	//--
 
 private:
@@ -985,6 +992,7 @@ private:
 	ofColor colorValues, colorNumbers, colorBangs, colorToggles;
 
 	void setupPlots();
+	void setupPlotsColors();
 
 	//--
 
