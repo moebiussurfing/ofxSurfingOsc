@@ -121,25 +121,9 @@ void ofApp::Changed_Bangs(ofAbstractParameter& e)//preset load/trig
 	oscHelper.ui->AddToLog(s);
 
 	if (name == "BANG_0") cout << name << ":    \t" << e << endl;
-	if (name == "BANG_1") cout << name << ":    \t" << e << endl;
-	if (name == "BANG_2") cout << name << ":    \t" << e << endl;
-	if (name == "BANG_3") cout << name << ":    \t" << e << endl;
-
-	/*
-		for (int i = 0; i < NUM_BANGS - 1; i++)
-		{
-			if (name == "BANG_" + ofToString(i + 1))
-			{
-
-				if (i == 0) bBeat = p.get();
-				else if (i == 1) bBang_0 = p.get();
-				else if (i == 2) bBang_1 = p.get();
-
-				ofLogNotice(__FUNCTION__) << "\tBANGS\t[" << ofToString(i + 1) << "] " << "BANG";
-				return;
-			}
-		}
-	*/
+	else if (name == "BANG_1") cout << name << ":    \t" << e << endl;
+	else if (name == "BANG_2") cout << name << ":    \t" << e << endl;
+	else if (name == "BANG_3") cout << name << ":    \t" << e << endl;
 }
 
 //--------------------------------------------------------------
@@ -229,13 +213,10 @@ void ofApp::Changed_Numbers(ofAbstractParameter& e)
 		{
 			ofParameter<int> p = e.cast<int>();
 			if (name != p.getName()) return;//skip if not been trigged!
-
-			cout << p.getName() << ":" << p.get() << endl;
-
+			cout << p.getName() << ":    \t" << p.get() << endl;
 			return;
 		}
 	}
-	
 }
 
 #endif

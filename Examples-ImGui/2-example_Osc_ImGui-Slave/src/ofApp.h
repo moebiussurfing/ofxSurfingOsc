@@ -35,7 +35,7 @@ public:
 
 #ifdef USE_local_Targets
 
-	ofParameter<bool> bBypass{ "ByPass", false };
+	ofParameter<bool> bBypass{ "ByPass", false }; // disable callbacks log
 
 	void setupTargets();
 
