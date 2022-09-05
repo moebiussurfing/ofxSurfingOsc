@@ -76,6 +76,21 @@ void ofApp::draw()
 	ui.End();
 }
 
+//--------------------------------------------------------------
+void ofApp::exit()
+{
+	ofxSurfingHelpers::saveGroup(psettings);
+
+#ifdef USE_local_Targets
+
+	ofAddListener(oscHelper.params_Bangs.parameterChangedE(), this, &ofApp::Changed_Bangs);
+	ofAddListener(oscHelper.params_Toggles.parameterChangedE(), this, &ofApp::Changed_Toggles);
+	ofAddListener(oscHelper.params_Values.parameterChangedE(), this, &ofApp::Changed_Values);
+	ofAddListener(oscHelper.params_Numbers.parameterChangedE(), this, &ofApp::Changed_Numbers);
+
+#endif
+}
+
 //----
 
 #ifdef USE_local_Targets
@@ -105,12 +120,10 @@ void ofApp::Changed_Bangs(ofAbstractParameter& e)//preset load/trig
 	ofLogNotice(__FUNCTION__) << s;
 	oscHelper.ui->AddToLog(s);
 
-	/*
-	//ofParameter<float> p = e.cast<float>();
-	//if (name == "BANG_1") bBeat = p.get();
-	//else if (name == "BANG_2") bBang_0 = p.get();
-	//else if (name == "BANG_3") bBang_1 = p.get();
-	*/
+	if (name == "BANG_0") cout << name << ":    \t" << e << endl;
+	if (name == "BANG_1") cout << name << ":    \t" << e << endl;
+	if (name == "BANG_2") cout << name << ":    \t" << e << endl;
+	if (name == "BANG_3") cout << name << ":    \t" << e << endl;
 
 	/*
 		for (int i = 0; i < NUM_BANGS - 1; i++)
@@ -139,16 +152,17 @@ void ofApp::Changed_Toggles(ofAbstractParameter& e)
 	ofLogNotice(__FUNCTION__) << s;
 	oscHelper.ui->AddToLog(s);
 
-	/*
-	for (int i = 0; i < NUM_TOGGLES - 1; i++)
+	// Example
+	for (int i = 0; i < NUM_TOGGLES; i++)
 	{
-		if (name == "TOGGLE_" + ofToString(i + 1))
+		if (name == "TOGGLE_" + ofToString(i))
 		{
-			//ofLogNotice(__FUNCTION__) << "\tTOGGLE\t[" << ofToString(i + 1) << "] " << (bToggles[i] ? "ON" : "OFF");
+			cout << name << ":    \t" << e << endl;
+			ofLogNotice(__FUNCTION__) << "\tTOGGLE\t[" << ofToString(i) << "] " << 
+				(oscHelper.bToggles[i] ? "ON" : "OFF");
 			return;
 		}
 	}
-	*/
 }
 
 //--------------------------------------------------------------
@@ -161,7 +175,14 @@ void ofApp::Changed_Values(ofAbstractParameter& e)
 	ofLogNotice(__FUNCTION__) << s;
 	oscHelper.ui->AddToLog(s);
 
+	// Example
+	if (name == "VALUE_0") cout << name << ":    \t" << e << endl;
+	else if (name == "VALUE_1") cout << name << ":    \t" << e << endl;
+	else if (name == "VALUE_2") cout << name << ":    \t" << e << endl;
+	else if (name == "VALUE_3") cout << name << ":    \t" << e << endl;
+
 	/*
+	// Example
 	if (e.type() == typeid(ofParameter<float>).name())
 	{
 		ofParameter<float> p = e.cast<float>();
@@ -179,17 +200,15 @@ void ofApp::Changed_Values(ofAbstractParameter& e)
 	}
 	*/
 
-	/*
-	for (int i = 0; i < NUM_VALUES - 1; i++)
+	// Example
+	for (int i = 0; i < NUM_VALUES; i++)
 	{
-		if (name == "VALUE " + ofToString(i + 1))
+		if (name == "VALUE_" + ofToString(i))
 		{
-			ofLogNotice(__FUNCTION__) << "\tVALUE\t[" << ofToString(i + 1) << "] " << values[i];
-
+			ofLogNotice(__FUNCTION__) << "\tVALUE\t[" << ofToString(i) << "] " << oscHelper.values[i];
 			return;
 		}
 	}
-	*/
 }
 
 //--------------------------------------------------------------
@@ -202,30 +221,21 @@ void ofApp::Changed_Numbers(ofAbstractParameter& e)
 	ofLogNotice(__FUNCTION__) << s;
 	oscHelper.ui->AddToLog(s);
 
-	/*
+	// Example
 	for (int i = 0; i < NUM_NUMBERS; i++)
 	{
-		if (name == "NUMBER_" + ofToString(i))
+		// Discard if not an int param
+		if (e.type() == typeid(ofParameter<int>).name())
 		{
+			ofParameter<int> p = e.cast<int>();
+			if (name != p.getName()) return;//skip if not been trigged!
+
+			cout << p.getName() << ":" << p.get() << endl;
+
 			return;
 		}
 	}
-	*/
+	
 }
 
 #endif
-
-//--------------------------------------------------------------
-void ofApp::exit()
-{
-	ofxSurfingHelpers::saveGroup(psettings);
-
-#ifdef USE_local_Targets
-
-	ofAddListener(oscHelper.params_Bangs.parameterChangedE(), this, &ofApp::Changed_Bangs);
-	ofAddListener(oscHelper.params_Toggles.parameterChangedE(), this, &ofApp::Changed_Toggles);
-	ofAddListener(oscHelper.params_Values.parameterChangedE(), this, &ofApp::Changed_Values);
-	ofAddListener(oscHelper.params_Numbers.parameterChangedE(), this, &ofApp::Changed_Numbers);
-
-#endif
-}

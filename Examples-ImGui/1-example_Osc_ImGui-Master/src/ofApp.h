@@ -1,6 +1,6 @@
 #pragma once
 
-#define USE_local_Targets
+//#define USE_local_Targets // More useful to use as receiver / slave
 
 #include "ofMain.h"
 
