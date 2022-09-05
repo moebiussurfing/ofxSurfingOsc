@@ -117,14 +117,17 @@ void ofxSurfingOsc::setup()
 		boxPlotsBg.setPathGlobal(path_Global);
 		boxPlotsBg.setName("Plots");
 		boxPlotsBg.bEdit.setName("EDIT PLOTS");
+
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
 		patchingManager.boxPlotsBg.bEdit.makeReferenceTo(boxPlotsBg.bEdit);
 #endif
 		boxPlotsBg.setup();
 
-		// constraint min size
-		glm::vec2 shape(200, 400);
-		boxPlotsBg.setRectConstraintMin(shape);
+		// constraint sizes
+		glm::vec2 shapeMin(200, 400);
+		boxPlotsBg.setRectConstraintMin(shapeMin);
+		glm::vec2 shapeMax(ofGetWidth(), ofGetHeight());
+		boxPlotsBg.setRectConstraintMax(shapeMax);
 	}
 #endif
 
@@ -484,10 +487,8 @@ void ofxSurfingOsc::setupParams()
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 	bGui_Plots.set("Plots", true);
-	//bSmoothPlots.set("Smooth", false);
-	//smoothPlotsPower.set("Smooth Power", 0.5, 0, 1);
 	if (bCustomTemplate) bGui_AllPlots.set("All", false);
-	bPlotsMini.set("Mini", false);
+	bPlotsMini.set("Mini", true);
 #endif
 #endif
 
@@ -508,9 +509,11 @@ void ofxSurfingOsc::setupParams()
 	// Extra
 
 	params_Extra.setName("Extra");
+
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
 	if (bDone_SetupTargets) params_Extra.add(bGui_Targets);
 #endif
+
 	params_Extra.add(bKeys);
 	params_Extra.add(boxHelp.bGui);
 	params_Extra.add(bDebug);
@@ -519,6 +522,7 @@ void ofxSurfingOsc::setupParams()
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
 	params_Extra.add(bRandomize);
 #endif
+
 	//params_Extra.add(bSmoothPlots);
 	//params_Extra.add(smoothPlotsPower);
 
@@ -588,16 +592,13 @@ void ofxSurfingOsc::setupParams()
 		params_PlotsInput.add(bGui_Plots);
 		params_PlotsInput.add(bPlotsMini);
 		if (bCustomTemplate) params_PlotsInput.add(bGui_AllPlots);
-		//params_PlotsInput.add(bSmoothPlots);
-		//params_PlotsInput.add(smoothPlotsPower);
 	}
 #endif
 
 	//--
 
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
-	if (bUseIn)
-		params_Osc.add(bGui_PatchingManager);
+	if (bUseIn) params_Osc.add(bGui_PatchingManager);
 #endif
 
 	//--
@@ -687,8 +688,7 @@ void ofxSurfingOsc::setupParams()
 	//--
 
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
-	if (bUseIn)
-		params_AppSettings.add(bGui_PatchingManager);
+	if (bUseIn) params_AppSettings.add(bGui_PatchingManager);
 #endif
 
 	//--
@@ -698,8 +698,6 @@ void ofxSurfingOsc::setupParams()
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 	params_AppSettings.add(params_PlotsInput);
 #endif
-
-	//params_AppSettings.add(bGui);
 
 	//--
 
@@ -802,6 +800,50 @@ void ofxSurfingOsc::Changed_Params_Osc(ofAbstractParameter& e)
 	//{
 	//	setOutputIp(OSC_OutputIp);//not required, it's the same param, there's no int
 	//}
+
+	//--
+
+	// OSC
+
+	//--
+
+	/*
+	// Input
+
+	if (bUseIn)
+	{
+		if (name == str_OSC_InputPort.getName())
+		{
+			//TODO: should verify that correspond to a valid port structure!
+			int p = ofToInt(str_OSC_InputPort);
+
+			setInputPort(p);
+
+			return;
+		}
+	}
+
+	//--
+
+	// Out
+
+	if (bUseOut)
+	{
+		if (name == str_OSC_OutputPort.getName())
+		{
+			int p = ofToInt(str_OSC_OutputPort);
+			setOutputPort(p);
+
+			return;
+		}
+
+		//else if (name == OSC_OutputIp.getName())
+		//{
+		//	setOutputIp(OSC_OutputIp);
+		// // not required, it's the same param, there's no int
+		//}
+	}
+	*/
 }
 
 //--------------------------------------------------------------
@@ -883,10 +925,8 @@ void ofxSurfingOsc::update()
 	if (ofGetFrameNum() == 1) bEnableMIDI = bEnableMIDI; // workaround
 #endif
 
-#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS 
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
-	updatePatchingManager();
-#endif
+	if (bUseIn) updatePatchingManager();
 #endif
 
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
@@ -957,14 +997,12 @@ void ofxSurfingOsc::draw(ofEventArgs& args)
 	draw();
 }
 
-#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS 
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
 //--------------------------------------------------------------
 void ofxSurfingOsc::drawPatchingManager()
 {
 	patchingManager.draw();
 }
-#endif
 #endif
 
 //--------------------------------------------------------------
@@ -1048,14 +1086,13 @@ void ofxSurfingOsc::draw()
 	//--
 
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
-	if (bUseIn)
-		if (bGui_PatchingManager) drawPatchingManager();
+	if (bUseIn) if (bGui_PatchingManager) drawPatchingManager();
 #endif
 
 	//--
 
 	boxHelp.draw();
-	}
+}
 
 //--------------------------------------------------------------
 void ofxSurfingOsc::exit()
@@ -1073,6 +1110,7 @@ void ofxSurfingOsc::exit()
 	if (bGui_InternalAllowed && bGui_Internal)
 	{
 		positionGui_Internal = gui_Internal.getPosition();
+
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS_GUI
 		positionGui_Targets = gui_Targets.getPosition();
 #endif
@@ -1105,7 +1143,7 @@ void ofxSurfingOsc::exit()
 
 }
 
-//--
+//----
 
 // Note that some settings can not be changed without restart the app!
 
@@ -1161,9 +1199,6 @@ void ofxSurfingOsc::addReceiver_Bool(ofParameter<bool>& p, string address)
 
 	ofxSubscribeOsc(OSC_InputPort, address, p);
 
-	//TODO:	
-	//ofxGetOsc
-
 	// Enabler
 	ofParameter<bool>b{ p.getName(), true };
 	bEnablerIns.push_back(b);
@@ -1189,8 +1224,6 @@ void ofxSurfingOsc::addReceiver_Int(ofParameter<int>& p, string address)
 			"OSC Input is disabled. That param " << p.getName() << " will not be registered!";
 		return;
 	}
-
-	//paramsAbstract.push_back(i);
 
 #ifdef USE_MIDI
 	mMidiParams.add(i);
@@ -1224,8 +1257,6 @@ void ofxSurfingOsc::addReceiver_Float(ofParameter<float>& p, string address)
 			"OSC Input is disabled. That param " << p.getName() << " will not be registered!";
 		return;
 	}
-
-	//paramsAbstract.push_back(f);
 
 #ifdef USE_MIDI
 	mMidiParams.add(p);
@@ -1348,57 +1379,15 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 
 	//--
 
-	// OSC
-
-	//--
-
-	/*
-	// Input
-
-	if (bUseIn)
-	{
-		if (name == str_OSC_InputPort.getName())
-		{
-			//TODO: should verify that correspond to a valid port structure!
-			int p = ofToInt(str_OSC_InputPort);
-
-			setInputPort(p);
-
-			return;
-		}
-	}
-
-	//--
-
-	// Out
-
-	if (bUseOut)
-	{
-		if (name == str_OSC_OutputPort.getName())
-		{
-			int p = ofToInt(str_OSC_OutputPort);
-			setOutputPort(p);
-
-			return;
-		}
-
-		//else if (name == OSC_OutputIp.getName())
-		//{
-		//	setOutputIp(OSC_OutputIp);
-		// // not required, it's the same param, there's no int
-		//}
-	}
-	*/
-
-	//--
-
 	//TODO:
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
 	if (name == bGui_PatchingManager.getName())
 	{
 		if (bUseIn)
+		{
 			if (bGui_PatchingManager) {
 			}
+		}
 
 		return;
 	}
@@ -1510,7 +1499,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 		return;
 	}
 #endif
-	}
+}
 
 //--------------------------------------------------------------
 void ofxSurfingOsc::refreshGui()
@@ -1713,10 +1702,10 @@ void ofxSurfingOsc::setupTargets()
 
 		// BeatCircles
 
-		bangCircles[i].setColor(colorBangs);
-		bangCircles[i].setColorBackground(ofColor(0, 128));
-		bangCircles[i].setLocked(true);
-		//bangCircles[i].setEnableBorder(true);
+		bangRects[i].setColor(colorBangs);
+		bangRects[i].setColorBackground(ofColor(0, 128));
+		bangRects[i].setLocked(true);
+		bangRects[i].setEnableBorder(true);
 #endif
 	}
 
@@ -1744,11 +1733,11 @@ void ofxSurfingOsc::setupTargets()
 
 		// BeatCircles
 
-		togglesCircles[i].setColor(colorToggles);
-		togglesCircles[i].setColorBackground(ofColor(0, 128));
-		togglesCircles[i].setLocked(true);
-		//togglesCircles[i].setEnableBorder(true);
-		togglesCircles[i].setToggleMode(true);
+		togglesRects[i].setColor(colorToggles);
+		togglesRects[i].setColorBackground(ofColor(0, 128));
+		togglesRects[i].setLocked(true);
+		togglesRects[i].setEnableBorder(true);
+		togglesRects[i].setToggleMode(true);
 #endif
 	}
 
@@ -1776,9 +1765,9 @@ void ofxSurfingOsc::setupTargets()
 
 		// Bars
 
-		valuesBar[i].setColor(colorValues);
-		valuesBar[i].setColorBackground(ofColor(0, 128));
-		valuesBar[i].setRounded(_rounded);
+		valuesBars[i].setColor(colorValues);
+		valuesBars[i].setColorBackground(ofColor(0, 128));
+		valuesBars[i].setRounded(_rounded);
 #endif
 	}
 
@@ -2087,8 +2076,8 @@ void ofxSurfingOsc::setupReceiveLogger()
 #endif
 				}
 			});
-		}
 	}
+}
 
 //--
 
@@ -2116,7 +2105,7 @@ void ofxSurfingOsc::Changed_Tar_Bangs(ofAbstractParameter& e) // preset load/tri
 			// Plot
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 			//plotsTargets[i]->update(1);
-			bangCircles[i].bang();
+			bangRects[i].bang();
 
 			//TODO:
 			// instant off
@@ -2148,9 +2137,9 @@ void ofxSurfingOsc::Changed_Tar_Toggles(ofAbstractParameter& e)
 			// Plot
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 			// first toggle (e.g: gist note)
-			//if (b) { togglesCircles[i].bang(); }
-			if (b) { togglesCircles[i].toggle(true); }
-			else { togglesCircles[i].toggle(false); }
+			//if (b) { togglesRects[i].bang(); }
+			if (b) { togglesRects[i].toggle(true); }
+			else { togglesRects[i].toggle(false); }
 #endif
 			return;
 		}
@@ -2198,7 +2187,7 @@ void ofxSurfingOsc::Changed_Tar_Numbers(ofAbstractParameter& e)
 //--
 
 //--------------------------------------------------------------
-void ofxSurfingOsc::exit_InternalParams()
+void ofxSurfingOsc::exit_Targets()
 {
 	ofRemoveListener(params_Bangs.parameterChangedE(), this, &ofxSurfingOsc::Changed_Tar_Bangs);
 	ofRemoveListener(params_Toggles.parameterChangedE(), this, &ofxSurfingOsc::Changed_Tar_Toggles);
@@ -2454,9 +2443,9 @@ void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
 
 			if (i >= _start && i < _end)
 			{
-				bangCircles[i].setEnableBorder(!bIsSmall);
+				//bangRects[i].setEnableBorder(!bIsSmall);
 
-				bangCircles[i].draw(glm::vec2(x + _r + _xpad, y + plotMargin + h / 2.0f), _r);
+				bangRects[i].draw(glm::vec2(x + _r + _xpad, y + plotMargin + h / 2.0f), _r);
 			}
 
 			//--
@@ -2469,9 +2458,9 @@ void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
 
 			if (i >= _start && i < _end)
 			{
-				togglesCircles[i].setEnableBorder(!bIsSmall);
+				//togglesRects[i].setEnableBorder(!bIsSmall);
 
-				togglesCircles[ii].draw(glm::vec2(x + _r + _xpad, y + plotMargin + h / 2.0f), _r);
+				togglesRects[ii].draw(glm::vec2(x + _r + _xpad, y + plotMargin + h / 2.0f), _r);
 			}
 
 			//--
@@ -2489,9 +2478,9 @@ void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
 			if (i >= _start && i < _end) {
 				float v = values[ii];
 
-				valuesBar[i].setEnableBorder(!bIsSmall);
+				//valuesBars[i].setEnableBorder(!bIsSmall);
 
-				valuesBar[ii].draw(
+				valuesBars[ii].draw(
 					v,
 					glm::vec2(x + _xpad, y + plotMargin + h - 2),
 					2 * _r, h - _gap);
@@ -2508,7 +2497,7 @@ void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
 			if (i >= _start && i < _end) {
 				int v = numbers[ii];
 
-				numbersBars[i].setEnableBorder(!bIsSmall);
+				//numbersBars[i].setEnableBorder(!bIsSmall);
 
 				numbersBars[ii].draw(
 					v,

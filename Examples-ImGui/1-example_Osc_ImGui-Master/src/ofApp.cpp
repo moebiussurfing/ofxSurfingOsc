@@ -63,7 +63,7 @@ void ofApp::draw()
 	{
 		if (ui.BeginWindow(name))
 		{
-			ui.Add(oscHelper.bGui, OFX_IM_TOGGLE_ROUNDED);
+			ui.Add(oscHelper.bGui, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
 
 #ifdef USE_local_Targets
 			ui.Add(bBypass, OFX_IM_TOGGLE_ROUNDED_SMALL);

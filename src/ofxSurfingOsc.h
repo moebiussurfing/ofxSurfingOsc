@@ -49,15 +49,12 @@
 
 // OPTIONAL
 
-// On Master mode / sender, 
-// these internal targets and plots will  
-// not bee probably used/useful.
-// And can be disabled/commented!
-// ofxHistoryPlot can be then removed. 
 #define SURF_OSC__USE__TARGETS_INTERNAL_PARAMS 
 #define SURF_OSC__USE__TARGETS_INTERNAL_PARAMS_GUI
-//#define SURF_OSC__USE__RECEIVER_PATCHING_MODE // Patcher
-#define SURF_OSC__USE__TARGETS_INTERNAL_PLOTS // Plots. Only used on Slave mode
+#define SURF_OSC__USE__TARGETS_INTERNAL_PLOTS // Plots. Requires Targets
+//#define SURF_OSC__USE__RECEIVER_PATCHING_MODE // Patcher. Requires receiver / Slave mode and Targets.
+
+//--
 
 //#define USE_MIDI // MIDI //TODO: WIP
 
@@ -100,10 +97,13 @@
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 #include "CircleBeat.h"
+#include "RectBeat.h"
 #include "BarValue.h"
 #include "ofxHistoryPlot.h"
 #endif
 #endif
+
+//--
 
 #include "ofxSurfingHelpers.h"
 #include "ofxSurfing_ofxGui.h"
@@ -251,6 +251,8 @@ public:
 				if (!ui->bMinimize)
 				{
 					ui->AddSpacingSeparated();
+
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 					ui->AddLabel("PLOTS");
 					ui->Indent();
 					ui->Add(bGui_Plots, OFX_IM_TOGGLE_ROUNDED);
@@ -258,7 +260,7 @@ public:
 					if (bCustomTemplate) ui->Add(bGui_AllPlots, OFX_IM_TOGGLE_ROUNDED_MINI);
 					ui->Unindent();
 					ui->AddSpacingSeparated();
-					
+#endif					
 					ui->Add(bRandomize, OFX_IM_TOGGLE_ROUNDED_MINI);
 					ui->Add(bDebug, OFX_IM_TOGGLE_ROUNDED_MINI);
 					if (bGui_InternalAllowed) ui->Add(bGui_Internal, OFX_IM_TOGGLE_ROUNDED_MINI);
@@ -764,7 +766,7 @@ private:
 
 private:
 
-	void exit_InternalParams();
+	void exit_Targets();
 
 	//--
 
@@ -862,15 +864,12 @@ private:
 	ofParameter<bool> bGui_Plots;
 	ofParameter<bool> bPlotsMini;
 
-	//// smooth
-	//ofParameter<bool> bSmoothPlots;
-	//ofParameter<float> smoothPlotsPower;
-
 	enum PLOTS_MINI_POS
 	{
 		POS_RIGHT,
 		POS_LEFT,
 	};
+
 	PLOTS_MINI_POS plotsMiniPos = POS_RIGHT;
 
 public:
@@ -929,7 +928,7 @@ public:
 			plotsTargets[_i - 1]->setVariableName(style.name);
 			plotsTargets[_i - 1]->setColor(_c);
 			plotsTargets_Visible[_i - 1] = true;
-			bangCircles[_i - 1].setColor(_c);
+			bangRects[_i - 1].setColor(_c);
 		}
 
 		// Toggles
@@ -941,7 +940,7 @@ public:
 			plotsTargets[_i - 1]->setVariableName(style.name);
 			plotsTargets[_i - 1]->setColor(_c);
 			plotsTargets_Visible[_i - 1] = true;
-			togglesCircles[_i - 1 - _start].setColor(_c);
+			togglesRects[_i - 1 - _start].setColor(_c);
 		}
 
 		// Values
@@ -955,7 +954,7 @@ public:
 			plotsTargets[_i - 1]->setVariableName(style.name);
 			plotsTargets[_i - 1]->setColor(_c);
 			plotsTargets_Visible[_i - 1] = true;
-			valuesBar[_i - 1 - _start].setColor(_c);
+			valuesBars[_i - 1 - _start].setColor(_c);
 			if (_min != -1 && _max != -1) plotsTargets[_i - 1]->setRange(_min, _max);
 		}
 
@@ -990,9 +989,9 @@ private:
 	//--
 
 	// Extra widgets
-	CircleBeat bangCircles[NUM_BANGS];
-	CircleBeat togglesCircles[NUM_TOGGLES];
-	BarValue valuesBar[NUM_VALUES];
+	RectBeat bangRects[NUM_BANGS];
+	RectBeat togglesRects[NUM_TOGGLES];
+	BarValue valuesBars[NUM_VALUES];
 	BarValue numbersBars[NUM_VALUES];
 
 	float _rounded = 0;
