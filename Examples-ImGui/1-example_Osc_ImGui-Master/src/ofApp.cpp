@@ -76,6 +76,21 @@ void ofApp::draw()
 	ui.End();
 }
 
+//--------------------------------------------------------------
+void ofApp::exit()
+{
+	ofxSurfingHelpers::saveGroup(psettings);
+
+#ifdef USE_local_Targets
+
+	ofAddListener(oscHelper.params_Bangs.parameterChangedE(), this, &ofApp::Changed_Bangs);
+	ofAddListener(oscHelper.params_Toggles.parameterChangedE(), this, &ofApp::Changed_Toggles);
+	ofAddListener(oscHelper.params_Values.parameterChangedE(), this, &ofApp::Changed_Values);
+	ofAddListener(oscHelper.params_Numbers.parameterChangedE(), this, &ofApp::Changed_Numbers);
+
+#endif
+}
+
 //----
 
 #ifdef USE_local_Targets
@@ -140,18 +155,3 @@ void ofApp::Changed_Numbers(ofAbstractParameter& e)
 }
 
 #endif
-
-//--------------------------------------------------------------
-void ofApp::exit()
-{
-	ofxSurfingHelpers::saveGroup(psettings);
-
-#ifdef USE_local_Targets
-
-	ofAddListener(oscHelper.params_Bangs.parameterChangedE(), this, &ofApp::Changed_Bangs);
-	ofAddListener(oscHelper.params_Toggles.parameterChangedE(), this, &ofApp::Changed_Toggles);
-	ofAddListener(oscHelper.params_Values.parameterChangedE(), this, &ofApp::Changed_Values);
-	ofAddListener(oscHelper.params_Numbers.parameterChangedE(), this, &ofApp::Changed_Numbers);
-
-#endif
-}

@@ -987,7 +987,6 @@ void ofxSurfingOsc::update()
 
 	//TODO:
 	// Timed off. Required bc ofxPubSubOsc sends one state per frame.
-	int dur = 50;
 	auto t = ofGetElapsedTimeMillis();
 	for (int i = 0; i < NUM_BANGS; i++)
 	{

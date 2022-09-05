@@ -785,7 +785,10 @@ public:
 	ofParameter<float> values[NUM_VALUES];
 	ofParameter<int> numbers[NUM_NUMBERS];
 
+private:
+
 	int t_bBangs[NUM_BANGS];
+	int dur = 100;
 
 	//--
 
