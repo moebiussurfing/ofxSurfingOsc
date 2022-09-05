@@ -43,7 +43,7 @@ public:
 	//----
 
 
-	// Local targets 
+	// Local Targets 
 	// aka receivers/senders
 
 #ifdef USE_local_Targets

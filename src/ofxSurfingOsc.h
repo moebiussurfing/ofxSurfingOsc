@@ -6,7 +6,7 @@
 
 	TODO:
 
-	+
+	+		send signals 0 and 1 to OSC values too
 
 	++		Patching Manager: look @daan example!
 	++		PatchPipeValue class:
@@ -54,10 +54,10 @@
 // not bee probably used/useful.
 // And can be disabled/commented!
 // ofxHistoryPlot can be then removed. 
-#define SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS 
-#define SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS_GUI
-#define SURF_OSC__USE__RECEIVER_PATCHING_MODE // Patcher
-//#define SURF_OSC__USE__RECEIVER_PLOTS // Plots. Only used on Slave mode
+#define SURF_OSC__USE__TARGETS_INTERNAL_PARAMS 
+#define SURF_OSC__USE__TARGETS_INTERNAL_PARAMS_GUI
+//#define SURF_OSC__USE__RECEIVER_PATCHING_MODE // Patcher
+#define SURF_OSC__USE__TARGETS_INTERNAL_PLOTS // Plots. Only used on Slave mode
 
 //#define USE_MIDI // MIDI //TODO: WIP
 
@@ -97,8 +97,8 @@
 
 //--
 
-#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
-#ifdef SURF_OSC__USE__RECEIVER_PLOTS
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 #include "CircleBeat.h"
 #include "BarValue.h"
 #include "ofxHistoryPlot.h"
@@ -132,7 +132,6 @@ class ofxSurfingOsc
 
 #ifdef USE_IM_GUI
 
-//private:
 public:
 
 	ofxSurfingGui* ui;
@@ -154,12 +153,10 @@ public:
 		if (ui == nullptr) return;
 
 		{
-			//if (ui->BeginWindowSpecial(bGui))
 			bool bIsSpecial = (ui->getModeSpecial() == IM_GUI_MODE_WINDOWS_SPECIAL_ORGANIZER);
 			bool b;
 			if (bIsSpecial) b = ui->BeginWindowSpecial(bGui);
 			else b = ui->BeginWindow(bGui);
-
 			if (b)
 			{
 				ui->AddLabelHuge("OSC");
@@ -167,15 +164,16 @@ public:
 
 				ui->Add(ui->bMinimize, OFX_IM_TOGGLE_ROUNDED);
 				ui->AddSpacingSeparated();
-				
-				ui->Add(bGui_Targets, OFX_IM_TOGGLE_ROUNDED);
+
+				ui->Add(bGui_Targets, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
+				ui->Add(ui->bLog, OFX_IM_TOGGLE_ROUNDED_SMALL);
 				ui->AddSpacingSeparated();
 
 				//--
 
 				// In
 
-				if (bUseOscIn)
+				if (bUseIn)
 				{
 					if (!ui->bMinimize) ui->AddLabelBig("IN");
 					ui->Add(bEnableOsc_Input, OFX_IM_TOGGLE);
@@ -190,19 +188,22 @@ public:
 
 						//TODO: implement
 						/*
-						if (getInEnablersSize() != 0) ui->AddSpacingSeparated();
+						*
+						if (!ui->bMinimize) {
 
-						//if (!ui->bMinimize) ui->AddLabelBig("ENABLERS");
-						SurfingGuiTypes s = OFX_IM_TOGGLE_SMALL;
-						for (int i = 0; i < getInEnablersSize(); i++) {
-							ui->Add(getInEnabler(i), s);
+							if (ui->BeginTree("ENABLERS", false))
+							{
+								if (getInEnablersSize() != 0) ui->AddSpacingSeparated();
+
+								//if (!ui->bMinimize) ui->AddLabelBig("ENABLERS");
+								SurfingGuiTypes s = OFX_IM_TOGGLE_SMALL;
+								for (int i = 0; i < getInEnablersSize(); i++) {
+									ui->Add(getInEnabler(i), s);
+								}
+								ui->EndTree();
+							}
 						}
 						*/
-
-						// Enablers
-						//ui->Add(bBeat, s);
-						//ui->Add(bBang_0, s);
-						//ui->Add(bBang_1, s);
 					}
 				}
 
@@ -210,9 +211,9 @@ public:
 
 				// Out
 
-				if (bUseOscOut)
+				if (bUseOut)
 				{
-					if (bUseOscIn) ui->AddSpacingSeparated();
+					if (bUseIn) ui->AddSpacingSeparated();
 
 					if (!ui->bMinimize) ui->AddLabelBig("OUT");
 					ui->Add(bEnableOsc_Output, OFX_IM_TOGGLE);
@@ -228,17 +229,20 @@ public:
 							ui->AddTooltip(tt);
 						}
 
-						if (getOutEnablersSize() != 0) ui->AddSpacingSeparated();
+						if (!ui->bMinimize) {
+							if (getOutEnablersSize() != 0) ui->AddSpacingSeparated();
 
-						//if (!ui->bMinimize) ui->AddLabelBig("ENABLERS");
-						SurfingGuiTypes s = OFX_IM_TOGGLE_SMALL;
-						for (int i = 0; i < getOutEnablersSize(); i++) {
-							ui->Add(getOutEnabler(i), s);
+							if (ui->BeginTree("ENABLERS", false))
+							{
+								//if (!ui->bMinimize) ui->AddLabelBig("ENABLERS");
+								SurfingGuiTypes s = OFX_IM_TOGGLE_SMALL;
+								for (int i = 0; i < getOutEnablersSize(); i++) {
+									ui->Add(getOutEnabler(i), s);
+								}
+
+								ui->EndTree();
+							}
 						}
-
-						//ui->Add(bBeat, s);
-						//ui->Add(bBang_0, s);
-						//ui->Add(bBang_1, s);
 					}
 				}
 
@@ -247,8 +251,15 @@ public:
 				if (!ui->bMinimize)
 				{
 					ui->AddSpacingSeparated();
-
-					ui->Add(bRandom, OFX_IM_TOGGLE_ROUNDED_MINI);
+					ui->AddLabel("PLOTS");
+					ui->Indent();
+					ui->Add(bGui_Plots, OFX_IM_TOGGLE_ROUNDED);
+					ui->Add(bPlotsMini, OFX_IM_TOGGLE_ROUNDED_SMALL);
+					if (bCustomTemplate) ui->Add(bGui_AllPlots, OFX_IM_TOGGLE_ROUNDED_MINI);
+					ui->Unindent();
+					ui->AddSpacingSeparated();
+					
+					ui->Add(bRandomize, OFX_IM_TOGGLE_ROUNDED_MINI);
 					ui->Add(bDebug, OFX_IM_TOGGLE_ROUNDED_MINI);
 					if (bGui_InternalAllowed) ui->Add(bGui_Internal, OFX_IM_TOGGLE_ROUNDED_MINI);
 					ui->Add(bHelp, OFX_IM_TOGGLE_ROUNDED_MINI);
@@ -270,14 +281,23 @@ public:
 
 		//--
 
+		// Targets
 		{
+			static bool bdone = false;
+			if (!bdone) {
+				bdone = true;
+				ui->ClearStyles();
+				ui->AddStyleGroupForBools(params_Bangs, OFX_IM_TOGGLE_SMALL);
+				ui->AddStyleGroupForBools(params_Toggles, OFX_IM_TOGGLE_SMALL);
+			}
+
 			bool bIsSpecial = (ui->getModeSpecial() == IM_GUI_MODE_WINDOWS_SPECIAL_ORGANIZER);
 			bool b;
 			if (bIsSpecial) b = ui->BeginWindowSpecial(bGui_Targets);
 			else b = ui->BeginWindow(bGui_Targets);
-			if (b) 
+			if (b)
 			{
-				if (bUseOscIn)
+				//if (bUseIn)
 				{
 					ui->AddGroup(params_Targets);
 				}
@@ -316,12 +336,7 @@ private:
 	void update(); // only required to plotting
 	void draw();
 
-private:
-
-	ofParameter<bool> bKeys;
-
-	bool bUseOscIn = true;//slave
-	bool bUseOscOut = true;//master 
+	//--
 
 public:
 
@@ -332,6 +347,15 @@ public:
 		Slave,
 		FullDuplex
 	};
+
+private:
+
+	ofParameter<bool> bKeys;
+
+	bool bUseIn = true;//slave
+	bool bUseOut = true;//master 
+
+public:
 
 	//--------------------------------------------------------------
 	void setup(SurfOscModes mode) { // fast setup passing the mode
@@ -375,8 +399,8 @@ private:
 
 	SurfOscModes mode = UNKNOWN;
 
-	void setEnableOscInput(bool b) { bUseOscIn = b; };//must be called before setup. can not be modified on runtime!
-	void setEnableOscOutput(bool b) { bUseOscOut = b; };//must be called before setup. can not be modified on runtime!
+	void setEnableOscInput(bool b) { bUseIn = b; };//must be called before setup. can not be modified on runtime!
+	void setEnableOscOutput(bool b) { bUseOut = b; };//must be called before setup. can not be modified on runtime!
 
 private:
 
@@ -407,7 +431,7 @@ public:
 		ofxSurfingHelpers::CheckFolder(path_Global);
 		path_Global = s;
 
-#ifdef SURF_OSC__USE__RECEIVER_PLOTS
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 		boxPlotsBg.setPathGlobal(path_Global);
 #endif
 	}
@@ -499,7 +523,7 @@ public:
 	//--------------------------------------------------------------
 	int getInEnablersSize() {
 		return bEnablerIns.size();
-}
+	}
 
 	//--
 
@@ -545,7 +569,7 @@ public:
 		else if (!bGui)
 			ofxTextFlow::setShowing(false);
 #endif
-	}
+}
 
 	//--
 
@@ -709,7 +733,7 @@ public:
 
 	void setupReceiveLogger();
 
-#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
 
 public:
 
@@ -719,23 +743,24 @@ public:
 		bCustomTemplate = b;
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
 		patchingManager.setCustomTemplate(b);
-		//ofLogError("ofxSurfingOsc") << "Requires SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS and SURF_OSC__USE__RECEIVER_PATCHING_MODE";
+		//ofLogError("ofxSurfingOsc") << "Requires SURF_OSC__USE__TARGETS_INTERNAL_PARAMS and SURF_OSC__USE__RECEIVER_PATCHING_MODE";
 #endif
-	}
+}
 
 	//--
 
 private:
 
-	void setupReceiverSubscribers();
+	void setupTargetsAsReceivers();
+	void setupTargetsAsSenders();
 
 	//--
 
 private:
 
-	void setupReceiverTargets();
+	void setupTargets();
 
-	bool bDone_SetupReceiver = false;
+	bool bDone_SetupTargets = false;
 
 private:
 
@@ -743,30 +768,41 @@ private:
 
 	//--
 
-	// Local receivers/targets
+	// Local Targets 
+	// For receivers or senders
+
+public:
+
+	ofParameter<bool> bBangs[NUM_BANGS];
+	ofParameter<bool> bToggles[NUM_TOGGLES];
+	ofParameter<float> values[NUM_VALUES];
+	ofParameter<int> numbers[NUM_NUMBERS];
+
+	//--
+
+private:
+
+	// Currently used as receivers from the osc messages.
+	// then will be feeded into these params.
 
 	// 8 bangs / 8 toggles / 8 float's / 8 int's
 	// for the moment this callbacks are only used to plotting purposes..
 
 	// Bool Bangs
-	ofParameter<bool> bBangs[NUM_BANGS];
 	string bangsNames[NUM_BANGS];
 	void Changed_Tar_Bangs(ofAbstractParameter& e);
 
 	// Bool Toggles
-	ofParameter<bool> bToggles[NUM_TOGGLES];
 	string togglesNames[NUM_TOGGLES];
 	void Changed_Tar_Toggles(ofAbstractParameter& e);
 
 	// Float Values
-	ofParameter<float> values[NUM_VALUES];
 	string valuesNames[NUM_VALUES];
 	void Changed_Tar_Values(ofAbstractParameter& e);
 
 	ofParameter<float> smoothValues[NUM_VALUES];
 
 	// Int Values
-	ofParameter<int> numbers[NUM_NUMBERS];
 	string numberNames[NUM_NUMBERS];
 	void Changed_Tar_Numbers(ofAbstractParameter& e);
 
@@ -798,7 +834,7 @@ public:
 
 	// Gui Panel
 	// for Targets
-#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS_GUI
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS_GUI
 private:
 	ofxPanel gui_Targets;
 	ofParameter<glm::vec2> positionGui_Targets;
@@ -810,7 +846,7 @@ public:
 
 	// Plots
 
-#ifdef SURF_OSC__USE__RECEIVER_PLOTS
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 
 private:
 
@@ -826,9 +862,9 @@ private:
 	ofParameter<bool> bGui_Plots;
 	ofParameter<bool> bPlotsMini;
 
-	// smooth
-	ofParameter<bool> bSmoothPlots;
-	ofParameter<float> smoothPlotsPower;
+	//// smooth
+	//ofParameter<bool> bSmoothPlots;
+	//ofParameter<float> smoothPlotsPower;
 
 	enum PLOTS_MINI_POS
 	{
@@ -848,7 +884,8 @@ public:
 private:
 
 	ofParameter<bool> bGui_AllPlots;
-	//only used if bCustomTemplate active. bc then we dont have any picked channels! 
+	//only used if bCustomTemplate active. 
+	//bc then we don't have any picked channels! 
 
 	const int amount_Plots_Targets = NUM_BANGS + NUM_TOGGLES + NUM_VALUES + NUM_NUMBERS;
 	vector<bool> plotsTargets_Visible; // array with bool of display state of any plot
@@ -966,7 +1003,7 @@ private:
 
 	//----
 
-#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
 
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
 
@@ -1013,7 +1050,8 @@ public:
 
 private:
 
-	ofParameter<bool> bRandom;
+	ofParameter<bool> bRandomize;
+
 	void doTesterRandom();
 
 #endif
@@ -1112,5 +1150,4 @@ void ofxSurfingBeatSync::drawImGui_Osc()
 		ui.EndWindowSpecial();
 	}
 }
-
 */

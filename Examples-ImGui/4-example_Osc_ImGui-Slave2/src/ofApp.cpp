@@ -3,7 +3,7 @@
 //--------------------------------------------------------------
 void ofApp::setup()
 {
-	name = "ImGuiSlaveBasic";
+	name = "ImGui-Slave";
 	ofSetWindowTitle(name);
 
 	ofSetBackgroundColor(ofColor::blue);

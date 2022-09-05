@@ -112,12 +112,14 @@ void ofxSurfingOsc::setup()
 
 	// Plots
 
-#ifdef SURF_OSC__USE__RECEIVER_PLOTS
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 	{
 		boxPlotsBg.setPathGlobal(path_Global);
 		boxPlotsBg.setName("Plots");
 		boxPlotsBg.bEdit.setName("EDIT PLOTS");
+#ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
 		patchingManager.boxPlotsBg.bEdit.makeReferenceTo(boxPlotsBg.bEdit);
+#endif
 		boxPlotsBg.setup();
 
 		// constraint min size
@@ -155,14 +157,14 @@ void ofxSurfingOsc::buildHelp()
 	strHelpInfo += name;
 	strHelpInfo += "\n\n";
 
-	if (bUseOscIn)
+	if (bUseIn)
 	{
 		strHelpInfo += "INPUT \n";
 		strHelpInfo += "PORT      " + str_OSC_InputPort.get() + "\n";
 		strHelpInfo += "\n";
 	}
 
-	if (bUseOscOut) {
+	if (bUseOut) {
 		strHelpInfo += "OUTPUT \n";
 		strHelpInfo += "PORT      " + str_OSC_OutputPort.get() + "\n";
 		strHelpInfo += "IP        " + OSC_OutputIp.get() + "\n";
@@ -195,13 +197,13 @@ void ofxSurfingOsc::setup_Osc()
 	params_OscSettings.clear();
 	params_OscSettings.setName("OSC_SETTINGS");
 
-	if (bUseOscIn)
+	if (bUseIn)
 	{
 		params_OscSettings.add(bEnableOsc_Input);
 		params_OscSettings.add(OSC_InputPort);
 	}
 
-	if (bUseOscOut)
+	if (bUseOut)
 	{
 		params_OscSettings.add(bEnableOsc_Output);
 		params_OscSettings.add(OSC_OutputPort);
@@ -271,13 +273,13 @@ void ofxSurfingOsc::initiate()
 
 		//--
 
-		if (bUseOscOut)
+		if (bUseOut)
 		{
 			bEnableOsc_Output = true;
 			OSC_InputPort = 12345;
 			OSC_OutputPort = 54321;
 		}
-		else if (bUseOscIn)
+		else if (bUseIn)//force
 		{
 			bEnableOsc_Input = true;
 			OSC_InputPort = 54321;
@@ -291,7 +293,7 @@ void ofxSurfingOsc::initiate()
 	ofxSurfingHelpers::loadGroup(params_OscSettings, path_Global + "/" + path_OscSettings);
 
 	// Fix workaround
-	if (bUseOscIn)
+	if (bUseIn)
 	{
 		bEnableOsc_Input = bEnableOsc_Input;
 	}
@@ -301,17 +303,18 @@ void ofxSurfingOsc::initiate()
 	// Initialize receiver mode when Input is enabled!
 	//if(0)
 
-	if (bUseOscIn)
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
+
+	// Setup param Targets
+	setupTargets();
+
+	//--
+
+	if (bUseIn)
 	{
-
-#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
-		// Setup param Targets
-		setupReceiverTargets();
-
 		// Subscribe all parameters
 		// to OSC incoming messages
-		setupReceiverSubscribers();
-#endif
+		setupTargetsAsReceivers();
 
 		// Log incoming messages
 		setupReceiveLogger();
@@ -319,8 +322,14 @@ void ofxSurfingOsc::initiate()
 
 	//--
 
-	// OSC
-	//startupDelayed();
+	if (bUseOut)
+	{
+		// Subscribe all parameters
+		// to OSC incoming messages
+		setupTargetsAsSenders();
+	}
+
+#endif
 
 	//----
 
@@ -337,7 +346,7 @@ void ofxSurfingOsc::startupDelayed()
 		// Debug and show all subscribed addresses
 		// Process all subscribed addresses
 
-		if (bUseOscIn)
+		if (bUseIn)
 		{
 			str_oscInputAddressesInfo = "ADDRESSES \n";
 			for (auto a : strs_inputAddresses)
@@ -351,7 +360,7 @@ void ofxSurfingOsc::startupDelayed()
 			ofAddListener(params_EnablerIns.parameterChangedE(), this, &ofxSurfingOsc::Changed_Params_EnablerIns);
 		}
 
-		if (bUseOscOut)
+		if (bUseOut)
 		{
 			str_oscOutputAddressesInfo = "ADDRESSES \n";
 			for (auto a : strs_outputAddresses)
@@ -379,8 +388,8 @@ void ofxSurfingOsc::startupDelayed()
 		}
 		*/
 
-		//if (bUseOscIn) str_oscAddressesInfo += str_oscInputAddressesInfo;
-		//if (bUseOscOut) str_oscAddressesInfo += str_oscOutputAddressesInfo;
+		//if (bUseIn) str_oscAddressesInfo += str_oscInputAddressesInfo;
+		//if (bUseOut) str_oscAddressesInfo += str_oscOutputAddressesInfo;
 
 		//--
 
@@ -401,7 +410,7 @@ void ofxSurfingOsc::startupDelayed()
 	if (bGui_InternalAllowed)
 	{
 		// Out Enablers
-		if (bUseOscOut)
+		if (bUseOut)
 		{
 			auto& g = gui_Internal.getGroup(params_Osc.getName());
 			auto& gout = g.getGroup(params_OscOutput.getName());
@@ -412,7 +421,7 @@ void ofxSurfingOsc::startupDelayed()
 
 		//TODO:
 		// In Enablers
-		if (bUseOscIn)
+		if (bUseIn)
 		{
 			auto& g = gui_Internal.getGroup(params_Osc.getName());
 			auto& gin = g.getGroup(params_OscInput.getName());
@@ -440,8 +449,8 @@ void ofxSurfingOsc::setupGui()
 #endif
 
 	// Plots
-#ifdef SURF_OSC__USE__RECEIVER_PLOTS
-	if (bUseOscIn) gui_Internal.add(params_PlotsInput);
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
+	if (bUseIn) gui_Internal.add(params_PlotsInput);
 #endif
 
 	// Extra
@@ -464,19 +473,19 @@ void ofxSurfingOsc::setupParams()
 	bKeys.set("Keys", true);
 	bDebug.set("Debug", false);
 
-#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
-	bRandom.set("Randomize", false);
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
+	bRandomize.set("Randomize", false);
 #endif
 
-#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
 	bGui_Targets.set("OSC TARGETS", true);
 #endif
 
-#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
-#ifdef SURF_OSC__USE__RECEIVER_PLOTS
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 	bGui_Plots.set("Plots", true);
-	bSmoothPlots.set("Smooth", false);
-	smoothPlotsPower.set("Smooth Power", 0.5, 0, 1);
+	//bSmoothPlots.set("Smooth", false);
+	//smoothPlotsPower.set("Smooth Power", 0.5, 0, 1);
 	if (bCustomTemplate) bGui_AllPlots.set("All", false);
 	bPlotsMini.set("Mini", false);
 #endif
@@ -491,7 +500,7 @@ void ofxSurfingOsc::setupParams()
 #endif
 
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
-	if (bUseOscIn) bGui_PatchingManager.set("PATCHING MANAGER", false);
+	if (bUseIn) bGui_PatchingManager.set("PATCHING MANAGER", false);
 #endif
 
 	//--
@@ -499,16 +508,16 @@ void ofxSurfingOsc::setupParams()
 	// Extra
 
 	params_Extra.setName("Extra");
-#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
-	if (bDone_SetupReceiver) params_Extra.add(bGui_Targets);
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
+	if (bDone_SetupTargets) params_Extra.add(bGui_Targets);
 #endif
 	params_Extra.add(bKeys);
 	params_Extra.add(boxHelp.bGui);
 	params_Extra.add(bDebug);
 	//params_Extra.add(bGui_Internal);
 
-#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
-	params_Extra.add(bRandom);
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
+	params_Extra.add(bRandomize);
 #endif
 	//params_Extra.add(bSmoothPlots);
 	//params_Extra.add(smoothPlotsPower);
@@ -519,7 +528,7 @@ void ofxSurfingOsc::setupParams()
 
 	// OSC
 
-	if (bUseOscIn)
+	if (bUseIn)
 	{
 		bEnableOsc_Input.set("IN ENABLE", false);
 		OSC_InputPort.set("IN PORT", 12345, 0, 99999);
@@ -529,7 +538,7 @@ void ofxSurfingOsc::setupParams()
 		bModeFeedback.set("Feedback", false);
 	}
 
-	if (bUseOscOut)
+	if (bUseOut)
 	{
 		bEnableOsc_Output.set("OUT ENABLE", true);//TODO: cant be disabled once publishers are added..
 		OSC_OutputPort.set("OUT PORT", 54321, 0, 99999);
@@ -538,7 +547,7 @@ void ofxSurfingOsc::setupParams()
 		OSC_OutputIp.set("OUT IP", "127.0.0.1");
 	}
 
-	if (bUseOscIn)
+	if (bUseIn)
 	{
 		params_OscInput.setName("INPUT");
 		params_OscInput.add(bEnableOsc_Input);
@@ -546,7 +555,7 @@ void ofxSurfingOsc::setupParams()
 		params_OscInput.add(bModeFeedback);
 	}
 
-	if (bUseOscOut)
+	if (bUseOut)
 	{
 		params_OscOutput.setName("OUTPUT");
 		params_OscOutput.add(bEnableOsc_Output);
@@ -558,14 +567,14 @@ void ofxSurfingOsc::setupParams()
 	str_OSC_InputPort.setSerializable(false);
 	str_OSC_OutputPort.setSerializable(false);
 
-	if (bUseOscIn) str_OSC_InputPort = ofToString(OSC_InputPort);
-	if (bUseOscOut) str_OSC_OutputPort = ofToString(OSC_OutputPort);
+	if (bUseIn) str_OSC_InputPort = ofToString(OSC_InputPort);
+	if (bUseOut) str_OSC_OutputPort = ofToString(OSC_OutputPort);
 
 	//--
 
 	params_Osc.setName("OSC");
-	if (bUseOscIn) params_Osc.add(params_OscInput);
-	if (bUseOscOut) params_Osc.add(params_OscOutput);
+	if (bUseIn) params_Osc.add(params_OscInput);
+	if (bUseOut) params_Osc.add(params_OscOutput);
 
 #ifdef USE_TEXT_FLOW
 	params_Osc.add(bGui_LogFlow);
@@ -573,22 +582,21 @@ void ofxSurfingOsc::setupParams()
 
 	//--
 
-#ifdef SURF_OSC__USE__RECEIVER_PLOTS
-	if (bUseOscIn)
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 	{
 		params_PlotsInput.setName("PLOTS INPUT");
 		params_PlotsInput.add(bGui_Plots);
 		params_PlotsInput.add(bPlotsMini);
 		if (bCustomTemplate) params_PlotsInput.add(bGui_AllPlots);
-		params_PlotsInput.add(bSmoothPlots);
-		params_PlotsInput.add(smoothPlotsPower);
+		//params_PlotsInput.add(bSmoothPlots);
+		//params_PlotsInput.add(smoothPlotsPower);
 	}
 #endif
 
 	//--
 
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
-	if (bUseOscIn)
+	if (bUseIn)
 		params_Osc.add(bGui_PatchingManager);
 #endif
 
@@ -600,26 +608,26 @@ void ofxSurfingOsc::setupParams()
 	bEnableMIDI.set("Enable MIDI", true);
 	params_MIDI.setName("MIDI");
 
-	if (bUseOscIn) {
+	if (bUseIn) {
 		MIDI_InputPort.set("MIDI INPUT PORT", 0, 0, 10);
 		str_MIDI_InputPort_name.set("", "");
 	}
 
 #ifdef USE_MIDI_OUT
-	if (bUseOscOut) {
+	if (bUseOut) {
 		MIDI_OutputPort.set("MIDI OUTPUT PORT", 0, 0, 10);
 		MIDI_OutPort_name.set("", "");
 	}
 #endif
 
 	params_MIDI.add(bEnableMIDI);
-	if (bUseOscIn) {
+	if (bUseIn) {
 		params_MIDI.add(MIDI_InputPort);
 		params_MIDI.add(str_MIDI_InputPort_name);
 		str_MIDI_InputPort_name.setSerializable(false);
 	}
 #ifdef USE_MIDI_OUT
-	if (bUseOscOut) {
+	if (bUseOut) {
 		params_MIDI.add(MIDI_OutputPort);
 		params_MIDI.add(MIDI_OutPort_name);
 		MIDI_OutPort_name.setSerializable(false);
@@ -651,7 +659,7 @@ void ofxSurfingOsc::setupParams()
 	params_AppSettings.add(bGui_Internal);
 	params_AppSettings.add(positionGui_Internal);
 
-#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS_GUI
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS_GUI
 	params_AppSettings.add(positionGui_Targets);
 #endif
 
@@ -679,7 +687,7 @@ void ofxSurfingOsc::setupParams()
 	//--
 
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
-	if (bUseOscIn)
+	if (bUseIn)
 		params_AppSettings.add(bGui_PatchingManager);
 #endif
 
@@ -687,9 +695,8 @@ void ofxSurfingOsc::setupParams()
 
 	// Plots
 
-#ifdef SURF_OSC__USE__RECEIVER_PLOTS
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 	params_AppSettings.add(params_PlotsInput);
-	//params_AppSettings.add(bSmoothPlots);//crashes
 #endif
 
 	//params_AppSettings.add(bGui);
@@ -721,7 +728,7 @@ void ofxSurfingOsc::Changed_Params_Osc(ofAbstractParameter& e)
 
 	// Settings
 
-	if (bUseOscIn)
+	if (bUseIn)
 	{
 		if (name == bEnableOsc_Input.getName())
 		{
@@ -754,7 +761,7 @@ void ofxSurfingOsc::Changed_Params_Osc(ofAbstractParameter& e)
 
 	//--
 
-	if (bUseOscOut)
+	if (bUseOut)
 	{
 		if (name == bEnableOsc_Output.getName())
 		{
@@ -800,7 +807,7 @@ void ofxSurfingOsc::Changed_Params_Osc(ofAbstractParameter& e)
 //--------------------------------------------------------------
 void ofxSurfingOsc::Changed_Params_EnablersOut(ofAbstractParameter& e)
 {
-	if (!bUseOscOut) return;
+	if (!bUseOut) return;
 	if (!bEnableOsc_Output.get()) return;
 
 	string name = e.getName();
@@ -825,7 +832,7 @@ void ofxSurfingOsc::Changed_Params_EnablersOut(ofAbstractParameter& e)
 //--------------------------------------------------------------
 void ofxSurfingOsc::Changed_Params_EnablerIns(ofAbstractParameter& e)
 {
-	if (!bUseOscIn) return;
+	if (!bUseIn) return;
 	if (!bEnableOsc_Input.get()) return;
 
 	string name = e.getName();
@@ -876,13 +883,13 @@ void ofxSurfingOsc::update()
 	if (ofGetFrameNum() == 1) bEnableMIDI = bEnableMIDI; // workaround
 #endif
 
-#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS 
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS 
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
 	updatePatchingManager();
 #endif
 #endif
 
-#ifdef SURF_OSC__USE__RECEIVER_PLOTS
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 	updatePlots();
 #endif
 
@@ -891,14 +898,15 @@ void ofxSurfingOsc::update()
 	// When activated bDebug, 
 	// Log input subscribed addresses
 	//if (ofGetFrameNum() % 600 == 0)
-	static bool _bDebug=false;// = !bDebug;
+	static bool _bDebug = false;// = !bDebug;
 	if (bDebug != _bDebug) // changed
 	{
 		_bDebug = bDebug;
-		if (bDebug) 
+		if (bDebug)
 		{
 			// In
-			if (bUseOscIn)
+
+			if (bUseIn)
 			{
 				auto si = "OSC IN \n\n" + ofToString(ofxGetSubscribedAddresses(OSC_InputPort)) + "\n\n";
 				ofLogNotice("ofxSurfingOsc") << "OSC IN  Addresses: " << ofToString(si);
@@ -911,7 +919,8 @@ void ofxSurfingOsc::update()
 			//--
 
 			// Out
-			if (bUseOscOut)
+
+			if (bUseOut)
 			{
 				auto so = "OSC OUT \n\n" + ofToString(ofxGetPublishedAddresses(OSC_OutputIp.get(), OSC_OutputPort)) + "\n\n";
 				ofLogNotice("ofxSurfingOsc") << "OSC OUT Addresses: " << ofToString(so);
@@ -926,10 +935,10 @@ void ofxSurfingOsc::update()
 	//--
 
 	// Random
-	if (bDebug)
+	//if (bDebug)
 	{
-#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
-		if (bUseOscIn)
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
+		//if (bUseIn)
 		{
 			doTesterRandom();
 		}
@@ -948,7 +957,7 @@ void ofxSurfingOsc::draw(ofEventArgs& args)
 	draw();
 }
 
-#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS 
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS 
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
 //--------------------------------------------------------------
 void ofxSurfingOsc::drawPatchingManager()
@@ -965,13 +974,12 @@ void ofxSurfingOsc::draw()
 
 	//--
 
-#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
-#ifdef SURF_OSC__USE__RECEIVER_PLOTS
-	if (bUseOscIn)
-		if (bGui_Plots)
-		{
-			drawPlots();
-}
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
+	if (bGui_Plots)
+	{
+		drawPlots();
+	}
 #endif
 #endif
 
@@ -979,10 +987,10 @@ void ofxSurfingOsc::draw()
 
 	// GUI Targets
 
-#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS 
-#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS_GUI
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS 
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS_GUI
 	if (bGui_InternalAllowed && bGui_Internal)
-		if (bGui_Targets && bDone_SetupReceiver)
+		if (bGui_Targets && bDone_SetupTargets)
 		{
 			gui_Targets.draw();
 		}
@@ -1040,14 +1048,14 @@ void ofxSurfingOsc::draw()
 	//--
 
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
-	if (bUseOscIn)
+	if (bUseIn)
 		if (bGui_PatchingManager) drawPatchingManager();
 #endif
 
 	//--
 
 	boxHelp.draw();
-}
+	}
 
 //--------------------------------------------------------------
 void ofxSurfingOsc::exit()
@@ -1065,7 +1073,7 @@ void ofxSurfingOsc::exit()
 	if (bGui_InternalAllowed && bGui_Internal)
 	{
 		positionGui_Internal = gui_Internal.getPosition();
-#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS_GUI
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS_GUI
 		positionGui_Targets = gui_Targets.getPosition();
 #endif
 	}
@@ -1079,12 +1087,12 @@ void ofxSurfingOsc::exit()
 	midiOut.closePort();
 #endif
 
-	if (bUseOscOut)
+	if (bUseOut)
 	{
 		ofRemoveListener(params_EnablerOuts.parameterChangedE(), this, &ofxSurfingOsc::Changed_Params_EnablersOut);
 	}
 
-	if (bUseOscIn)
+	if (bUseIn)
 	{
 		ofRemoveListener(params_EnablerIns.parameterChangedE(), this, &ofxSurfingOsc::Changed_Params_EnablerIns);
 	}
@@ -1131,7 +1139,7 @@ void ofxSurfingOsc::setOutputIp(string ip)
 //--------------------------------------------------------------
 void ofxSurfingOsc::addReceiver_Bool(ofParameter<bool>& p, string address)
 {
-	if (!bUseOscIn) {
+	if (!bUseIn) {
 		ofLogError("ofxSurfingOsc") << (__FUNCTION__);
 		ofLogError("ofxSurfingOsc") <<
 			"OSC Input is disabled. That param " << p.getName() << " will not be registered!";
@@ -1165,7 +1173,7 @@ void ofxSurfingOsc::addReceiver_Bool(ofParameter<bool>& p, string address)
 	//--
 
 	// Feedback
-	if (bModeFeedback && bUseOscOut)
+	if (bModeFeedback && bUseOut)
 	{
 		ofxPublishOsc(OSC_OutputIp, OSC_OutputPort, address, p);
 	}
@@ -1174,7 +1182,7 @@ void ofxSurfingOsc::addReceiver_Bool(ofParameter<bool>& p, string address)
 //--------------------------------------------------------------
 void ofxSurfingOsc::addReceiver_Int(ofParameter<int>& p, string address)
 {
-	if (!bUseOscIn)
+	if (!bUseIn)
 	{
 		ofLogError("ofxSurfingOsc") << (__FUNCTION__);
 		ofLogError("ofxSurfingOsc") <<
@@ -1201,7 +1209,7 @@ void ofxSurfingOsc::addReceiver_Int(ofParameter<int>& p, string address)
 	//--
 
 	// Feedback
-	if (bModeFeedback && bUseOscOut)
+	if (bModeFeedback && bUseOut)
 	{
 		ofxPublishOsc(OSC_OutputIp, OSC_OutputPort, address, p);
 	}
@@ -1210,7 +1218,7 @@ void ofxSurfingOsc::addReceiver_Int(ofParameter<int>& p, string address)
 //--------------------------------------------------------------
 void ofxSurfingOsc::addReceiver_Float(ofParameter<float>& p, string address)
 {
-	if (!bUseOscIn) {
+	if (!bUseIn) {
 		ofLogError("ofxSurfingOsc") << (__FUNCTION__);
 		ofLogError("ofxSurfingOsc") <<
 			"OSC Input is disabled. That param " << p.getName() << " will not be registered!";
@@ -1237,7 +1245,7 @@ void ofxSurfingOsc::addReceiver_Float(ofParameter<float>& p, string address)
 	//--
 
 	// Feedback
-	if (bModeFeedback && bUseOscOut)
+	if (bModeFeedback && bUseOut)
 	{
 		ofxPublishOsc(OSC_OutputIp, OSC_OutputPort, address, p);
 	}
@@ -1250,7 +1258,7 @@ void ofxSurfingOsc::addReceiver_Float(ofParameter<float>& p, string address)
 //--------------------------------------------------------------
 void ofxSurfingOsc::addSender_Bool(ofParameter<bool>& p, string address)
 {
-	if (!bUseOscOut) {
+	if (!bUseOut) {
 		ofLogError("ofxSurfingOsc") << (__FUNCTION__);
 		ofLogError("ofxSurfingOsc") <<
 			"OSC Output is disabled. That param " << p.getName() << " will not be registered!";
@@ -1270,7 +1278,7 @@ void ofxSurfingOsc::addSender_Bool(ofParameter<bool>& p, string address)
 //--------------------------------------------------------------
 void ofxSurfingOsc::addSender_Float(ofParameter<float>& p, string address)
 {
-	if (!bUseOscOut) {
+	if (!bUseOut) {
 		ofLogError("ofxSurfingOsc") << (__FUNCTION__);
 		ofLogError("ofxSurfingOsc") <<
 			"OSC Output is disabled. That param " << p.getName() << " will not be registered!";
@@ -1290,7 +1298,7 @@ void ofxSurfingOsc::addSender_Float(ofParameter<float>& p, string address)
 //--------------------------------------------------------------
 void ofxSurfingOsc::addSender_Int(ofParameter<int>& p, string address)
 {
-	if (!bUseOscOut) {
+	if (!bUseOut) {
 		ofLogError("ofxSurfingOsc") << (__FUNCTION__);
 		ofLogError("ofxSurfingOsc") <<
 			"OSC Output is disabled. That param " << p.getName() << " will not be registered!";
@@ -1335,7 +1343,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 		ofxTextFlow::setShowing(bGui_LogFlow);
 
 		return;
-}
+	}
 #endif
 
 	//--
@@ -1347,7 +1355,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 	/*
 	// Input
 
-	if (bUseOscIn)
+	if (bUseIn)
 	{
 		if (name == str_OSC_InputPort.getName())
 		{
@@ -1364,7 +1372,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 
 	// Out
 
-	if (bUseOscOut)
+	if (bUseOut)
 	{
 		if (name == str_OSC_OutputPort.getName())
 		{
@@ -1388,42 +1396,9 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
 	if (name == bGui_PatchingManager.getName())
 	{
-		if (bUseOscIn)
+		if (bUseIn)
 			if (bGui_PatchingManager) {
 			}
-
-		return;
-	}
-#endif
-
-	//--
-
-	// Smooth
-
-#ifdef SURF_OSC__USE__RECEIVER_PLOTS
-	if (name == bSmoothPlots.getName())
-	{
-		int _start = NUM_BANGS + NUM_TOGGLES;
-
-		for (int i = _start; i < _start + NUM_VALUES; i++)
-		{
-			if (i > plotsTargets.size() - 1) return;
-			plotsTargets[i]->setShowSmoothedCurve(bSmoothPlots);
-		}
-
-		return;
-	}
-	else if (name == smoothPlotsPower.getName())
-	{
-		if (bSmoothPlots) {
-			int _start = NUM_BANGS + NUM_TOGGLES;
-
-			for (int i = _start; i < _start + NUM_VALUES; i++)
-			{
-				if (i > plotsTargets.size() - 1) return;
-				plotsTargets[i]->setSmoothFilter(0.1);
-			}
-		}
 
 		return;
 	}
@@ -1527,7 +1502,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 		return;
 	}
 
-#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS_GUI
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS_GUI
 	if (name == positionGui_Targets.getName())
 	{
 		if (bGui_InternalAllowed && bGui_Internal)
@@ -1535,7 +1510,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 		return;
 	}
 #endif
-}
+	}
 
 //--------------------------------------------------------------
 void ofxSurfingOsc::refreshGui()
@@ -1554,23 +1529,23 @@ void ofxSurfingOsc::refreshGui()
 	else
 	{
 		gm.minimize();
-}
+	}
 #endif
 
 	//--
 
 	auto& go = gui_Internal.getGroup(params_Osc.getName());
 	go.minimize();
-	if (bUseOscOut)
+	if (bUseOut)
 	{
 		auto& gout = go.getGroup(params_OscOutput.getName());
 		gout.minimize();
 		//if (getOutEnablersSize() != 0) gout.getGroup(params_EnablerOuts.getName()).minimize();
 	}
-	if (bUseOscIn) go.getGroup(params_OscInput.getName()).minimize();
+	if (bUseIn) go.getGroup(params_OscInput.getName()).minimize();
 
-#ifdef SURF_OSC__USE__RECEIVER_PLOTS
-	if (bUseOscIn) go.getGroup(params_PlotsInput.getName()).minimize();
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
+	if (bUseIn) go.getGroup(params_PlotsInput.getName()).minimize();
 #endif
 
 	auto& ge = gui_Internal.getGroup(params_Extra.getName());
@@ -1606,7 +1581,7 @@ void ofxSurfingOsc::keyPressed(ofKeyEventArgs& eventArgs)
 #ifdef USE_TEXT_FLOW
 	else if (key == OF_KEY_BACKSPACE) {
 		ofxTextFlow::clear();
-}
+	}
 #endif
 }
 
@@ -1662,10 +1637,10 @@ void ofxSurfingOsc::noteOut(int note, bool state)
 
 //----
 
-#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
 
 //--------------------------------------------------------------
-void ofxSurfingOsc::setupReceiverTargets()
+void ofxSurfingOsc::setupTargets()
 {
 	ofLogNotice("ofxSurfingOsc") << (__FUNCTION__);
 
@@ -1673,7 +1648,7 @@ void ofxSurfingOsc::setupReceiverTargets()
 
 	// Plots
 
-#ifdef SURF_OSC__USE__RECEIVER_PLOTS
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 
 	// Plots Colors
 
@@ -1724,7 +1699,7 @@ void ofxSurfingOsc::setupReceiverTargets()
 
 	for (int i = 0; i < NUM_BANGS; i++)
 	{
-		string _name = "BANG_" + ofToString(i + 1);
+		string _name = "BANG_" + ofToString(i);
 		bBangs[i].set(_name, false);
 		params_Bangs.add(bBangs[i]);
 
@@ -1732,7 +1707,7 @@ void ofxSurfingOsc::setupReceiverTargets()
 
 		// Plots
 
-#ifdef SURF_OSC__USE__RECEIVER_PLOTS
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 		ofxHistoryPlot* graph = addGraph(_name, 0, 1.0f, colorBangs, 0);
 		plotsTargets.push_back(graph);
 
@@ -1755,7 +1730,7 @@ void ofxSurfingOsc::setupReceiverTargets()
 
 	for (int i = 0; i < NUM_TOGGLES; i++)
 	{
-		string _name = "TOGGLE_" + ofToString(i + 1);
+		string _name = "TOGGLE_" + ofToString(i);
 		bToggles[i].set(_name, false);
 		params_Toggles.add(bToggles[i]);
 
@@ -1763,7 +1738,7 @@ void ofxSurfingOsc::setupReceiverTargets()
 
 		// Plots
 
-#ifdef SURF_OSC__USE__RECEIVER_PLOTS
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 		ofxHistoryPlot* graph = addGraph(_name, 0, 1.0f, colorToggles, 0);
 		plotsTargets.push_back(graph);
 
@@ -1787,7 +1762,7 @@ void ofxSurfingOsc::setupReceiverTargets()
 
 	for (int i = 0; i < NUM_VALUES; i++)
 	{
-		string _name = "VALUE_" + ofToString(i + 1);
+		string _name = "VALUE_" + ofToString(i);
 		values[i].set(_name, 0.f, 0.f, 1.f);
 		params_Values.add(values[i]);
 
@@ -1795,7 +1770,7 @@ void ofxSurfingOsc::setupReceiverTargets()
 
 		// Plots
 
-#ifdef SURF_OSC__USE__RECEIVER_PLOTS
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 		ofxHistoryPlot* graph = addGraph(_name, 0, 1.0f, colorValues, 2, false); // no smooth
 		plotsTargets.push_back(graph);
 
@@ -1820,7 +1795,7 @@ void ofxSurfingOsc::setupReceiverTargets()
 
 	for (int i = 0; i < NUM_NUMBERS; i++)
 	{
-		string _name = "NUMBER_" + ofToString(i + 1);
+		string _name = "NUMBER_" + ofToString(i);
 		numbers[i].set(_name, 0, _min, _max);
 		params_Numbers.add(numbers[i]);
 
@@ -1828,7 +1803,7 @@ void ofxSurfingOsc::setupReceiverTargets()
 
 		// Plots
 
-#ifdef SURF_OSC__USE__RECEIVER_PLOTS
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 		ofxHistoryPlot* graph = addGraph(_name, _min, _max, colorNumbers, 0);
 		plotsTargets.push_back(graph);
 
@@ -1848,7 +1823,7 @@ void ofxSurfingOsc::setupReceiverTargets()
 
 	//TODO: make external methods to improve customize workflow
 	// Customize label and selected plots
-#ifdef SURF_OSC__USE__RECEIVER_PLOTS
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 	setupPlots();
 #endif
 
@@ -1870,7 +1845,7 @@ void ofxSurfingOsc::setupReceiverTargets()
 
 	// Gui Targets
 
-#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS_GUI
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS_GUI
 	gui_Targets.setup("OSC TARGETS");
 	gui_Targets.add(params_Targets);
 
@@ -1891,11 +1866,11 @@ void ofxSurfingOsc::setupReceiverTargets()
 
 	//--
 
-	bDone_SetupReceiver = true;
+	bDone_SetupTargets = true;
 }
 
 //--------------------------------------------------------------
-void ofxSurfingOsc::setupReceiverSubscribers()
+void ofxSurfingOsc::setupTargetsAsReceivers()
 {
 	ofLogNotice("ofxSurfingOsc") << (__FUNCTION__);
 
@@ -1903,16 +1878,16 @@ void ofxSurfingOsc::setupReceiverSubscribers()
 	// When enabled, all received OSC/MIDI input messages 
 	// are auto send to the output OSC too, as mirroring.
 
-	string tag = "1/";
-
 	//-
-
-	// add OSC targets to the addon class
-	// this will subscribe the OSC addresses with/to the target local parameters
 
 	// NOTE:
 	// '/1/' -> it's an address pattern to adapt to pages or layout
 	// of some controller apps like TouchOSC
+
+	string tag = "1/";
+
+	// add OSC targets to the addon class
+	// this will subscribe the OSC addresses with/to the target local parameters
 
 	//--
 
@@ -1920,7 +1895,7 @@ void ofxSurfingOsc::setupReceiverSubscribers()
 
 	for (int i = 0; i < NUM_BANGS; i++)
 	{
-		string Osc_Address = "/bang/" + tag + ofToString(i + 1);
+		string Osc_Address = "/bang/" + tag + ofToString(i);
 		addReceiver_Bool(bBangs[i], Osc_Address);
 	}
 
@@ -1930,7 +1905,7 @@ void ofxSurfingOsc::setupReceiverSubscribers()
 
 	for (int i = 0; i < NUM_TOGGLES; i++)
 	{
-		string Osc_Address = "/toggle/" + tag + ofToString(i + 1);
+		string Osc_Address = "/toggle/" + tag + ofToString(i);
 		addReceiver_Bool(bToggles[i], Osc_Address);
 	}
 
@@ -1940,7 +1915,7 @@ void ofxSurfingOsc::setupReceiverSubscribers()
 
 	for (int i = 0; i < NUM_VALUES; i++)
 	{
-		string Osc_Address = "/value/" + tag + ofToString(i + 1);
+		string Osc_Address = "/value/" + tag + ofToString(i);
 		addReceiver_Float(values[i], Osc_Address);
 	}
 
@@ -1950,8 +1925,69 @@ void ofxSurfingOsc::setupReceiverSubscribers()
 
 	for (int i = 0; i < NUM_NUMBERS; i++)
 	{
-		string Osc_Address = "/number/" + tag + ofToString(i + 1);
+		string Osc_Address = "/number/" + tag + ofToString(i);
 		addReceiver_Int(numbers[i], Osc_Address);
+	}
+}
+
+//--------------------------------------------------------------
+void ofxSurfingOsc::setupTargetsAsSenders()
+{
+	ofLogNotice("ofxSurfingOsc") << (__FUNCTION__);
+
+	//setModeFeedback(false); // disabled by default
+	// When enabled, all received OSC/MIDI input messages 
+	// are auto send to the output OSC too, as mirroring.
+
+	//-
+
+	// NOTE:
+	// '/1/' -> it's an address pattern to adapt to pages or layout
+	// of some controller apps like TouchOSC
+
+	string tag = "1/";
+
+	// add OSC targets to the addon class
+	// this will subscribe the OSC addresses with/to the target local parameters
+
+	//--
+
+	// Bangs
+
+	for (int i = 0; i < NUM_BANGS; i++)
+	{
+		string Osc_Address = "/bang/" + tag + ofToString(i);
+		addSender_Bool(bBangs[i], Osc_Address);
+	}
+
+	//--
+
+	// Toggles
+
+	for (int i = 0; i < NUM_TOGGLES; i++)
+	{
+		string Osc_Address = "/toggle/" + tag + ofToString(i);
+		addSender_Bool(bToggles[i], Osc_Address);
+	}
+
+	//--
+
+	// Values
+
+	for (int i = 0; i < NUM_VALUES; i++)
+	{
+		string Osc_Address = "/value/" + tag + ofToString(i);
+		addSender_Float(values[i], Osc_Address);
+	}
+
+	//--
+
+	// Numbers
+
+	for (int i = 0; i < NUM_NUMBERS; i++)
+	{
+		string Osc_Address = "/number/" + tag + ofToString(i);
+		addSender_Int(numbers[i], Osc_Address);
 	}
 }
 
@@ -1965,7 +2001,7 @@ void ofxSurfingOsc::setupReceiveLogger()
 	//TODO:
 	//return;
 
-	if (bUseOscIn)
+	if (bUseIn)
 	{
 		ofxGetOscSubscriber(OSC_InputPort);
 		// Create subscriber binding explicitly
@@ -2007,8 +2043,8 @@ void ofxSurfingOsc::setupReceiveLogger()
 						// Make sure we get the right type
 						if (m.getArgType(i) == OFXOSC_TYPE_INT32)
 						{
-							if (m.getArgAsInt32(i) == 0)bskip = true;
-							//ignore bools arg as it is a bang
+							if (m.getArgAsInt32(i) == 0) bskip = true;
+							// ignore bools arg as it is a bang
 							if (m.getArgAsInt32(i) != 1) {
 								msgString += ofToString(m.getArgAsInt32(i));
 							}
@@ -2051,8 +2087,8 @@ void ofxSurfingOsc::setupReceiveLogger()
 #endif
 				}
 			});
+		}
 	}
-}
 
 //--
 
@@ -2060,7 +2096,7 @@ void ofxSurfingOsc::setupReceiveLogger()
 // All the params will send 
 // and receive OSC/MIDI changes
 
-#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
 
 //--------------------------------------------------------------
 void ofxSurfingOsc::Changed_Tar_Bangs(ofAbstractParameter& e) // preset load/trig
@@ -2069,16 +2105,16 @@ void ofxSurfingOsc::Changed_Tar_Bangs(ofAbstractParameter& e) // preset load/tri
 
 	string name = e.getName();
 
-	for (int i = 0; i < NUM_BANGS - 1; i++)
+	for (int i = 0; i < NUM_BANGS; i++)
 	{
 		// Only when true (BANG, not note-off)
-		if (name == "BANG_" + ofToString(i + 1) && bBangs[i])
+		if (name == "BANG_" + ofToString(i) && bBangs[i])
 		{
 			// Bang
-			ofLogNotice("ofxSurfingOsc") << (__FUNCTION__) << "BANGS\t[" << ofToString(i + 1) << "] " << "BANG";
+			ofLogNotice("ofxSurfingOsc") << (__FUNCTION__) << "BANGS\t[" << ofToString(i) << "] " << "BANG";
 
 			// Plot
-#ifdef SURF_OSC__USE__RECEIVER_PLOTS
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 			//plotsTargets[i]->update(1);
 			bangCircles[i].bang();
 
@@ -2101,16 +2137,16 @@ void ofxSurfingOsc::Changed_Tar_Toggles(ofAbstractParameter& e)
 
 	string name = e.getName();
 
-	for (int i = 0; i < NUM_TOGGLES - 1; i++)//?
+	for (int i = 0; i < NUM_TOGGLES; i++)
 	{
-		if (name == "TOGGLE_" + ofToString(i + 1))
+		if (name == "TOGGLE_" + ofToString(i))
 		{
 			// State
 			bool b = bToggles[i].get();
-			ofLogNotice("ofxSurfingOsc") << (__FUNCTION__) << "TOGGLE\t[" << ofToString(i + 1) << "] " << (b ? "ON" : "OFF");
+			ofLogNotice("ofxSurfingOsc") << (__FUNCTION__) << "TOGGLE\t[" << ofToString(i) << "] " << (b ? "ON" : "OFF");
 
 			// Plot
-#ifdef SURF_OSC__USE__RECEIVER_PLOTS
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 			// first toggle (e.g: gist note)
 			//if (b) { togglesCircles[i].bang(); }
 			if (b) { togglesCircles[i].toggle(true); }
@@ -2128,12 +2164,12 @@ void ofxSurfingOsc::Changed_Tar_Values(ofAbstractParameter& e)
 
 	string name = e.getName();
 
-	for (int i = 0; i < NUM_VALUES - 1; i++)
+	for (int i = 0; i < NUM_VALUES; i++)
 	{
-		if (name == "VALUE_" + ofToString(i + 1))
+		if (name == "VALUE_" + ofToString(i))
 		{
 			// Values
-			ofLogNotice("ofxSurfingOsc") << (__FUNCTION__) << "VALUE\t[" << ofToString(i + 1) << "] " << values[i];
+			ofLogNotice("ofxSurfingOsc") << (__FUNCTION__) << "VALUE\t[" << ofToString(i) << "] " << values[i];
 
 			return;
 		}
@@ -2147,12 +2183,12 @@ void ofxSurfingOsc::Changed_Tar_Numbers(ofAbstractParameter& e)
 
 	string name = e.getName();
 
-	for (int i = 0; i < NUM_NUMBERS - 1; i++)
+	for (int i = 0; i < NUM_NUMBERS; i++)
 	{
-		if (name == "NUMBER_" + ofToString(i + 1))
+		if (name == "NUMBER_" + ofToString(i))
 		{
 			// numbers
-			ofLogNotice("ofxSurfingOsc") << (__FUNCTION__) << "NUMBER\t[" << ofToString(i + 1) << "] " << numbers[i];
+			ofLogNotice("ofxSurfingOsc") << (__FUNCTION__) << "NUMBER\t[" << ofToString(i) << "] " << numbers[i];
 
 			return;
 		}
@@ -2174,143 +2210,8 @@ void ofxSurfingOsc::exit_InternalParams()
 
 //----
 
-#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
-#ifdef SURF_OSC__USE__RECEIVER_PLOTS
-
-/*
-//--------------------------------------------------------------
-void ofxSurfingOsc::setupPlots()
-{
-	//TODO:
-	// Custom template
-
-	// Array with bool of display state of any plot.
-	plotsTargets_Visible.clear();
-	plotsTargets_Visible.resize(amount_Plots_Targets);
-	// amount total plots. Marked as selected or not.
-
-	// Enable all plots by default
-	for (int _i = 0; _i < plotsTargets_Visible.size(); _i++)
-	{
-		plotsTargets_Visible[_i] = true;
-	}
-
-	//----
-
-	// Customize special plots
-
-	// Template is for my ofxSoundAnalyzer add-on
-
-	if (bCustomTemplate)
-	{
-		int _a = 64;
-		ofColor _c;
-
-		// Disable all plots
-		for (int _i = 0; _i < plotsTargets_Visible.size(); _i++)
-			plotsTargets_Visible[_i] = false;
-
-		int _i;
-		int _start;
-
-		//----
-
-		// Bangs
-		_start = 0;
-
-		// Bang 1 as beat
-		_c = ofColor(ofColor::green, _a);
-		_i = _start + 1;
-		plotsTargets[_i - 1]->setVariableName("BEAT");
-		plotsTargets[_i - 1]->setColor(_c);
-		plotsTargets_Visible[_i - 1] = true;
-
-		bangCircles[_i - 1].setColor(_c);
-
-		// Bang 2 as onset
-		_c = ofColor(ofColor::red, _a);
-		_i = _start + 2;
-		plotsTargets[_i - 1]->setVariableName("ONSET");
-		plotsTargets[_i - 1]->setColor(_c);
-		plotsTargets_Visible[_i - 1] = true;
-
-		bangCircles[_i - 1].setColor(_c);
-
-		//--
-
-		// Toggles
-		_start = NUM_BANGS;
-
-		// Toggle 1 as note // trig note
-		_i = _start + 1;
-		plotsTargets[_i - 1]->setVariableName("NOTE");
-		_c = ofColor(ofColor::orange, _a);
-		plotsTargets[_i - 1]->setColor(_c);
-		plotsTargets_Visible[_i - 1] = true;
-
-		togglesCircles[_i - 1 - _start].setColor(_c);
-
-		//--
-
-		// Values
-		_start = _start + NUM_TOGGLES;
-
-		// Aubio
-		// Value 1
-		_c = ofColor(ofColor::red, _a);
-		_i = _start + 1;
-		plotsTargets[_i - 1]->setVariableName("AUBIO");
-		plotsTargets[_i - 1]->setColor(_c);
-		plotsTargets_Visible[_i - 1] = true;
-
-		valuesBar[_i - 1 - _start].setColor(_c);
-
-		// Gist
-		// Value 2
-		_c = ofColor(ofColor::orange, _a);
-		_i = _start + 2;
-		plotsTargets[_i - 1]->setVariableName("GIST");
-		plotsTargets[_i - 1]->setColor(_c);
-		plotsTargets_Visible[_i - 1] = true;
-
-		valuesBar[_i - 1 - _start].setColor(_c);
-
-		//// Value 3
-		//_i = _start + 3;
-		//plotsTargets[_i - 1]->setVariableName("CIRCLE AUBIO");
-		//plotsTargets[_i - 1]->setColor(ofColor::green);
-		//plotsTargets_Visible[_i - 1] = true;
-
-		//// Value 4
-		//_i = _start + 4;
-		//plotsTargets[_i - 1]->setVariableName("CIRCLE GIST");
-		//plotsTargets[_i - 1]->setColor(ofColor::orange);
-		//plotsTargets_Visible[_i - 1] = true;
-
-		// Bpm
-		// Value 8
-		_c = ofColor(ofColor::lightPink, _a);
-		_i = _start + 8; // last value
-		plotsTargets[_i - 1]->setRange(40, 300);
-		plotsTargets[_i - 1]->setVariableName("BPM");
-		plotsTargets[_i - 1]->setPrecision(0);
-		plotsTargets[_i - 1]->setColor(_c);
-		plotsTargets_Visible[_i - 1] = true;
-
-		valuesBar[_i - 1 - _start].setColor(_c);
-	}
-
-	//----
-
-	// Count enabled plots to enable hide the all not used
-	amountPlotsTargetsVisible = 0;
-	for (int _i = 0; _i < plotsTargets_Visible.size(); _i++)
-	{
-		// count how many are enabled
-		if (plotsTargets_Visible[_i]) amountPlotsTargetsVisible++;
-	}
-}
-*/
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 
 //--------------------------------------------------------------
 void ofxSurfingOsc::setupPlots()
@@ -2757,6 +2658,37 @@ void ofxSurfingOsc::updatePatchingManager() {
 }
 #endif
 
+//--
+
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
+//--------------------------------------------------------------
+void ofxSurfingOsc::doTesterRandom()
+{
+	// Timed Randomizer
+	if (bRandomize && ofGetFrameNum() % 6 == 0)
+	{
+		static bool b = false;
+		if (ofGetFrameNum() % 60 == 0) b = !b;
+		int o = b ? 0 : 4;//offset
+		const float r = ofRandom(1);
+		const int i0 = (ofRandom(1) < ofRandom(0.5)) ? 0 + o : 1 + o;
+		const int i1 = (ofRandom(1) < ofRandom(0.5)) ? 2 + o : 3 + o;
+
+		// here to be used as senders instead of receivers
+		if (r < 0.1) bBangs[i0] = !bBangs[i0];
+		else if (r < 0.2) bBangs[i1] = !bBangs[i1];
+		else if (r < 0.3) bToggles[i0] = !bToggles[i0];
+		else if (r < 0.4) bToggles[i1] = !bToggles[i1];
+		else if (r < 0.5) values[i0] = ofRandom(values[i0].getMin(), values[i0].getMax());
+		else if (r < 0.6) values[i1] = ofRandom(values[i1].getMin(), values[i1].getMax());
+		else if (r < 0.7) values[i0] = ofRandom(values[i0].getMin(), values[i0].getMax());
+		else if (r < 0.8) values[i1] = ofRandom(values[i1].getMin(), values[i1].getMax());
+		else if (r < 0.9) numbers[i0] = ofRandom(numbers[i0].getMin(), numbers[i0].getMax());
+		else if (r < 1) numbers[i1] = ofRandom(numbers[i1].getMin(), numbers[i1].getMax());
+	}
+}
+#endif
+
 
 //----
 
@@ -2765,7 +2697,7 @@ void ofxSurfingOsc::updatePatchingManager() {
 //--------------------------------------------------------------
 //void ofxSurfingOsc::addReceiver(ofAbstractParameter &e, string address)
 //{
-//	if (!bUseOscIn) return;
+//	if (!bUseIn) return;
 //  ofxSubscribeOsc(12345, address, &e);
 //}
 //
@@ -2786,31 +2718,3 @@ void ofxSurfingOsc::updatePatchingManager() {
 //{
 //	paramsAbstract.push_back(f);
 //}
-
-#ifdef SURF_OSC__USE__RECEIVER_INTERNAL_PARAMS
-//--------------------------------------------------------------
-void ofxSurfingOsc::doTesterRandom()
-{
-	// Timed Randomizer
-	if (bRandom && ofGetFrameNum() % 6 == 0)
-	{
-		static bool b = false;
-		if (ofGetFrameNum() % 60 == 0) b = !b;
-		int o = b ? 0 : 4;//offset
-		const float r = ofRandom(1);
-		const int i0 = (ofRandom(1) < ofRandom(0.5)) ? 0 + o : 1 + o;
-		const int i1 = (ofRandom(1) < ofRandom(0.5)) ? 2 + o : 3 + o;
-
-		if (r < 0.1) bBangs[i0] = !bBangs[i0];
-		else if (r < 0.2) bBangs[i1] = !bBangs[i1];
-		else if (r < 0.3) bToggles[i0] = !bToggles[i0];
-		else if (r < 0.4) bToggles[i1] = !bToggles[i1];
-		else if (r < 0.5) values[i0] = ofRandom(values[i0].getMin(), values[i0].getMax());
-		else if (r < 0.6) values[i1] = ofRandom(values[i1].getMin(), values[i1].getMax());
-		else if (r < 0.7) values[i0] = ofRandom(values[i0].getMin(), values[i0].getMax());
-		else if (r < 0.8) values[i1] = ofRandom(values[i1].getMin(), values[i1].getMax());
-		else if (r < 0.9) numbers[i0] = ofRandom(numbers[i0].getMin(), numbers[i0].getMax());
-		else if (r < 1) numbers[i1] = ofRandom(numbers[i1].getMin(), numbers[i1].getMax());
-	}
-}
-#endif

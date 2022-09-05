@@ -25,7 +25,7 @@
 //
 //			// Out
 //
-//			if (bUseOscOut)
+//			if (bUseOut)
 //			{
 //				//if (!ui->bMinimize) ui->AddLabelBig("OUT");
 //				ui->Add(bEnableOsc_Output, OFX_IM_TOGGLE);
