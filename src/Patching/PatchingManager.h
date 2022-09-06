@@ -209,7 +209,7 @@ private:
 
 	//--
 
-	string path_Settings = "PatchingManager";
+	string path_Settings = "PatchingManager.json";
 	string path_Global = "ofxSurfingOsc/Patching";
 
 	//--
