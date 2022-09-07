@@ -2406,7 +2406,7 @@ void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
 		_amount = _amountPlotsTargets;
 
 		int x, y, w, h;
-		int _xpad = 40;
+		int _xpad = 30;
 		int p = 0;
 		float _r;//widgets size
 		bool bIsSmall;
