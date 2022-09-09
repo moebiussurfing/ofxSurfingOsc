@@ -56,14 +56,35 @@
 #define SURF_OSC__USE__TARGETS_INTERNAL_PLOTS 
 
 // Patcher. Requires receiver / Slave mode and Targets.
-#define SURF_OSC__USE__RECEIVER_PATCHING_MODE 
+#define SURF_OSC__USE__RECEIVER_PATCHING_MODE // could map senders too to normalize
 
 //----
 
 //#define USE_MIDI // MIDI //TODO: WIP
 
-#define USE_IM_GUI // replaces ofxGui
-// When disabled you must disable the ofxSurfingOsc/src/ImGui/ folder
+#define USE_IM_GUI // Replaces ofxGui!
+/*
+// When disabled you must remove the ofxSurfingOsc/src/ImGui/ folder
+// Example parent scope with an external instantiated ImGui
+//--------------------------------------------------------------
+void ofxSurfingBeatSync::setupImGui()
+{
+	ofLogNotice("ofxSurfingBeatSync") << (__FUNCTION__);
+
+	ui.setName("SyncSurf");
+	ui.setWindowsMode(IM_GUI_MODE_WINDOWS_SPECIAL_ORGANIZER);
+	ui.setup();
+
+	//ui.addWindowSpecial(bGui_Main);
+	//ui.addWindowSpecial(ui.bGui_GameMode);
+
+	ui.addWindowSpecial(oscHelper.bGui);
+	ui.addWindowSpecial(oscHelper.bGui_Targets);
+	ui.addWindowSpecial(oscHelper.bGui_Enablers);
+
+	ui.startup();
+}
+*/
 
 //-----------------------
 
@@ -150,177 +171,7 @@ public:
 
 public:
 
-	//void drawImGui();
-	///*
-	//--------------------------------------------------------------
-	void drawImGui()
-	{
-		if (ui == nullptr) return;
-
-		{
-			bool bIsSpecial = (ui->getModeSpecial() == IM_GUI_MODE_WINDOWS_SPECIAL_ORGANIZER);
-			bool b;
-			if (bIsSpecial) b = ui->BeginWindowSpecial(bGui);
-			else b = ui->BeginWindow(bGui);
-			if (b)
-			{
-				ui->AddLabelHuge("OSC");
-				ui->AddSpacing();
-
-				ui->Add(ui->bMinimize, OFX_IM_TOGGLE_ROUNDED);
-				ui->AddSpacingSeparated();
-
-				ui->Add(bGui_Targets, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
-				ui->Add(ui->bLog, OFX_IM_TOGGLE_ROUNDED_SMALL);
-				ui->AddSpacingSeparated();
-
-				//--
-
-				// In
-
-				if (bUseIn)
-				{
-					if (!ui->bMinimize) ui->AddLabelBig("IN");
-					ui->Add(bEnableOsc_Input, OFX_IM_TOGGLE);
-					if (bEnableOsc_Input)
-					{
-						if (!ui->bMinimize)
-						{
-							string tt = "Must restart the app \nto update these settings!";
-							ui->Add(OSC_InputPort, OFX_IM_DRAG);
-							ui->AddTooltip(tt);
-						}
-
-						//TODO: implement
-						/*
-						*
-						if (!ui->bMinimize) {
-
-							if (ui->BeginTree("ENABLERS", false))
-							{
-								if (getInEnablersSize() != 0) ui->AddSpacingSeparated();
-
-								//if (!ui->bMinimize) ui->AddLabelBig("ENABLERS");
-								SurfingGuiTypes s = OFX_IM_TOGGLE_SMALL;
-								for (int i = 0; i < getInEnablersSize(); i++) {
-									ui->Add(getInEnabler(i), s);
-								}
-								ui->EndTree();
-							}
-						}
-						*/
-					}
-				}
-
-				//--
-
-				// Out
-
-				if (bUseOut)
-				{
-					if (bUseIn) ui->AddSpacingSeparated();
-
-					if (!ui->bMinimize) ui->AddLabelBig("OUT");
-					ui->Add(bEnableOsc_Output, OFX_IM_TOGGLE);
-					if (bEnableOsc_Output)
-					{
-						if (!ui->bMinimize)
-						{
-							string tt = "Must restart the app \nto update these settings!";
-							//ui->AddLabelBig(ofToString(OSC_OutputPort));
-							ui->Add(OSC_OutputPort, OFX_IM_DRAG);
-							ui->AddTooltip(tt);
-							ui->Add(OSC_OutputIp, OFX_IM_TEXT_INPUT);
-							ui->AddTooltip(tt);
-						}
-
-						if (!ui->bMinimize) {
-							if (getOutEnablersSize() != 0) ui->AddSpacingSeparated();
-
-							if (ui->BeginTree("ENABLERS", false))
-							{
-								//if (!ui->bMinimize) ui->AddLabelBig("ENABLERS");
-								SurfingGuiTypes s = OFX_IM_TOGGLE_SMALL;
-								for (int i = 0; i < getOutEnablersSize(); i++) {
-									ui->Add(getOutEnabler(i), s);
-								}
-
-								ui->EndTree();
-							}
-						}
-					}
-				}
-
-				//--
-
-				if (!ui->bMinimize)
-				{
-					ui->AddSpacingSeparated();
-
-#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
-					ui->AddLabel("PLOTS");
-					ui->Indent();
-					ui->Add(bGui_Plots, OFX_IM_TOGGLE_ROUNDED);
-					ui->Add(bPlotsMini, OFX_IM_TOGGLE_ROUNDED_SMALL);
-					if (bCustomTemplate) ui->Add(bGui_AllPlots, OFX_IM_TOGGLE_ROUNDED_MINI);
-					ui->Unindent();
-					ui->AddSpacingSeparated();
-#endif					
-					ui->Add(bRandomize, OFX_IM_TOGGLE_ROUNDED_MINI);
-					ui->Add(bDebug, OFX_IM_TOGGLE_ROUNDED_MINI);
-					if (bGui_InternalAllowed) ui->Add(bGui_Internal, OFX_IM_TOGGLE_ROUNDED_MINI);
-					ui->Add(bHelp, OFX_IM_TOGGLE_ROUNDED_MINI);
-				}
-
-				glm::vec2 p = ui->getWindowShape().getBottomLeft();
-				//float w = ui->getWindowShape().getWidth();
-				//w = (w / 2.f) - (boxHelp.getRectangle().getWidth() / 2.f);
-				//p += glm::vec2(w, 0);
-				p += glm::vec2(-11, -9);
-				boxHelp.setPosition(p.x, p.y);
-
-				//--
-
-				if (bIsSpecial) ui->EndWindowSpecial();
-				else ui->EndWindow();
-			}
-		}
-
-		//--
-
-		// Targets
-		{
-			static bool bdone = false;
-			if (!bdone) {
-				bdone = true;
-				ui->ClearStyles();
-				ui->AddStyleGroupForBools(params_Bangs, OFX_IM_TOGGLE_SMALL);
-				ui->AddStyleGroupForBools(params_Toggles, OFX_IM_TOGGLE_SMALL);
-			}
-
-			bool bIsSpecial = (ui->getModeSpecial() == IM_GUI_MODE_WINDOWS_SPECIAL_ORGANIZER);
-			bool b;
-			if (bIsSpecial) b = ui->BeginWindowSpecial(bGui_Targets);
-			else b = ui->BeginWindow(bGui_Targets);
-			if (b)
-			{
-				//if (bUseIn)
-				{
-					ui->AddGroup(params_Targets);
-				}
-
-				//--
-
-				if (bIsSpecial) ui->EndWindowSpecial();
-				else ui->EndWindow();
-			}
-		}
-
-		//--
-
-		ui->DrawWindowLogIfEnabled();
-	}
-	//*/
+	void drawImGui();
 
 #endif
 
@@ -397,6 +248,7 @@ public:
 
 	ofParameter<bool> bGui;
 	ofParameter<bool> bGui_Internal;
+	ofParameter<bool> bGui_Enablers;
 
 	void setName(string n) { name = n; };
 
@@ -859,6 +711,8 @@ public:
 	// Plots
 
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
+	public:
+	ofParameter<bool> bGui_Plots;
 
 private:
 
@@ -871,7 +725,6 @@ private:
 	}
 
 	// We can select which plots to draw
-	ofParameter<bool> bGui_Plots;
 	ofParameter<bool> bPlotsMini;
 
 	enum PLOTS_MINI_POS
@@ -960,12 +813,21 @@ public:
 			int _i = _start + style.index;//related to style
 			float _min = style.range.x;
 			float _max = style.range.y;
+			if (_min == -1 && _max == -1) {//default
+				_min = 0;
+				_max = 1;
+			}
 			ofColor _c = style.color;
+			//plot
 			plotsTargets[_i - 1]->setVariableName(style.name);
 			plotsTargets[_i - 1]->setColor(_c);
 			plotsTargets_Visible[_i - 1] = true;
-			valuesBars[_i - 1 - _start].setColor(_c);
-			if (_min != -1 && _max != -1) plotsTargets[_i - 1]->setRange(_min, _max);
+			plotsTargets[_i - 1]->setRange(_min, _max);
+			//widget
+			int _ii = _i - 1 - _start;
+			valuesBars[_ii].setColor(_c);
+			valuesBars[_ii].setValueMin(_min);
+			valuesBars[_ii].setValueMax(_max);
 		}
 
 		// Numbers
@@ -975,12 +837,21 @@ public:
 			int _i = _start + style.index;//related to style
 			int _min = style.range.x;
 			int _max = style.range.y;
+			if (_min == -1 && _max == -1) {//default
+				_min = 0;
+				_max = 1;
+			}
 			ofColor _c = style.color;
+			//plot
 			plotsTargets[_i - 1]->setVariableName(style.name);
 			plotsTargets[_i - 1]->setColor(_c);
 			plotsTargets_Visible[_i - 1] = true;
-			numbersBars[_i - 1 - _start].setColor(_c);
-			if (_min != -1 && _max != -1) plotsTargets[_i - 1]->setRange(_min, _max);
+			plotsTargets[_i - 1]->setRange(_min, _max);
+			//widget
+			int _ii = _i - 1 - _start;
+			numbersBars[_ii].setColor(_c);
+			numbersBars[_ii].setValueMin(_min);
+			numbersBars[_ii].setValueMax(_max);
 		}
 	}
 
@@ -995,6 +866,7 @@ private:
 	ofColor colorValues, colorNumbers, colorBangs, colorToggles;
 
 	void setupPlots();
+	void setupPlotsCustomTemplate();
 	void setupPlotsColors();
 
 	//--

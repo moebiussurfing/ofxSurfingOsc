@@ -15,6 +15,16 @@ void ofApp::setup()
 	psettings.add(oscHelper.bGui_Targets);
 	ofxSurfingHelpers::loadGroup(psettings);
 
+	// sender params
+	params.add(state1);
+	params.add(state2);
+	params.add(state3);
+	params.add(state4);
+	params.add(value1);
+	params.add(value2);
+	params.add(value3);
+	params.add(value4);
+
 	//--
 
 #ifdef USE_local_Targets
@@ -38,6 +48,27 @@ void ofApp::setupOsc()
 	ofSetWindowTitle(name);
 
 	oscHelper.setup(mode);
+
+	string tag = "1/";
+	string Osc_Address;
+	int i = 0;
+	Osc_Address = "/bang/" + tag + ofToString(i++);
+	oscHelper.addSender_Bool(state1, Osc_Address);
+	Osc_Address = "/bang/" + tag + ofToString(i++);
+	oscHelper.addSender_Bool(state2, Osc_Address);
+	Osc_Address = "/bang/" + tag + ofToString(i++);
+	oscHelper.addSender_Bool(state3, Osc_Address);
+	Osc_Address = "/bang/" + tag + ofToString(i++);
+	oscHelper.addSender_Bool(state4, Osc_Address);
+	i = 0;
+	Osc_Address = "/value/" + tag + ofToString(i++);
+	oscHelper.addSender_Float(value1, Osc_Address);
+	Osc_Address = "/value/" + tag + ofToString(i++);
+	oscHelper.addSender_Float(value2, Osc_Address);
+	Osc_Address = "/value/" + tag + ofToString(i++);
+	oscHelper.addSender_Float(value3, Osc_Address);
+	Osc_Address = "/value/" + tag + ofToString(i++);
+	oscHelper.addSender_Float(value4, Osc_Address);
 }
 
 //--------------------------------------------------------------
@@ -68,6 +99,9 @@ void ofApp::draw()
 #ifdef USE_local_Targets
 			ui.Add(bBypass, OFX_IM_TOGGLE_ROUNDED_SMALL);
 #endif
+			ui.AddSeparated();
+			ui.AddGroup(params);
+
 			ui.EndWindow();
 		}
 

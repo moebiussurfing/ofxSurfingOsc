@@ -472,6 +472,7 @@ void ofxSurfingOsc::setupParams()
 {
 	bGui.set("ofxSurfingOsc", true);
 	bGui_Internal.set("Internal", true);
+	bGui_Enablers.set("ENABLERS", true);
 	bEnableOsc.set("Enable OSC", true);
 	bKeys.set("Keys", true);
 	bDebug.set("Debug", false);
@@ -659,6 +660,7 @@ void ofxSurfingOsc::setupParams()
 	params_AppSettings.setName("Osc_AppSettings");
 	params_AppSettings.add(bGui_Internal);
 	params_AppSettings.add(positionGui_Internal);
+	params_AppSettings.add(bGui_Enablers);
 
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS_GUI
 	params_AppSettings.add(positionGui_Targets);
@@ -678,7 +680,6 @@ void ofxSurfingOsc::setupParams()
 	params_AppSettings.add(bGui_MIDI);
 	params_AppSettings.add(bEnableMIDI);
 	params_AppSettings.add(MIDI_InputPort);
-
 #ifdef USE_MIDI_OUT
 	params_AppSettings.add(MIDI_OutputPort);
 #endif
@@ -985,8 +986,12 @@ void ofxSurfingOsc::update()
 #endif
 	}
 
+	//--
+
 	//TODO:
-	// Timed off. Required bc ofxPubSubOsc sends one state per frame.
+	// Handle bangs
+	// Timed off. 
+	// Required bc ofxPubSubOsc sends one state per frame.
 	auto t = ofGetElapsedTimeMillis();
 	for (int i = 0; i < NUM_BANGS; i++)
 	{
@@ -1022,10 +1027,6 @@ void ofxSurfingOsc::drawPatchingManager()
 //--------------------------------------------------------------
 void ofxSurfingOsc::draw()
 {
-	if (!bGui) return;
-
-	//--
-
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 	if (bGui_Plots)
@@ -1034,6 +1035,10 @@ void ofxSurfingOsc::draw()
 	}
 #endif
 #endif
+
+	//--
+
+	if (!bGui) return;
 
 	//--
 
@@ -1107,6 +1112,201 @@ void ofxSurfingOsc::draw()
 
 	boxHelp.draw();
 }
+
+#ifdef USE_IM_GUI
+//--------------------------------------------------------------
+void ofxSurfingOsc::drawImGui()
+{
+	if (ui == nullptr) return;
+
+	bool bIsSpecial = (ui->getModeSpecial() == IM_GUI_MODE_WINDOWS_SPECIAL_ORGANIZER);
+
+	// Enablers
+	{
+		bool b;
+		if (bIsSpecial) b = ui->BeginWindowSpecial(bGui_Enablers);
+		else b = ui->BeginWindow(bGui_Enablers);
+		if (b)
+		{
+			//if (!ui->bMinimize) 
+			{
+				//if (getOutEnablersSize() != 0) ui->AddSpacingSeparated();
+
+				//if (ui->BeginTree("ENABLERS", false))
+				{
+					//if (!ui->bMinimize) ui->AddLabelBig("ENABLERS");
+					//SurfingGuiTypes s = OFX_IM_CHECKBOX;
+					SurfingGuiTypes s = OFX_IM_TOGGLE_SMALL;
+					for (int i = 0; i < getOutEnablersSize(); i++) {
+						ui->Add(getOutEnabler(i), s);
+					}
+
+					//ui->EndTree();
+				}
+			}
+
+			if (bIsSpecial) ui->EndWindowSpecial();
+			else ui->EndWindow();
+		}
+	}
+
+	//--
+
+	// Main
+	{
+		bool b;
+		if (bIsSpecial) b = ui->BeginWindowSpecial(bGui);
+		else b = ui->BeginWindow(bGui);
+		if (b)
+		{
+			ui->AddLabelHuge("OSC");
+			ui->AddSpacing();
+
+			ui->Add(ui->bMinimize, OFX_IM_TOGGLE_ROUNDED);
+			ui->AddSpacingSeparated();
+
+			ui->Add(bGui_Targets, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
+			ui->Add(bGui_Enablers, OFX_IM_TOGGLE_ROUNDED);
+			ui->Add(ui->bLog, OFX_IM_TOGGLE_ROUNDED_SMALL);
+			ui->AddSpacingSeparated();
+
+			//--
+
+			// In
+
+			if (bUseIn)
+			{
+				if (!ui->bMinimize) ui->AddLabelBig("IN");
+				ui->Add(bEnableOsc_Input, OFX_IM_TOGGLE);
+				if (bEnableOsc_Input)
+				{
+					if (!ui->bMinimize)
+					{
+						string tt = "Must restart the app \nto update these settings!";
+						ui->Add(OSC_InputPort, OFX_IM_DRAG);
+						ui->AddTooltip(tt);
+					}
+
+					//TODO: implement
+					/*
+					*
+					if (!ui->bMinimize) {
+
+						if (ui->BeginTree("ENABLERS", false))
+						{
+							if (getInEnablersSize() != 0) ui->AddSpacingSeparated();
+
+							//if (!ui->bMinimize) ui->AddLabelBig("ENABLERS");
+							SurfingGuiTypes s = OFX_IM_TOGGLE_SMALL;
+							for (int i = 0; i < getInEnablersSize(); i++) {
+								ui->Add(getInEnabler(i), s);
+							}
+							ui->EndTree();
+						}
+					}
+					*/
+				}
+			}
+
+			//--
+
+			// Out
+
+			if (bUseOut)
+			{
+				if (bUseIn) ui->AddSpacingSeparated();
+
+				if (!ui->bMinimize) ui->AddLabelBig("OUT");
+				ui->Add(bEnableOsc_Output, OFX_IM_TOGGLE);
+				if (bEnableOsc_Output)
+				{
+					if (!ui->bMinimize)
+					{
+						string tt = "Must restart the app \nto update these settings!";
+						//ui->AddLabelBig(ofToString(OSC_OutputPort));
+						ui->Add(OSC_OutputPort, OFX_IM_DRAG);
+						ui->AddTooltip(tt);
+						ui->Add(OSC_OutputIp, OFX_IM_TEXT_INPUT);
+						ui->AddTooltip(tt);
+					}
+				}
+			}
+
+			//--
+
+			// Plots
+
+			if (!ui->bMinimize)
+			{
+				ui->AddSpacingSeparated();
+
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
+				ui->AddLabel("PLOTS");
+				ui->Indent();
+				ui->Add(bGui_Plots, OFX_IM_TOGGLE_ROUNDED);
+				ui->Add(bPlotsMini, OFX_IM_TOGGLE_ROUNDED_SMALL);
+				if (bCustomTemplate) ui->Add(bGui_AllPlots, OFX_IM_TOGGLE_ROUNDED_MINI);
+				ui->Unindent();
+				ui->AddSpacingSeparated();
+#endif					
+				ui->Add(bRandomize, OFX_IM_TOGGLE_ROUNDED_SMALL);
+				ui->Add(bDebug, OFX_IM_TOGGLE_ROUNDED_MINI);
+				if (bGui_InternalAllowed) ui->Add(bGui_Internal, OFX_IM_TOGGLE_ROUNDED_MINI);
+				ui->Add(bHelp, OFX_IM_TOGGLE_ROUNDED_MINI);
+			}
+
+			bool block = false;
+			if (block) {
+				glm::vec2 p = ui->getWindowShape().getBottomLeft();
+				//float w = ui->getWindowShape().getWidth();
+				//w = (w / 2.f) - (boxHelp.getRectangle().getWidth() / 2.f);
+				//p += glm::vec2(w, 0);
+				p += glm::vec2(-11, -9);
+				boxHelp.setPosition(p.x, p.y);
+			}
+
+			//--
+
+			if (bIsSpecial) ui->EndWindowSpecial();
+			else ui->EndWindow();
+		}
+	}
+
+	//--
+
+	// Targets
+	{
+		static bool bdone = false;
+		if (!bdone) {
+			bdone = true;
+			ui->ClearStyles();
+			ui->AddStyleGroupForBools(params_Bangs, OFX_IM_TOGGLE_SMALL);
+			ui->AddStyleGroupForBools(params_Toggles, OFX_IM_TOGGLE_SMALL);
+		}
+
+		bool bIsSpecial = (ui->getModeSpecial() == IM_GUI_MODE_WINDOWS_SPECIAL_ORGANIZER);
+		bool b;
+		if (bIsSpecial) b = ui->BeginWindowSpecial(bGui_Targets);
+		else b = ui->BeginWindow(bGui_Targets);
+		if (b)
+		{
+			//if (bUseIn)
+			{
+				ui->AddGroup(params_Targets);
+			}
+
+			//--
+
+			if (bIsSpecial) ui->EndWindowSpecial();
+			else ui->EndWindow();
+		}
+	}
+
+	//--
+
+	ui->DrawWindowLogIfEnabled();
+}
+#endif
 
 //--------------------------------------------------------------
 void ofxSurfingOsc::exit()
@@ -1226,7 +1426,7 @@ void ofxSurfingOsc::addReceiver_Bool(ofParameter<bool>& p, string address)
 	{
 		ofxPublishOsc(OSC_OutputIp, OSC_OutputPort, address, p);
 	}
-}
+	}
 
 //--------------------------------------------------------------
 void ofxSurfingOsc::addReceiver_Int(ofParameter<int>& p, string address)
@@ -1310,7 +1510,17 @@ void ofxSurfingOsc::addSender_Bool(ofParameter<bool>& p, string address)
 		return;
 	}
 
-	//ofxPublishOscIf(p.get(), OSC_OutputIp, OSC_OutputPort, address, p);
+	/*
+	//https://github.com/2bbb/ofxPubSubOsc/issues/38
+	//[=](ofColor c) { if (condition) { ofBackground(c); });
+	[=](ofColor c) { if (condition) { ofBackground(c); });
+
+	bool _b = p.get();
+	ofxPublishOscIf([_b](const bool& _b) {
+		ofLogNotice() << "pub:" << _b;
+		}, OSC_OutputIp, OSC_OutputPort, address, p);
+	*/
+
 	ofxPublishOsc(OSC_OutputIp, OSC_OutputPort, address, p);
 	strs_outputAddresses.push_back(address);
 
@@ -1389,7 +1599,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 		ofxTextFlow::setShowing(bGui_LogFlow);
 
 		return;
-}
+	}
 #endif
 
 	//--
@@ -1478,7 +1688,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 		}
 
 		return;
-	}
+}
 
 #endif
 
@@ -1494,7 +1704,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 		//if (!bGui_OscHelper && bGui_LogFlow) bGui_OscHelper = true;
 
 		return;
-	}
+}
 #endif
 
 	//--
@@ -1533,7 +1743,7 @@ void ofxSurfingOsc::refreshGui()
 	else
 	{
 		gm.minimize();
-}
+	}
 #endif
 
 	//--
@@ -1563,7 +1773,7 @@ void ofxSurfingOsc::refreshGui()
 	//{
 	//	go.minimize();
 	//}
-}
+	}
 
 //--------------------------------------------------------------
 void ofxSurfingOsc::keyPressed(ofKeyEventArgs& eventArgs)
@@ -1585,7 +1795,7 @@ void ofxSurfingOsc::keyPressed(ofKeyEventArgs& eventArgs)
 #ifdef USE_TEXT_FLOW
 	else if (key == OF_KEY_BACKSPACE) {
 		ofxTextFlow::clear();
-}
+	}
 #endif
 }
 
@@ -1749,6 +1959,7 @@ void ofxSurfingOsc::setupTargets()
 		valuesBars[i].setColor(colorValues);
 		valuesBars[i].setColorBackground(ofColor(0, 128));
 		valuesBars[i].setRounded(_rounded);
+		valuesBars[i].setEnableBorder(true);
 #endif
 	}
 
@@ -1784,6 +1995,7 @@ void ofxSurfingOsc::setupTargets()
 		numbersBars[i].setRounded(_rounded);
 		numbersBars[i].setValueMax(_max);
 		numbersBars[i].setValueMin(_min);
+		numbersBars[i].setEnableBorder(true);
 #endif
 	}
 
@@ -2093,7 +2305,7 @@ void ofxSurfingOsc::Changed_Tar_Bangs(ofAbstractParameter& e) // preset load/tri
 			//bBangs[i] = false;
 			//int _start = 0;
 			//plotsTargets[_start + i]->update(true);
-			
+
 			//TODO: 
 			// Timed off. Required bc ofxPubSubOsc sends one state per frame.
 			t_bBangs[i] = ofGetElapsedTimeMillis();
@@ -2231,6 +2443,73 @@ void ofxSurfingOsc::setupPlotsColors()
 }
 
 //--------------------------------------------------------------
+void ofxSurfingOsc::setupPlotsCustomTemplate()
+{
+	int _a = 170;
+	plotStyle s;
+
+	// Disable all plots
+	for (int _i = 0; _i < plotsTargets_Visible.size(); _i++)
+		plotsTargets_Visible[_i] = false;
+
+	//----
+
+	// note that index starts at 1 instead of 0
+
+	// Bangs
+
+	// Bang 1 
+	s.name = "BEAT";
+	s.target = plotTarget_Bang;
+	s.index = 1;
+	s.color = ofColor(ofColor::white, _a);
+	setupPlotCustom(s);
+
+	//-
+
+	// Bang 2 
+	s.name = "SIGNAL_0";
+	s.target = plotTarget_Bang;
+	s.index = 2;
+	s.color = ofColor(ofColor::turquoise, _a);
+	setupPlotCustom(s);
+
+	//--
+
+	// Bang 3 
+	s.name = "SIGNAL_1";
+	s.target = plotTarget_Bang;
+	s.index = 3;
+	s.color = ofColor(ofColor::orange, _a);
+	setupPlotCustom(s);
+
+	//--
+
+	// Values
+
+	s.name = "SIGNAL_0";
+	s.target = plotTarget_Value;
+	s.index = 1;
+	s.color = ofColor(ofColor::turquoise, _a);
+	setupPlotCustom(s);
+
+	s.name = "SIGNAL_1";
+	s.target = plotTarget_Value;
+	s.index = 2;
+	s.color = ofColor(ofColor::orange, _a);
+	setupPlotCustom(s);
+
+	// Value 1 
+	// Bpm
+	s.name = "BPM";
+	s.target = plotTarget_Value;
+	s.index = 3;
+	s.range = glm::vec2(40, 240);//min, max
+	s.color = ofColor(ofColor::white, _a);
+	setupPlotCustom(s);
+}
+
+//--------------------------------------------------------------
 void ofxSurfingOsc::setupPlots()
 {
 	//--
@@ -2252,81 +2531,11 @@ void ofxSurfingOsc::setupPlots()
 	//----
 
 	// Customize special plots
-
 	// Template is for my ofxSoundAnalyzer add-on
 
 	if (bCustomTemplate)
 	{
-		int _a = 170;
-		plotStyle s;
-
-		// Disable all plots
-		for (int _i = 0; _i < plotsTargets_Visible.size(); _i++)
-			plotsTargets_Visible[_i] = false;
-
-		//----
-
-		// Bangs
-
-		// Bang 1 
-		// as beat
-
-		s.name = "BEAT";
-		s.target = plotTarget_Bang;
-		s.index = 1;
-		s.color = ofColor(ofColor::green, _a);
-		setupPlotCustom(s);
-
-		//-
-
-		// Bang 2 
-		// as onset
-		s.name = "ONSET";
-		s.target = plotTarget_Bang;
-		s.index = 2;
-		s.color = ofColor(ofColor::red, _a);
-		setupPlotCustom(s);
-
-		//--
-
-		// Toggles
-		// Toggle 1 
-		// as trig note
-		s.name = "NOTE";
-		s.target = plotTarget_Toggle;
-		s.index = 1;
-		s.color = ofColor(ofColor::orange, _a);
-		setupPlotCustom(s);
-
-		//--
-
-		// Values
-
-		// Aubio
-		// Value 1 
-		s.name = "AUBIO";
-		s.target = plotTarget_Value;
-		s.index = 1;
-		s.color = ofColor(ofColor::red, _a);
-		setupPlotCustom(s);
-
-		//-
-
-		// Gist
-		// Value 2 
-		s.name = "GIST";
-		s.target = plotTarget_Value;
-		s.index = 2;
-		s.color = ofColor(ofColor::orange, _a);
-		setupPlotCustom(s);
-
-		// Bpm
-		s.name = "BPM";
-		s.target = plotTarget_Value;
-		s.index = 8;
-		s.range = glm::vec2(40, 300);//min, max
-		s.color = ofColor(ofColor::lightPink, _a);
-		setupPlotCustom(s);
+		setupPlotsCustomTemplate();
 	}
 
 	//----
@@ -2411,7 +2620,7 @@ void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
 		float _r;//widgets size
 		bool bIsSmall;
 
-		// accumulate how many we have drawn to not left empty spaces
+		// accumulate how many we have drawn to not left empty spaces.
 
 		for (int i = 0; i < _amount; i++)
 		{
@@ -2427,7 +2636,7 @@ void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
 
 			_r = ofClamp((h * 0.8 * 0.5), h * 0.5 * 0.9, _w / 6.f);
 
-			//when small will simplify drawing stuff like disabling borders
+			// when small will simplify drawing stuff like disabling borders.
 			bIsSmall = (_r < 100);
 			//bIsSmall = true;
 

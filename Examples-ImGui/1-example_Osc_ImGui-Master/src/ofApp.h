@@ -46,4 +46,15 @@ public:
 
 #endif
 
+	//----
+
+	ofParameterGroup params{"Params"};
+	ofParameter<bool> state1{ "state1", false };
+	ofParameter<bool> state2{ "state2", false };
+	ofParameter<bool> state3{ "state3", false };
+	ofParameter<bool> state4{ "state4", false };
+	ofParameter<float> value1{ "value1", 0, 0, 1 };
+	ofParameter<float> value2{ "value2", 0, 0, 1 };
+	ofParameter<float> value3{ "value3", 0, 0, 1 };
+	ofParameter<float> value4{ "value4", 0, 0, 1 };
 };
