@@ -4,15 +4,18 @@ ofxSurfingOsc
 ![Stage: beta](https://img.shields.io/badge/-alpha-red)
 
 # Overview
-An **Osc Manager** as a predefined template for two linked apps: **Master** and **Slave**.
-Useful to easely add Osc Out linking **ofParams** from a **Master app**.
-And the same for the Slave App, linking an Osc Input to their **ofParams**.
+An **Osc Manager** as a **predefined template** for **two linked apps**: 
+
+**Master** to **Slave**
+
+Useful to easely add **Osc Out** linking **ofParams** from a **Master app**.
+And the same for the **Slave App**, linking an **Osc Input** to their **ofParams**.
 
 ## Screenshot
 ![](Examples-ImGui/Capture.PNG)
 
 ## Features
-- 8 Bool Bangs, 8 Bool Toggles, 8 Float Values, 8 Int Numbers.
+- **8 Bool Bangs, 8 Bool Toggles, 8 Float Values, 8 Int Numbers**.
 - Internal params with GUI.
 - Persistent settings.
 - Plots.
@@ -33,7 +36,7 @@ Look Examples.
 
 - ofxOsc
 - ofxPubSubOsc
-- ofxHistoryPlot
+- ofxHistoryPlot / Fork
 - ofxSurfingBox
 - ofxSurfingHelpers
 - ofxGui / oF Core
@@ -41,7 +44,7 @@ Look Examples.
 
 **OPTIONAL**:
 - ofxSurfingImGui
-- ofxImGui
+- ofxImGui / Develop branch
 
 *Thanks a lot to all these ofxAddons coders. Look into each folder for authoring credits, original forks, and license info.*  
  </p>
@@ -51,7 +54,7 @@ Look Examples.
   <summary>Tested Systems</summary>
   <p>
 
-  - **Windows 10** / **VS 2017** / **OF ~0.11**
+  - **Windows 10** / **VS 2022** / **OF ~0.11**
   </p>
 </details>
 
