@@ -6,10 +6,10 @@ ofxSurfingOsc
 # Overview
 An **Osc Manager** as a **predefined template** for **two linked apps**: 
 
-**Master** to **Slave**
+**Master** to **Slave**  
 
-Useful to easely add **Osc Out** linking **ofParams** from a **Master app**.
-And the same for the **Slave App**, linking an **Osc Input** to their **ofParams**.
+Useful to easely add **Osc Out** linking **ofParams** from a **Master app**.  
+And the same for the **Slave App**, linking an **Osc Input** to their **ofParams**.  
 
 ## Screenshot
 ![](Examples-ImGui/Capture.PNG)
