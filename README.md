@@ -34,17 +34,17 @@ Look Examples.
   <summary>Dependencies</summary>
   <p>
 
-- ofxOsc
 - ofxPubSubOsc
 - ofxHistoryPlot / Fork
 - ofxSurfingBox
 - ofxSurfingHelpers
+- ofxOsc / oF Core
 - ofxGui / oF Core
-- ofxWindowApp / Only for the example
 
 **OPTIONAL**:
 - ofxSurfingImGui
 - ofxImGui / Develop branch
+- ofxWindowApp / Only for the example
 
 *Thanks a lot to all these ofxAddons coders. Look into each folder for authoring credits, original forks, and license info.*  
  </p>
