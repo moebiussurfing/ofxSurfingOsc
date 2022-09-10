@@ -1,6 +1,8 @@
 #pragma once
 
-//#define USE_local_Targets // More useful to use as receiver / slave
+//#define USE_local_Targets 
+// More useful to use as receiver / slave
+// But can be used as common ofParms callbacks!
 
 #include "ofMain.h"
 
@@ -30,31 +32,35 @@ public:
 
 	//----
 
-	// Local Targets 
-	// aka receivers and/or senders
-
-#ifdef USE_local_Targets
-
-	ofParameter<bool> bBypass{ "ByPass", false };
-
-	void setupTargets();
-
-	void Changed_Bangs(ofAbstractParameter& e);
-	void Changed_Toggles(ofAbstractParameter& e);
-	void Changed_Values(ofAbstractParameter& e);
-	void Changed_Numbers(ofAbstractParameter& e);
-
-#endif
-
-	//----
-
 	ofParameterGroup params{"Params"};
-	ofParameter<bool> state1{ "state1", false };
-	ofParameter<bool> state2{ "state2", false };
-	ofParameter<bool> state3{ "state3", false };
-	ofParameter<bool> state4{ "state4", false };
+	ofParameter<bool> bang1{ "bang1", false };
+	ofParameter<bool> bang2{ "bang2", false };
+	ofParameter<bool> bang3{ "bang3", false };
+	ofParameter<bool> bang4{ "bang4", false };
+	ofParameter<bool> toggle1{ "toggle1", false };
+	ofParameter<bool> toggle2{ "toggle2", false };
+	ofParameter<bool> toggle3{ "toggle3", false };
+	ofParameter<bool> toggle4{ "toggle4", false };
 	ofParameter<float> value1{ "value1", 0, 0, 1 };
 	ofParameter<float> value2{ "value2", 0, 0, 1 };
 	ofParameter<float> value3{ "value3", 0, 0, 1 };
 	ofParameter<float> value4{ "value4", 0, 0, 1 };
+	ofParameter<int> number1{ "number1", 0, 0, 1000 };
+	ofParameter<int> number2{ "number2", 0, 0, 1000 };
+	ofParameter<int> number3{ "number3", 0, 0, 1000 };
+	ofParameter<int> number4{ "number4", 0, 0, 1000 };
+
+	//----
+
+	// Local Targets 
+	// aka receivers and/or senders
+
+#ifdef USE_local_Targets
+	void setupTargetsCallbacks();
+	void Changed_Bangs(ofAbstractParameter& e);
+	void Changed_Toggles(ofAbstractParameter& e);
+	void Changed_Values(ofAbstractParameter& e);
+	void Changed_Numbers(ofAbstractParameter& e);
+	ofParameter<bool> bBypass{ "ByPass", false };
+#endif
 };

@@ -661,6 +661,7 @@ void ofxSurfingOsc::setupParams()
 	params_AppSettings.add(bGui_Internal);
 	params_AppSettings.add(positionGui_Internal);
 	params_AppSettings.add(bGui_Enablers);
+	params_AppSettings.add(bGui_Targets);
 
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS_GUI
 	params_AppSettings.add(positionGui_Targets);
@@ -1119,15 +1120,21 @@ void ofxSurfingOsc::drawImGui()
 {
 	if (ui == nullptr) return;
 
+	if (!bGui) return;
+
 	bool bIsSpecial = (ui->getModeSpecial() == IM_GUI_MODE_WINDOWS_SPECIAL_ORGANIZER);
 
 	// Enablers
+	if (bUseOut)
 	{
 		bool b;
 		if (bIsSpecial) b = ui->BeginWindowSpecial(bGui_Enablers);
 		else b = ui->BeginWindow(bGui_Enablers);
 		if (b)
 		{
+			ui->AddLabelBig("OSC OUT");
+			//ui->AddLabel("Enable channels");
+
 			//if (!ui->bMinimize) 
 			{
 				//if (getOutEnablersSize() != 0) ui->AddSpacingSeparated();
@@ -1166,7 +1173,7 @@ void ofxSurfingOsc::drawImGui()
 			ui->AddSpacingSeparated();
 
 			ui->Add(bGui_Targets, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
-			ui->Add(bGui_Enablers, OFX_IM_TOGGLE_ROUNDED);
+			if(bUseOut) ui->Add(bGui_Enablers, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
 			ui->Add(ui->bLog, OFX_IM_TOGGLE_ROUNDED_SMALL);
 			ui->AddSpacingSeparated();
 
@@ -1284,7 +1291,6 @@ void ofxSurfingOsc::drawImGui()
 			ui->AddStyleGroupForBools(params_Toggles, OFX_IM_TOGGLE_SMALL);
 		}
 
-		bool bIsSpecial = (ui->getModeSpecial() == IM_GUI_MODE_WINDOWS_SPECIAL_ORGANIZER);
 		bool b;
 		if (bIsSpecial) b = ui->BeginWindowSpecial(bGui_Targets);
 		else b = ui->BeginWindow(bGui_Targets);
@@ -1421,6 +1427,7 @@ void ofxSurfingOsc::addReceiver_Bool(ofParameter<bool>& p, string address)
 
 	//--
 
+	//TODO: WIP
 	// Feedback
 	if (bModeFeedback && bUseOut)
 	{
@@ -1455,6 +1462,7 @@ void ofxSurfingOsc::addReceiver_Int(ofParameter<int>& p, string address)
 
 	//--
 
+	//TODO: WIP
 	// Feedback
 	if (bModeFeedback && bUseOut)
 	{
@@ -1489,6 +1497,7 @@ void ofxSurfingOsc::addReceiver_Float(ofParameter<float>& p, string address)
 
 	//--
 
+	//TODO: WIP
 	// Feedback
 	if (bModeFeedback && bUseOut)
 	{
@@ -2761,7 +2770,8 @@ void ofxSurfingOsc::drawPlots()
 		// Bg
 		ofPushStyle();
 		ofSetColor(OF_COLOR_BG_PANELS);
-		ofDrawRectRounded(boxPlotsBg.getRectangle(), 5);
+		float r = 3;
+		ofDrawRectRounded(boxPlotsBg.getRectangle(), r);
 		boxPlotsBg.draw();
 		ofPopStyle();
 
@@ -2919,6 +2929,31 @@ void ofxSurfingOsc::doTesterRandom()
 
 
 //----
+
+//--------------------------------------------------------------
+void ofxSurfingOsc::linkBang(ofParameter<bool>& p)
+{
+	static int i = 0;
+	p.makeReferenceTo(bBangs[++i]);
+}
+//--------------------------------------------------------------
+void ofxSurfingOsc::linkToggle(ofParameter<bool>& p)
+{
+	static int i = 0;
+	p.makeReferenceTo(bToggles[++i]);
+}
+//--------------------------------------------------------------
+void ofxSurfingOsc::linkValue(ofParameter<float>& p)
+{
+	static int i = 0;
+	p.makeReferenceTo(values[++i]);
+}
+//--------------------------------------------------------------
+void ofxSurfingOsc::linkNumber(ofParameter<int>& p)
+{
+	static int i = 0;
+	p.makeReferenceTo(numbers[++i]);
+}
 
 
 //TODO:

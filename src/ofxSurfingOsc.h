@@ -203,7 +203,7 @@ public:
 		UNKNOWN = 0,
 		Master,
 		Slave,
-		FullDuplex
+		FullDuplex//TODO: WIP
 	};
 
 private:
@@ -314,7 +314,15 @@ public:
 	//--
 
 	// Subscribers / Publishers 
-	// 
+	 
+	// Target Linkers
+	void linkBang(ofParameter<bool>& b);
+	void linkToggle(ofParameter<bool>& b);
+	void linkValue(ofParameter<float>& b);
+	void linkNumber(ofParameter<int>& b);
+	
+	//--
+	
 	// Pass local ofParams (from ofApp) 
 	// with an associated Osc address to link to.
 	// will use addSender when performing a Master app / sender,

@@ -4,20 +4,25 @@ ofxSurfingOsc
 ![Stage: beta](https://img.shields.io/badge/-alpha-red)
 
 # Overview
-A predefined Osc Manager as a template for a two sides apps: Master / Slave.
+An **Osc Manager** as a predefined template for two linked apps: **Master** and **Slave**.
+Useful to easely add Osc Out linking **ofParams** from a **Master app**.
+And the same for the Slave App, linking an Osc Input to their **ofParams**.
 
 ## Screenshot
-![](Capture.PNG)
+![](Examples-ImGui/Capture.PNG)
 
 ## Features
-- Predefined common template.
 - 8 Bool Bangs, 8 Bool Toggles, 8 Float Values, 8 Int Numbers.
 - Internal params with GUI.
 - Persistent settings.
 - Plots.
-- WIP: Customize template disable not used channels.
-- WIP: Smoothing plots.
-- WIP: Patching system to assign channels for different target params, with map and clamp ranges.
+- WIP: Customized templates to disable not used channels.
+  - Customize and organize channel plots.
+- WIP: Patching system 
+  - assign channels for different Target **ofParams**. 
+  - with map and clamp ranges.
+- WIP: apply some settings on runtime.
+- WIP: **TouchOsc** templates.
 
 ## Usage
 Look Examples.
@@ -31,10 +36,10 @@ Look Examples.
 - ofxHistoryPlot
 - ofxSurfingBox
 - ofxSurfingHelpers
-- ofxGui
+- ofxGui / oF Core
 - ofxWindowApp / Only for the example
 
-TODO:
+**OPTIONAL**:
 - ofxSurfingImGui
 - ofxImGui
 
@@ -58,8 +63,7 @@ An add-on by **@moebiusSurfing**
 <p>
 <a href="mailto:moebiussurfing@gmail.com" target="_blank">Email</a> |
 <a href="https://twitter.com/moebiusSurfing/" rel="nofollow">Twitter</a> | 
-<a href="https://www.youtube.com/moebiusSurfing" rel="nofollow">YouTube</a> | 
-<a href="https://www.instagram.com/moebiusSurfing/" rel="nofollow">Instagram</a> 
+<a href="https://www.youtube.com/moebiusSurfing" rel="nofollow">YouTube</a> 
 </p>
 
 ### License
