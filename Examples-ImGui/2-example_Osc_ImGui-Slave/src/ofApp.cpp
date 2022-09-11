@@ -57,7 +57,7 @@ void ofApp::setupOsc()
 	ofSetWindowTitle(name);
 	oscHelper.setup(mode);
 
-	// Link param
+	// Link params
 	{
 		oscHelper.linkBang(bang1);
 		oscHelper.linkBang(bang2);

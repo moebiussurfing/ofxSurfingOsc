@@ -470,7 +470,9 @@ void ofxSurfingOsc::setupGui()
 //----------------------------------------------------
 void ofxSurfingOsc::setupParams()
 {
-	bGui.set("ofxSurfingOsc", true);
+	bGui.set("OSC", true);
+	//bGui.set("ofxSurfingOsc", true);
+
 	bGui_Internal.set("Internal", true);
 	bGui_Enablers.set("ENABLERS", true);
 	bEnableOsc.set("Enable OSC", true);
@@ -1142,8 +1144,8 @@ void ofxSurfingOsc::drawImGui()
 				//if (ui->BeginTree("ENABLERS", false))
 				{
 					//if (!ui->bMinimize) ui->AddLabelBig("ENABLERS");
-					//SurfingGuiTypes s = OFX_IM_CHECKBOX;
-					SurfingGuiTypes s = OFX_IM_TOGGLE_SMALL;
+					SurfingGuiTypes s = OFX_IM_CHECKBOX;
+					//SurfingGuiTypes s = OFX_IM_TOGGLE_SMALL;
 					for (int i = 0; i < getOutEnablersSize(); i++) {
 						ui->Add(getOutEnabler(i), s);
 					}
@@ -1550,7 +1552,10 @@ void ofxSurfingOsc::addSender_Float(ofParameter<float>& p, string address)
 		return;
 	}
 
-	ofxPublishOsc(OSC_OutputIp, OSC_OutputPort, address, p);
+	//TODO:
+	bool bAlways = false;
+
+	ofxPublishOsc(OSC_OutputIp, OSC_OutputPort, address, p, !bAlways);
 	strs_outputAddresses.push_back(address);
 
 	// Enabler
@@ -1615,7 +1620,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 
 	//TODO:
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
-	if (name == bGui_PatchingManager.getName())
+	else if (name == bGui_PatchingManager.getName())
 	{
 		if (bUseIn)
 		{
@@ -1635,7 +1640,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 
 	// MIDI in
 
-	if (name == MIDI_InputPort.getName())
+	else if (name == MIDI_InputPort.getName())
 	{
 		ofLogNotice(__FUNCTION__) << "MIDI INPUT PORT: " << (MIDI_InputPort);
 		mMidiParams.disconnect();
@@ -1674,7 +1679,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 
 #ifdef USE_MIDI_OUT
 
-	if (name == MIDI_OutputPort.getName())
+	else if (name == MIDI_OutputPort.getName())
 	{
 		ofLogNotice(__FUNCTION__) << "MIDI OUT PORT: " << (MIDI_OutputPort);
 		midiOut.listOutPorts();
@@ -1706,7 +1711,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 	//--
 
 #ifdef USE_TEXT_FLOW
-	if (name == bGui_LogFlow.getName())
+	else if (name == bGui_LogFlow.getName())
 	{
 		// workflow
 		if (bGui_LogFlow) bGui_OscHelper = true;
@@ -1718,18 +1723,20 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 
 	//--
 
-	if (name == positionGui_Internal.getName())
+	else if (name == positionGui_Internal.getName())
 	{
 		if (bGui_InternalAllowed && bGui_Internal)
 			gui_Internal.setPosition(positionGui_Internal.get().x, positionGui_Internal.get().y);
+
 		return;
 	}
 
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS_GUI
-	if (name == positionGui_Targets.getName())
+	else if (name == positionGui_Targets.getName())
 	{
 		if (bGui_InternalAllowed && bGui_Internal)
 			gui_Targets.setPosition(positionGui_Targets.get().x, positionGui_Targets.get().y);
+
 		return;
 	}
 #endif
@@ -1897,7 +1904,7 @@ void ofxSurfingOsc::setupTargets()
 		// Plots
 
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
-		ofxHistoryPlot* graph = addGraph(_name, 0, 1.0f, colorBangs, 0);
+		ofxHistoryPlot* graph = addPlot(_name, 0, 1.0f, colorBangs, 0);
 		plotsTargets.push_back(graph);
 
 		// BeatCircles
@@ -1928,7 +1935,7 @@ void ofxSurfingOsc::setupTargets()
 		// Plots
 
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
-		ofxHistoryPlot* graph = addGraph(_name, 0, 1.0f, colorToggles, 0);
+		ofxHistoryPlot* graph = addPlot(_name, 0, 1.0f, colorToggles, 0);
 		plotsTargets.push_back(graph);
 
 		// BeatCircles
@@ -1960,7 +1967,7 @@ void ofxSurfingOsc::setupTargets()
 		// Plots
 
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
-		ofxHistoryPlot* graph = addGraph(_name, 0, 1.0f, colorValues, 2, false); // no smooth
+		ofxHistoryPlot* graph = addPlot(_name, 0, 1.0f, colorValues, 2, false); // no smooth
 		plotsTargets.push_back(graph);
 
 		// Bars
@@ -1994,7 +2001,7 @@ void ofxSurfingOsc::setupTargets()
 		// Plots
 
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
-		ofxHistoryPlot* graph = addGraph(_name, _min, _max, colorNumbers, 0);
+		ofxHistoryPlot* graph = addPlot(_name, _min, _max, colorNumbers, 0);
 		plotsTargets.push_back(graph);
 
 		// Bars
@@ -2306,20 +2313,12 @@ void ofxSurfingOsc::Changed_Tar_Bangs(ofAbstractParameter& e) // preset load/tri
 
 			// Plot
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
-			//plotsTargets[i]->update(1);
 			bangRects[i].bang();
-
-			////TODO:
-			//// instant off
-			//bBangs[i] = false;
-			//int _start = 0;
-			//plotsTargets[_start + i]->update(true);
 
 			//TODO: 
 			// Timed off. Required bc ofxPubSubOsc sends one state per frame.
 			t_bBangs[i] = ofGetElapsedTimeMillis();
 #endif
-
 			return;
 		}
 	}
@@ -2459,8 +2458,12 @@ void ofxSurfingOsc::setupPlotsCustomTemplate()
 
 	// Disable all plots
 	for (int _i = 0; _i < plotsTargets_Visible.size(); _i++)
+	{
 		plotsTargets_Visible[_i] = false;
-
+	
+		mapPlots[_i] = _i;//TODO: WIP:
+	}
+	
 	//----
 
 	// note that index starts at 1 instead of 0
@@ -2568,7 +2571,7 @@ void ofxSurfingOsc::updatePlots() {
 		_start = 0;
 		_end = NUM_BANGS;
 		if (i >= _start && i < _end)
-			plotsTargets[i]->update(bBangs[i]);//0?
+			plotsTargets[i]->update(bBangs[i]); // ?
 
 		_start = _end;
 		_end = _start + NUM_TOGGLES;
@@ -2586,6 +2589,10 @@ void ofxSurfingOsc::updatePlots() {
 			plotsTargets[i]->update(numbers[i - _start]);
 	}
 }
+
+//--
+
+// Plots
 
 //--------------------------------------------------------------
 void ofxSurfingOsc::drawPlots(ofRectangle rect)
@@ -2636,7 +2643,7 @@ void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
 			// 1. Plots
 
 			if (bDrawAll) y = plotMargin + plotHeight * i;
-			else y = plotMargin + plotHeight * (p);
+			else y = plotMargin + plotHeight * p;
 
 			y += _y;
 			x = _x + plotMargin;
@@ -2752,8 +2759,6 @@ void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
 					glm::vec2(x + _xpad, y + plotMargin + h - 2),
 					2 * _r, h - _gap);
 			}
-
-			//----
 		}
 	}
 }
@@ -2769,6 +2774,7 @@ void ofxSurfingOsc::drawPlots()
 	{
 		// Bg
 		ofPushStyle();
+		ofFill();
 		ofSetColor(OF_COLOR_BG_PANELS);
 		float r = 3;
 		ofDrawRectRounded(boxPlotsBg.getRectangle(), r);
@@ -2785,6 +2791,7 @@ void ofxSurfingOsc::drawPlots()
 		// Bg
 		ofRectangle r = ofGetCurrentViewport();
 		ofPushStyle();
+		ofFill();
 		ofSetColor(OF_COLOR_BG_PANELS);
 		ofDrawRectRounded(r, 5);
 		ofPopStyle();
@@ -2794,7 +2801,7 @@ void ofxSurfingOsc::drawPlots()
 }
 
 //--------------------------------------------------------------
-ofxHistoryPlot* ofxSurfingOsc::addGraph(string varName, float min, float max, ofColor color, int precision, bool _smooth)
+ofxHistoryPlot* ofxSurfingOsc::addPlot(string varName, float min, float max, ofColor color, int precision, bool _smooth)
 {
 	//TODO: min hardcoded to 0
 
@@ -2807,7 +2814,8 @@ ofxHistoryPlot* ofxSurfingOsc::addGraph(string varName, float min, float max, of
 	//graph2 scale can shrink back after growing if graph2 curves requires it
 	graph->setRange(min, max); // this lock the auto range!
 
-	if (_smooth) {
+	if (_smooth) 
+	{
 		graph->setShowSmoothedCurve(true);
 		graph->setSmoothFilter(0.1);
 	}
@@ -2821,8 +2829,11 @@ ofxHistoryPlot* ofxSurfingOsc::addGraph(string varName, float min, float max, of
 
 	graph->setLineWidth(_line);
 	graph->setColor(color);
-	graph->setDrawBackground(true);
-	graph->setBackgroundColor(ofColor(0, 225));
+
+	//graph->setDrawBackground(true);
+	//graph->setBackgroundColor(ofColor(0, 225));
+	graph->setDrawBackground(false);
+
 	graph->setDrawGrid(false);
 
 	//graph->setRangeAuto();

@@ -719,8 +719,13 @@ public:
 	// Plots
 
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
-	public:
+
+public:
+	
 	ofParameter<bool> bGui_Plots;
+	
+	std::map<int, int> mapPlots;
+	//TODO: WIP: add organize plots
 
 private:
 
@@ -867,7 +872,7 @@ public:
 
 private:
 
-	ofxHistoryPlot* addGraph(string varName, float min, float max, ofColor color, int precision, bool _smooth = false);
+	ofxHistoryPlot* addPlot(string varName, float min, float max, ofColor color, int precision, bool _smooth = false);
 
 	vector<ofxHistoryPlot*>plotsTargets;
 

@@ -33,7 +33,7 @@
 #include "ofxOneEuroFilter.h"
 #define FREQ_FILTER_REF 5
 
-#define OF_COLOR_BG_PANELS ofColor(0, 220)
+#define OF_COLOR_BG_PANELS ofColor(0, 200)
 
 //--
 
