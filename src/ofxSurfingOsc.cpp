@@ -338,12 +338,20 @@ void ofxSurfingOsc::initiate()
 
 	// Load Settings
 
-	ofxSurfingHelpers::loadGroup(params_AppSettings, path_Global + "/" + path_AppSettings);
+	//ofxSurfingHelpers::loadGroup(params_AppSettings, path_Global + "/" + path_AppSettings);
 }
 
 //----------------------------------------------------
 void ofxSurfingOsc::startupDelayed()
 {
+	//----
+
+	// Load Settings
+
+	ofxSurfingHelpers::loadGroup(params_AppSettings, path_Global + "/" + path_AppSettings);
+
+	//--
+	// 
 	// Debug Info
 	{
 		// Debug and show all subscribed addresses
@@ -489,7 +497,7 @@ void ofxSurfingOsc::setupParams()
 
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
-	bGui_Plots.set("Plots", true);
+	bGui_Plots.set("PLOTS", true);
 	if (bCustomTemplate) bGui_AllPlots.set("All", false);
 	bPlotsMini.set("Mini", true);
 #endif
@@ -1003,7 +1011,8 @@ void ofxSurfingOsc::update()
 			bBangs[i] = false;
 
 			int _start = 0;
-			plotsTargets[_start + i]->update(false);
+
+			//plotsTargets[_start + i]->update(false);
 		}
 	}
 }
@@ -1144,11 +1153,51 @@ void ofxSurfingOsc::drawImGui()
 				//if (ui->BeginTree("ENABLERS", false))
 				{
 					//if (!ui->bMinimize) ui->AddLabelBig("ENABLERS");
+
 					SurfingGuiTypes s = OFX_IM_CHECKBOX;
 					//SurfingGuiTypes s = OFX_IM_TOGGLE_SMALL;
-					for (int i = 0; i < getOutEnablersSize(); i++) {
+
+					if (ui->AddButton("All", OFX_IM_BUTTON, 2, true))
+					{
+						for (int i = 0; i < bEnablerOuts.size(); i++) bEnablerOuts[i] = true;
+					}
+					if (ui->AddButton("None", OFX_IM_BUTTON, 2))
+					{
+						for (int i = 0; i < bEnablerOuts.size(); i++) bEnablerOuts[i] = false;
+					}
+
+					for (int i = 0; i < getOutEnablersSize(); i++)
+					{
 						ui->Add(getOutEnabler(i), s);
 					}
+
+					//WIP
+					/*
+					for (int i = 0; i < getOutEnablersSize(); i++)
+					{
+						static bool b0 = false;
+						static bool b1 = false;
+						static bool b2 = false;
+						static bool b3 = false;
+
+						if (i == 0) b0 = ui->BeginTree("BANGS");
+						else if (i == NUM_BANGS) b1 = ui->BeginTree("TOGGLES");
+						else if (i == NUM_BANGS + NUM_TOGGLES) b2 = ui->BeginTree("VALUES");
+						else if (i == NUM_BANGS + NUM_TOGGLES + NUM_VALUES) b3 = ui->BeginTree("NUMBERS");
+
+						if (i < NUM_BANGS && !b0) continue;
+						else if (i < NUM_BANGS + NUM_TOGGLES && !b1) continue;
+						else if (i < NUM_BANGS + NUM_TOGGLES + NUM_VALUES && !b2) continue;
+						else if (i < NUM_BANGS + NUM_TOGGLES + NUM_VALUES + NUM_NUMBERS && !b3) continue;
+
+						ui->Add(getOutEnabler(i), s);
+
+						if (i == NUM_BANGS - 1 && b0) ui->EndTree();
+						else if (i == NUM_BANGS + NUM_TOGGLES - 1 && b1) ui->EndTree();
+						else if (i == NUM_BANGS + NUM_TOGGLES + NUM_VALUES - 1 && b2) ui->EndTree();
+						else if (i == NUM_BANGS + NUM_TOGGLES + NUM_VALUES + NUM_NUMBERS - 1 && b3) ui->EndTree();
+					}
+					*/
 
 					//ui->EndTree();
 				}
@@ -1175,7 +1224,7 @@ void ofxSurfingOsc::drawImGui()
 			ui->AddSpacingSeparated();
 
 			ui->Add(bGui_Targets, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
-			if(bUseOut) ui->Add(bGui_Enablers, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
+			if (bUseOut) ui->Add(bGui_Enablers, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
 			ui->Add(ui->bLog, OFX_IM_TOGGLE_ROUNDED_SMALL);
 			ui->AddSpacingSeparated();
 
@@ -1258,7 +1307,7 @@ void ofxSurfingOsc::drawImGui()
 				ui->Unindent();
 				ui->AddSpacingSeparated();
 #endif					
-				ui->Add(bRandomize, OFX_IM_TOGGLE_ROUNDED_SMALL);
+				ui->Add(bRandomize, OFX_IM_TOGGLE_SMALL_BORDER_BLINK);
 				ui->Add(bDebug, OFX_IM_TOGGLE_ROUNDED_MINI);
 				if (bGui_InternalAllowed) ui->Add(bGui_Internal, OFX_IM_TOGGLE_ROUNDED_MINI);
 				ui->Add(bHelp, OFX_IM_TOGGLE_ROUNDED_MINI);
@@ -1435,7 +1484,7 @@ void ofxSurfingOsc::addReceiver_Bool(ofParameter<bool>& p, string address)
 	{
 		ofxPublishOsc(OSC_OutputIp, OSC_OutputPort, address, p);
 	}
-	}
+}
 
 //--------------------------------------------------------------
 void ofxSurfingOsc::addReceiver_Int(ofParameter<int>& p, string address)
@@ -1521,18 +1570,22 @@ void ofxSurfingOsc::addSender_Bool(ofParameter<bool>& p, string address)
 		return;
 	}
 
-	/*
 	//https://github.com/2bbb/ofxPubSubOsc/issues/38
-	//[=](ofColor c) { if (condition) { ofBackground(c); });
-	[=](ofColor c) { if (condition) { ofBackground(c); });
-
-	bool _b = p.get();
-	ofxPublishOscIf([_b](const bool& _b) {
-		ofLogNotice() << "pub:" << _b;
-		}, OSC_OutputIp, OSC_OutputPort, address, p);
+	/*
+	auto condition = [&]() {
+		static bool b = false;//previous
+		bool bChanged = false;
+		if (b != p.get()) {//changed
+			b = p.get();
+			bChanged = true;
+		}
+		return bChanged && p.get();
+	};
+	ofxPublishOscIf(condition, OSC_OutputIp, OSC_OutputPort, address, p);
 	*/
 
 	ofxPublishOsc(OSC_OutputIp, OSC_OutputPort, address, p);
+
 	strs_outputAddresses.push_back(address);
 
 	// Enabler
@@ -1613,7 +1666,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 		ofxTextFlow::setShowing(bGui_LogFlow);
 
 		return;
-	}
+}
 #endif
 
 	//--
@@ -1702,7 +1755,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 		}
 
 		return;
-}
+	}
 
 #endif
 
@@ -1718,7 +1771,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 		//if (!bGui_OscHelper && bGui_LogFlow) bGui_OscHelper = true;
 
 		return;
-}
+	}
 #endif
 
 	//--
@@ -1759,7 +1812,7 @@ void ofxSurfingOsc::refreshGui()
 	else
 	{
 		gm.minimize();
-	}
+}
 #endif
 
 	//--
@@ -1789,7 +1842,7 @@ void ofxSurfingOsc::refreshGui()
 	//{
 	//	go.minimize();
 	//}
-	}
+		}
 
 //--------------------------------------------------------------
 void ofxSurfingOsc::keyPressed(ofKeyEventArgs& eventArgs)
@@ -1811,7 +1864,7 @@ void ofxSurfingOsc::keyPressed(ofKeyEventArgs& eventArgs)
 #ifdef USE_TEXT_FLOW
 	else if (key == OF_KEY_BACKSPACE) {
 		ofxTextFlow::clear();
-	}
+}
 #endif
 }
 
@@ -1904,10 +1957,12 @@ void ofxSurfingOsc::setupTargets()
 		// Plots
 
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
+		//ofxHistoryPlot* graph = addPlot((float*)&bBangs[i].get(), _name, 0, 1.0f, colorBangs, 0);
 		ofxHistoryPlot* graph = addPlot(_name, 0, 1.0f, colorBangs, 0);
+
 		plotsTargets.push_back(graph);
 
-		// BeatCircles
+		// BangRects
 
 		bangRects[i].setColor(colorBangs);
 		bangRects[i].setColorBackground(ofColor(0, 128));
@@ -1935,10 +1990,12 @@ void ofxSurfingOsc::setupTargets()
 		// Plots
 
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
+		//ofxHistoryPlot* graph = addPlot((float*)&bToggles[i].get(), _name, 0, 1.0f, colorToggles, 0);
 		ofxHistoryPlot* graph = addPlot(_name, 0, 1.0f, colorToggles, 0);
+
 		plotsTargets.push_back(graph);
 
-		// BeatCircles
+		// ToggleRects
 
 		togglesRects[i].setColor(colorToggles);
 		togglesRects[i].setColorBackground(ofColor(0, 128));
@@ -1967,7 +2024,9 @@ void ofxSurfingOsc::setupTargets()
 		// Plots
 
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
+		//ofxHistoryPlot* graph = addPlot(values[i], _name, 0, 1.0f, colorValues, 2, false); // no smooth
 		ofxHistoryPlot* graph = addPlot(_name, 0, 1.0f, colorValues, 2, false); // no smooth
+
 		plotsTargets.push_back(graph);
 
 		// Bars
@@ -2001,7 +2060,9 @@ void ofxSurfingOsc::setupTargets()
 		// Plots
 
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
+		//ofxHistoryPlot* graph = addPlot((float*)&numbers[i].get(), _name, _min, _max, colorNumbers, 0);
 		ofxHistoryPlot* graph = addPlot(_name, _min, _max, colorNumbers, 0);
+
 		plotsTargets.push_back(graph);
 
 		// Bars
@@ -2460,20 +2521,29 @@ void ofxSurfingOsc::setupPlotsCustomTemplate()
 	for (int _i = 0; _i < plotsTargets_Visible.size(); _i++)
 	{
 		plotsTargets_Visible[_i] = false;
-	
-		mapPlots[_i] = _i;//TODO: WIP:
+
+		//TODO: WIP:
+		// A. correlative organization
+		mapPlots[_i] = _i;
 	}
-	
+
+	////TODO: WIP:
+	//// B. custom organization
+	//mapPlots[0] = 0;//beat
+	//mapPlots[0] = 0;//beat
+
 	//----
 
-	// note that index starts at 1 instead of 0
+	// Note that index starts at 1 instead of 0.
 
 	// Bangs
 
 	// Bang 1 
 	s.name = "BEAT";
 	s.target = plotTarget_Bang;
-	s.index = 1;
+	s.index = 0 + 1;
+	//s.index = mapPlots[0] + 1;
+	//s.index = 1;
 	s.color = ofColor(ofColor::white, _a);
 	setupPlotCustom(s);
 
@@ -2482,7 +2552,7 @@ void ofxSurfingOsc::setupPlotsCustomTemplate()
 	// Bang 2 
 	s.name = "SIGNAL_0";
 	s.target = plotTarget_Bang;
-	s.index = 2;
+	s.index = 1 + 1;
 	s.color = ofColor(ofColor::turquoise, _a);
 	setupPlotCustom(s);
 
@@ -2491,7 +2561,7 @@ void ofxSurfingOsc::setupPlotsCustomTemplate()
 	// Bang 3 
 	s.name = "SIGNAL_1";
 	s.target = plotTarget_Bang;
-	s.index = 3;
+	s.index = 1 + 2;
 	s.color = ofColor(ofColor::orange, _a);
 	setupPlotCustom(s);
 
@@ -2507,7 +2577,8 @@ void ofxSurfingOsc::setupPlotsCustomTemplate()
 
 	s.name = "SIGNAL_1";
 	s.target = plotTarget_Value;
-	s.index = 2;
+	//s.index = 2;
+	s.index = 1 + 1;
 	s.color = ofColor(ofColor::orange, _a);
 	setupPlotCustom(s);
 
@@ -2515,7 +2586,8 @@ void ofxSurfingOsc::setupPlotsCustomTemplate()
 	// Bpm
 	s.name = "BPM";
 	s.target = plotTarget_Value;
-	s.index = 3;
+	s.index = 1 + 2;
+	//s.index = 3;
 	s.range = glm::vec2(40, 240);//min, max
 	s.color = ofColor(ofColor::white, _a);
 	setupPlotCustom(s);
@@ -2563,6 +2635,7 @@ void ofxSurfingOsc::setupPlots()
 
 //--------------------------------------------------------------
 void ofxSurfingOsc::updatePlots() {
+	//return;//using pointer
 
 	for (int i = 0; i < plotsTargets.size(); i++)
 	{
@@ -2632,14 +2705,17 @@ void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
 
 		int x, y, w, h;
 		int _xpad = 30;
-		int p = 0;
+		int p = 0;//picked plot
 		float _r;//widgets size
 		bool bIsSmall;
 
 		// accumulate how many we have drawn to not left empty spaces.
 
+		//for (int j = 0; j < _amount; j++)
 		for (int i = 0; i < _amount; i++)
 		{
+			//--
+
 			// 1. Plots
 
 			if (bDrawAll) y = plotMargin + plotHeight * i;
@@ -2670,6 +2746,25 @@ void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
 					plotsTargets[i]->draw(x, y + plotMargin, w, h);
 					p++;
 				}
+
+				/*
+				if (plotsTargets_Visible[i])
+				{
+					//TODO: WIP:
+					// B. custom organization
+					mapPlots[0] = 0;//beat
+					mapPlots[1] = 5;//bpm
+					//mapPlots[2] = 5;//bpm
+
+					//TODO: WIP:
+					// re arrange
+					int j = mapPlots[i];
+
+					plotsTargets[j]->draw(x, y + plotMargin, w, h);
+					p++;
+				}
+				*/
+
 				else
 				{
 					continue;
@@ -2801,20 +2896,25 @@ void ofxSurfingOsc::drawPlots()
 }
 
 //--------------------------------------------------------------
+//TODO: auto updatable pointer
+//ofxHistoryPlot* ofxSurfingOsc::addPlot(float* ptr, string varName, float min, float max, ofColor color, int precision, bool _smooth)
+//--------------------------------------------------------------
 ofxHistoryPlot* ofxSurfingOsc::addPlot(string varName, float min, float max, ofColor color, int precision, bool _smooth)
 {
 	//TODO: min hardcoded to 0
 
 	float _line = 1.0f;
-	float maxHistory = 60 * 5;
-	ofxHistoryPlot* graph = new ofxHistoryPlot(NULL, varName, maxHistory, false);//true for autoupdate
+	float _maxHistory = 60 * 5;
+
+	//ofxHistoryPlot* graph = new ofxHistoryPlot((float*)&ptr, varName, _maxHistory, true);//true for autoupdate
+	ofxHistoryPlot* graph = new ofxHistoryPlot(NULL, varName, _maxHistory, false);//true for autoupdate
 
 	//graph->setRangeAuto();
 	//graph->setAutoRangeShrinksBack(true);
 	//graph2 scale can shrink back after growing if graph2 curves requires it
 	graph->setRange(min, max); // this lock the auto range!
 
-	if (_smooth) 
+	if (_smooth)
 	{
 		graph->setShowSmoothedCurve(true);
 		graph->setSmoothFilter(0.1);
@@ -2945,25 +3045,29 @@ void ofxSurfingOsc::doTesterRandom()
 void ofxSurfingOsc::linkBang(ofParameter<bool>& p)
 {
 	static int i = 0;
-	p.makeReferenceTo(bBangs[++i]);
+	p.makeReferenceTo(bBangs[i++]);
+	//p.makeReferenceTo(bBangs[++i]);//starting at 1 instead of 0
 }
 //--------------------------------------------------------------
 void ofxSurfingOsc::linkToggle(ofParameter<bool>& p)
 {
 	static int i = 0;
-	p.makeReferenceTo(bToggles[++i]);
+	p.makeReferenceTo(bToggles[i++]);
+	//p.makeReferenceTo(bToggles[++i]);
 }
 //--------------------------------------------------------------
 void ofxSurfingOsc::linkValue(ofParameter<float>& p)
 {
 	static int i = 0;
-	p.makeReferenceTo(values[++i]);
+	p.makeReferenceTo(values[i++]);
+	//p.makeReferenceTo(values[++i]);
 }
 //--------------------------------------------------------------
 void ofxSurfingOsc::linkNumber(ofParameter<int>& p)
 {
 	static int i = 0;
-	p.makeReferenceTo(numbers[++i]);
+	p.makeReferenceTo(numbers[i++]);
+	//p.makeReferenceTo(numbers[++i]);
 }
 
 

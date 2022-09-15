@@ -804,6 +804,7 @@ public:
 			plotsTargets[_i - 1]->setVariableName(style.name);
 			plotsTargets[_i - 1]->setColor(_c);
 			plotsTargets_Visible[_i - 1] = true;
+
 			bangRects[_i - 1].setColor(_c);
 		}
 
@@ -816,6 +817,7 @@ public:
 			plotsTargets[_i - 1]->setVariableName(style.name);
 			plotsTargets[_i - 1]->setColor(_c);
 			plotsTargets_Visible[_i - 1] = true;
+
 			togglesRects[_i - 1 - _start].setColor(_c);
 		}
 
@@ -836,6 +838,7 @@ public:
 			plotsTargets[_i - 1]->setColor(_c);
 			plotsTargets_Visible[_i - 1] = true;
 			plotsTargets[_i - 1]->setRange(_min, _max);
+
 			//widget
 			int _ii = _i - 1 - _start;
 			valuesBars[_ii].setColor(_c);
@@ -860,6 +863,7 @@ public:
 			plotsTargets[_i - 1]->setColor(_c);
 			plotsTargets_Visible[_i - 1] = true;
 			plotsTargets[_i - 1]->setRange(_min, _max);
+
 			//widget
 			int _ii = _i - 1 - _start;
 			numbersBars[_ii].setColor(_c);
@@ -871,6 +875,9 @@ public:
 	//--
 
 private:
+
+	//TODO: auto updatable pointer
+	//ofxHistoryPlot* addPlot(float* ptr, string varName, float min, float max, ofColor color, int precision, bool _smooth = false);
 
 	ofxHistoryPlot* addPlot(string varName, float min, float max, ofColor color, int precision, bool _smooth = false);
 
