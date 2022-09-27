@@ -30,7 +30,7 @@ TODO:
 #define FREQ_FILTER_REF 5
 
 #define OF_COLOR_BG_PANELS ofColor(0, 200)
-#define OF_COLOR_WIDGETS ofColor(255, 200)
+#define OF_COLOR_WIDGETS ofColor(200)
 
 //--
 

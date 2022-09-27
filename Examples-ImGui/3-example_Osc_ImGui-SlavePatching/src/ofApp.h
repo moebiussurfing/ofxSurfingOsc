@@ -37,7 +37,6 @@ public:
 
 	//----
 
-
 	// Local Targets 
 	// aka receivers/senders
 

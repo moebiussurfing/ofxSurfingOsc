@@ -20,28 +20,28 @@ void PatchingManager::setup(string name)
 
 	for (int i = 0; i < NUM_BANGS; i++)
 	{
-		string name = "BANG_" + ofToString(i );
+		string name = "BANG_" + ofToString(i);
 		pipeBangs[i].setup(name);
 		_gBangs.add(pipeBangs[i].params);
 	}
 
 	for (int i = 0; i < NUM_TOGGLES; i++)
 	{
-		string name = "TOGGLE_" + ofToString(i );
+		string name = "TOGGLE_" + ofToString(i);
 		pipeToggles[i].setup(name);
 		_gToggles.add(pipeToggles[i].params);
 	}
 
 	for (int i = 0; i < NUM_VALUES; i++)
 	{
-		string name = "VALUE_" + ofToString(i );
+		string name = "VALUE_" + ofToString(i);
 		pipeValues[i].setup(name);
 		_gValues.add(pipeValues[i].params);
 	}
 
 	for (int i = 0; i < NUM_NUMBERS; i++)
 	{
-		string name = "NUMBER_" + ofToString(i );
+		string name = "NUMBER_" + ofToString(i);
 		pipeNumbers[i].setup(name, false);//not normalized
 		_gNumbers.add(pipeNumbers[i].params);
 
@@ -171,7 +171,8 @@ void PatchingManager::setup(string name)
 		boxWidgets.setup();
 
 		// constraint sizes
-		glm::vec2 shapeMin(150, 300);
+		float f = 0.85f;
+		glm::vec2 shapeMin(f * 240, f * 320);
 		boxWidgets.setRectConstraintMin(shapeMin);
 		glm::vec2 shapeMax(ofGetWidth(), ofGetHeight());
 		boxWidgets.setRectConstraintMax(shapeMax);
@@ -365,18 +366,22 @@ void PatchingManager::setupPreview() {
 	{
 		//previewBangs[i].setColor(ofColor::green);
 		previewBangs[i].setColor(OF_COLOR_WIDGETS);
+		previewBangs[i].setColorBackground(ofColor(0, 128));
 	}
 
 	for (int i = 0; i < NUM_TOGGLES; i++)
 	{
 		//previewToggles[i].setColor(ofColor::orange);
 		previewToggles[i].setColor(OF_COLOR_WIDGETS);
+		previewToggles[i].setColorBackground(ofColor(0, 128));
+		//previewToggles[i].setToggleMode(true);//?
 	}
 
 	for (int i = 0; i < NUM_VALUES; i++)
 	{
 		//previewValues[i].setColor(ofColor::red);
 		previewValues[i].setColor(OF_COLOR_WIDGETS);
+		previewValues[i].setColorBackground(ofColor(0, 128));
 		//previewValues[i].setRounded(_rounded);
 	}
 
@@ -384,14 +389,16 @@ void PatchingManager::setupPreview() {
 	{
 		//previewNumbers[i].setColor(ofColor::yellow);
 		previewNumbers[i].setColor(OF_COLOR_WIDGETS);
+		previewNumbers[i].setColorBackground(ofColor(0, 128));
 		//previewNumbers[i].setRounded(_rounded);
 	}
 
 	//--
 
+	//TODO:
 	// Customize
 	// Template is for my ofxSoundAnalyzer add-on
-
+	// Add method to set and correlate to parent styles..
 	if (bCustomTemplate)
 	{
 		//previewBangs[0].setColor(ofColor::green);

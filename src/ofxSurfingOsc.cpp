@@ -124,7 +124,8 @@ void ofxSurfingOsc::setup()
 		boxPlotsBg.setup();
 
 		// constraint sizes
-		glm::vec2 shapeMin(200, 400);
+		float f = 0.85f;
+		glm::vec2 shapeMin(f * 240, f * 480);
 		boxPlotsBg.setRectConstraintMin(shapeMin);
 		glm::vec2 shapeMax(ofGetWidth(), ofGetHeight());
 		boxPlotsBg.setRectConstraintMax(shapeMax);
@@ -1132,7 +1133,7 @@ void ofxSurfingOsc::draw()
 		mMidiParams.draw();
 		//mMidiParams.setVisible(true);
 		//mMidiParams.setVisible(true);
-	}
+}
 #endif
 
 	//--
@@ -1199,9 +1200,11 @@ void ofxSurfingOsc::drawImGui()
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
 			if (bUse_PatchingManager) {
 				ui.AddSpacingSeparated();
-				ui.AddLabelBig("PATCHING MANAGER");
+				if (!ui.bMinimize)
+					ui.AddLabelBig("PATCHING MANAGER");
 				ui.Add(bGui_PatchingManager, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
-				if (patchingManager.bGui_InternalAllowed) ui.Add(bGui_Internal, OFX_IM_TOGGLE_ROUNDED_MINI);
+				if (!ui.bMinimize)
+					if (patchingManager.bGui_InternalAllowed) ui.Add(bGui_Internal, OFX_IM_TOGGLE_ROUNDED_MINI);
 				ui.AddSpacingSeparated();
 			}
 #endif
@@ -1281,7 +1284,7 @@ void ofxSurfingOsc::drawImGui()
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 				ui.AddLabel("PLOTS");
 				ui.Indent();
-				ui.Add(bGui_Plots, OFX_IM_TOGGLE_ROUNDED);
+				ui.Add(bGui_Plots, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
 				ui.Add(bPlotsMini, OFX_IM_TOGGLE_ROUNDED_SMALL);
 				if (bCustomTemplate) ui.Add(bGui_AllPlots, OFX_IM_TOGGLE_ROUNDED_MINI);
 				ui.Unindent();
@@ -1750,7 +1753,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 		ofxTextFlow::setShowing(bGui_LogFlow);
 
 		return;
-	}
+}
 #endif
 
 	//--
@@ -1857,7 +1860,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 		//if (!bGui_OscHelper && bGui_LogFlow) bGui_OscHelper = true;
 
 		return;
-	}
+}
 #endif
 
 	//--
@@ -1898,7 +1901,7 @@ void ofxSurfingOsc::refreshGui()
 	else
 	{
 		gm.minimize();
-	}
+}
 #endif
 
 	//--
@@ -1958,7 +1961,7 @@ void ofxSurfingOsc::keyPressed(ofKeyEventArgs& eventArgs)
 #ifdef USE_TEXT_FLOW
 	else if (key == OF_KEY_BACKSPACE) {
 		ofxTextFlow::clear();
-	}
+}
 #endif
 }
 

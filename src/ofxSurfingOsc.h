@@ -7,22 +7,26 @@
 	TODO:
 
 	+		store out enabler settings
-			notice that could not correlate target params to externally added params.
+			notice that could not correlate target params 
+				to externally added params instead of default targets!
 
-	++		Patching Manager: look @daan example!
+	PATCHING MANAGER
+	+		move all classes to https://github.com/moebiussurfing/ofxPatchbayParams	
+	+ 		look @daan example!
 	++		PatchPipeValue class:
-				add extra params parallel to targets, to work as
+				add extra params parallel to targets, to work as.
 				def params appliers to any App: using enable/disable osc msg,
-			improve linking/callbacks/getters workflow
-			fix smoothing
-
+			improve linking/callbacks/getters workflow.
+			fix smoothing.
+			add minimize, reset behaviors.
 	++		add mini class receiver with mute channels,
 				plotting and signal filtering, matrix patcher with ImGui
 				split in smaller classes to have a minimal to use copy/paste easy to our ofApp projects?
-	++		change plots to auto update to reduce bangs over update..
 	++		add filter to OSC receivers? using plot? biquad lpf/hpf?
-	++		sort plots by user better
-	++ 		debug output addresses log too on address list
+
+	++		change plots to auto update to reduce bangs over update..
+	++		better sort plots by user.
+	++ 		debug output addresses log too on address list.
 
 	++		API: we should make a queuer to OSC messages faster:
 				auto assigning the names depending of his type.
@@ -33,7 +37,8 @@
 					should use kind of map/pairs/smartPointers/msaOrderedMap to store all added params?
 
 	+		disabler per project for not include midi?
-	+		add midi out feedback for received subscribed toggles/bool: using ofxParamsMisiSync?
+	+		add midi out feedback for received subscribed toggles/bool: 
+			using ofxParamsMisiSync?
 				https://github.com/NickHardeman/ofxMidiParams/issues/1#issuecomment-630559720
 				add bg rectangle.
 	+		add 'connected' toggle, disabler for in/out/feedback,
@@ -57,7 +62,7 @@
 #define SURF_OSC__USE__TARGETS_INTERNAL_PARAMS 
 #define SURF_OSC__USE__TARGETS_INTERNAL_PARAMS_GUI
 
-// Plots. Requires above Targets enabled
+// Plots. Requires above Targets enabled.
 #define SURF_OSC__USE__TARGETS_INTERNAL_PLOTS 
 
 // Patcher. Requires receiver / Slave mode and Targets.
@@ -68,33 +73,11 @@
 //#define USE_MIDI // MIDI //TODO: WIP
 
 #define USE_IM_GUI // Replaces ofxGui!
-
-/*
 // When disabled you must remove the ofxSurfingOsc/src/ImGui/ folder
-// Example parent scope with an external instantiated ImGui
-//--------------------------------------------------------------
-void ofxSurfingBeatSync::setupImGui()
-{
-	ofLogNotice("ofxSurfingBeatSync") << (__FUNCTION__);
-
-	ui.setName("SyncSurf");
-	ui.setWindowsMode(IM_GUI_MODE_WINDOWS_SPECIAL_ORGANIZER);
-	ui.setup();
-
-	//ui.addWindowSpecial(bGui_Main);
-	//ui.addWindowSpecial(ui.bGui_GameMode);
-
-	ui.addWindowSpecial(oscHelper.bGui);
-	ui.addWindowSpecial(oscHelper.bGui_Targets);
-	ui.addWindowSpecial(oscHelper.bGui_Enablers);
-
-	ui.startup();
-}
-*/
 
 //-----------------------
 
-//#define USE_TEXT_FLOW // Logging..
+//#define USE_TEXT_FLOW // Deprecated. Currently using ImGui for logging.
 
 #define OF_COLOR_BG_PANELS ofColor(0, 220) // duplicated
 
@@ -158,22 +141,6 @@ void ofxSurfingBeatSync::setupImGui()
 
 class ofxSurfingOsc
 {
-	//--------
-
-#ifdef USE_IM_GUI
-
-private:
-
-	void setupImGui();
-	ofxSurfingGui ui;
-
-public:
-
-	void drawImGui();
-
-#endif
-
-	//--------
 
 public:
 
@@ -303,6 +270,23 @@ private:
 	void setupParams(); // must be called at first before set ports and add params
 
 	void setupGuiInternal();
+
+	//--------
+
+#ifdef USE_IM_GUI
+
+private:
+
+	void setupImGui();
+	ofxSurfingGui ui;
+
+public:
+
+	void drawImGui();
+
+#endif
+
+	//--------
 
 	//--
 
@@ -469,6 +453,8 @@ private:
 
 	ofParameterGroup params_AppSettings;
 
+	//--
+
 #ifdef USE_MIDI
 	ofxMidiParams mMidiParams;
 	ofParameterGroup padParams;
@@ -483,8 +469,8 @@ private:
 	std::string str_oscOutputAddressesInfo;
 	std::string str_oscAddressesInfo;
 
-	vector <std::string> strs_inputAddresses;
-	vector <std::string> strs_outputAddresses;
+	vector<std::string> strs_inputAddresses;
+	vector<std::string> strs_outputAddresses;
 
 	//--
 
@@ -601,19 +587,13 @@ private:
 	//--
 
 	//TODO:
-
 #ifdef USE_MIDI_OUT
-
 private:
-
 	ofxMidiOut midiOut;
 	ofParameter<int> MIDI_OutputPort;
 	ofParameter<string> MIDI_OutPort_name;
-
 public:
-
 	void noteOut(int note, bool state);
-
 #endif
 
 	//----	
@@ -630,7 +610,6 @@ public:
 		bCustomTemplate = b;
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
 		patchingManager.setCustomTemplate(b);
-		//ofLogError("ofxSurfingOsc") << "Requires SURF_OSC__USE__TARGETS_INTERNAL_PARAMS and SURF_OSC__USE__RECEIVER_PATCHING_MODE";
 #endif
 	}
 
@@ -667,9 +646,10 @@ public:
 
 private:
 
+	// mantain bangs enable for a short time to ui display purposes
 	int t_bBangs[NUM_BANGS];
-	//int durationBangsTrue = 2 * 1/60.f;//x frames // smaller
 	int durationBangsTrue = 17; // ms visible on the button
+	//int durationBangsTrue = 2 * 1/60.f;//x frames // smaller
 	//int durationBangsTrue = 100;
 
 	//--
@@ -703,15 +683,17 @@ private:
 	//--
 
 	bool bCustomTemplate = false;
-	// when is enabled. all the plots will be drawn.
-	// can't be selective drawing only tre selected!
+	// when is disabled. all the plots will be drawn.
+	// when enabled will draw only the selected!
+	// default colors can be changed too.
+	
 	//--
 
 public:
 
 	//TODO:
-
 	ofParameterGroup params_Targets;
+	
 	ofParameterGroup params_Bangs;
 	ofParameterGroup params_Toggles;
 	ofParameterGroup params_Values;
@@ -735,7 +717,7 @@ private:
 	ofParameter<glm::vec2> positionGui_Targets;
 
 public:
-
+	
 	ofParameter<bool> bGui_Targets;
 #endif
 
@@ -765,6 +747,8 @@ private:
 	// We can select which plots to draw
 	ofParameter<bool> bPlotsMini;
 
+	/*
+private:
 	enum PLOTS_MINI_POS
 	{
 		POS_RIGHT,
@@ -780,6 +764,7 @@ public:
 		if (bLeft) plotsMiniPos = POS_LEFT;
 		else plotsMiniPos = POS_RIGHT;
 	}
+	*/
 
 private:
 
@@ -818,6 +803,7 @@ public:
 		glm::vec2 range = glm::vec2(-1, -1);//min, max
 	};
 
+	//--------------------------------------------------------------
 	void setupPlotCustom(plotStyle style)
 	{
 		// BeatCircles
@@ -858,13 +844,13 @@ public:
 				_max = 1;
 			}
 			ofColor _c = style.color;
-			//plot
+			// plot
 			plotsTargets[_i - 1]->setVariableName(style.name);
 			plotsTargets[_i - 1]->setColor(_c);
 			plotsTargets_Visible[_i - 1] = true;
 			plotsTargets[_i - 1]->setRange(_min, _max);
 
-			//widget
+			// widget
 			int _ii = _i - 1 - _start;
 			valuesBars[_ii].setColor(_c);
 			valuesBars[_ii].setValueMin(_min);
@@ -883,13 +869,13 @@ public:
 				_max = 1;
 			}
 			ofColor _c = style.color;
-			//plot
+			// plot
 			plotsTargets[_i - 1]->setVariableName(style.name);
 			plotsTargets[_i - 1]->setColor(_c);
 			plotsTargets_Visible[_i - 1] = true;
 			plotsTargets[_i - 1]->setRange(_min, _max);
 
-			//widget
+			// widget
 			int _ii = _i - 1 - _start;
 			numbersBars[_ii].setColor(_c);
 			numbersBars[_ii].setValueMin(_min);
@@ -901,6 +887,8 @@ public:
 
 private:
 
+	//TODO: add method to individual channels: plot + widget
+	// To help to organize channels too.
 	//TODO: auto updatable pointer
 	//ofxHistoryPlot* addPlot(float* ptr, string varName, float min, float max, ofColor color, int precision, bool _smooth = false);
 
@@ -944,22 +932,21 @@ private:
 	void drawPatchingManager();
 
 	ofParameter<bool> bGui_PatchingManager;
-	ofParameter<bool> bUse_PatchingManager{ "use patching manager", false };
 
-	//--
+	ofParameter<bool> bUse_PatchingManager{ "use patching manager", false };//must enable before setup
 
 public:
 
+	//--------------------------------------------------------------
+	void enablePatchingManager() {
+		bUse_PatchingManager = true;
+	}
 	/*
 	//--------------------------------------------------------------
 	void disablePatchingManager(){
 		bUse_PatchingManager=false;
 	}
 	*/
-	//--------------------------------------------------------------
-	void enablePatchingManager() {
-		bUse_PatchingManager = true;
-	}
 
 	//--
 
@@ -1031,70 +1018,4 @@ public:
 	bool getInEnabled() const {
 		return bEnableOsc_Input.get();
 	}
-
 };
-
-
-/*
-*
-* EXAMPLE SNIPPET
-*
-	oscHelper.disableGuiInternalAllow();
-	oscHelper.setup(ofxSurfingOsc::Master);
-
-	// custom
-	oscHelper.bGui.setName("OSC");
-	string s += "/beat";
-	oscHelper.setHelpInfoExtra(s);
-
-	// register
-	string Osc_Address;
-	string tag = "1/";
-	Osc_Address = "/bpm";
-	oscHelper.addSender_Float(bpm, Osc_Address);
-
-	oscHelper.startup();
-
-	//-
-
-	// ui
-	ui.addWindowSpecial(oscHelper.bGui);
-	ui.Add(oscHelper.bGui, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
-	if (oscHelper.bGui) drawImGui_Osc();
-
-//--------------------------------------------------------------
-void ofxSurfingBeatSync::drawImGui_Osc()
-{
-	if (ui.BeginWindowSpecial(oscHelper.bGui))
-	{
-		ui.AddLabelHuge("OSC");
-		//if (!ui.bMinimize) ui.AddLabelBig("OUT");
-		ui.AddSpacing();
-
-		ui.Add(oscHelper.bEnableOsc_Output, OFX_IM_TOGGLE);
-		if (oscHelper.bEnableOsc_Output) {
-			if (!ui.bMinimize)
-			{
-				//ui.AddLabelBig(ofToString(oscHelper.OSC_OutputPort));
-				ui.Add(oscHelper.OSC_OutputPort, OFX_IM_DRAG);
-				ui.Add(oscHelper.OSC_OutputIp, OFX_IM_TEXT_INPUT);
-			}
-			ui.AddSpacingSeparated();
-
-			if (!ui.bMinimize) ui.AddLabelBig("ENABLERS");
-			SurfingGuiTypes s = OFX_IM_TOGGLE_SMALL;
-			for (int i = 0; i < oscHelper.getOutEnablersSize(); i++) {
-				ui.Add(oscHelper.getOutEnabler(i), s);
-			}
-			ui.Add(bBeat, s);
-			ui.Add(bBang_0, s);
-			ui.Add(bBang_1, s);
-		}
-
-		ui.AddSpacingSeparated();
-
-		ui.Add(oscHelper.bHelp, OFX_IM_TOGGLE_ROUNDED_MINI);
-		ui.EndWindowSpecial();
-	}
-}
-*/
