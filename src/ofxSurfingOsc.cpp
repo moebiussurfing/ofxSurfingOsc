@@ -119,7 +119,7 @@ void ofxSurfingOsc::setup()
 		boxPlotsBg.bEdit.setName("EDIT PLOTS");
 
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
-		patchingManager.boxPlotsBg.bEdit.makeReferenceTo(boxPlotsBg.bEdit);
+		patchingManager.boxWidgets.bEdit.makeReferenceTo(boxPlotsBg.bEdit);
 #endif
 		boxPlotsBg.setup();
 
@@ -459,6 +459,11 @@ void ofxSurfingOsc::setupImGui()
 	ui.addWindowSpecial(bGui_Targets);
 	ui.addWindowSpecial(bGui_Enablers);
 
+#ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
+	if (bUse_PatchingManager)
+		ui.addWindowSpecial(bGui_PatchingManager);
+#endif
+
 	ui.startup();
 }
 #endif
@@ -499,7 +504,6 @@ void ofxSurfingOsc::setupGuiInternal()
 void ofxSurfingOsc::setupParams()
 {
 	bGui.set("OSC", true);
-	//bGui.set("ofxSurfingOsc", true);
 
 	bGui_Internal.set("Internal", true);
 	bGui_Enablers.set("ENABLERS", true);
@@ -532,7 +536,10 @@ void ofxSurfingOsc::setupParams()
 #endif
 
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
-	if (bUseIn) bGui_PatchingManager.set("PATCHING MANAGER", false);
+	if (bUseIn)
+	{
+		if (bUse_PatchingManager) bGui_PatchingManager.set("PATCHER", false);
+	}
 #endif
 
 	//--
@@ -629,7 +636,12 @@ void ofxSurfingOsc::setupParams()
 	//--
 
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
-	if (bUseIn) params_Osc.add(bGui_PatchingManager);
+	if (bUseIn) {
+		if (bUse_PatchingManager) {
+			params_Osc.add(bGui_PatchingManager);
+			params_Osc.add(bUse_PatchingManager);
+		}
+	}
 #endif
 
 	//--
@@ -725,7 +737,13 @@ void ofxSurfingOsc::setupParams()
 	//--
 
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
-	if (bUseIn) params_AppSettings.add(bGui_PatchingManager);
+	if (bUseIn) {
+		if (bUse_PatchingManager) {
+			params_AppSettings.add(bGui_PatchingManager);
+			params_AppSettings.add(bUse_PatchingManager);
+		}
+	}
+
 #endif
 
 	//--
@@ -1142,7 +1160,7 @@ void ofxSurfingOsc::draw()
 	//--
 
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
-	if (bUseIn) if (bGui_PatchingManager) drawPatchingManager();
+	if (bUseIn) if (bGui_PatchingManager && bUse_PatchingManager) drawPatchingManager();
 #endif
 
 	//--
@@ -1177,6 +1195,16 @@ void ofxSurfingOsc::drawImGui()
 
 			ui.Add(bGui_Targets, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
 			if (bUseOut) ui.Add(bGui_Enablers, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
+
+#ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
+			if (bUse_PatchingManager) {
+				ui.AddSpacingSeparated();
+				ui.AddLabelBig("PATCHING MANAGER");
+				ui.Add(bGui_PatchingManager, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
+				if (patchingManager.bGui_InternalAllowed) ui.Add(bGui_Internal, OFX_IM_TOGGLE_ROUNDED_MINI);
+				ui.AddSpacingSeparated();
+			}
+#endif
 			ui.Add(ui.bLog, OFX_IM_TOGGLE_ROUNDED_SMALL);
 			ui.AddSpacingSeparated();
 
@@ -1388,6 +1416,32 @@ void ofxSurfingOsc::drawImGui()
 			else ui.EndWindow();
 		}
 	}
+
+	//--
+
+#ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
+	if (bUse_PatchingManager) {
+		if (ui.BeginWindowSpecial(bGui_PatchingManager))
+		{
+			// custom styles
+			static bool bDone = false;
+			if (!bDone) {
+				bDone = true;
+				ui.AddStyle("ENABLE", OFX_IM_TOGGLE_SMALL_BORDER_BLINK);
+				ui.AddStyle("SOLO", OFX_IM_TOGGLE_SMALL_BORDER_BLINK);
+				ui.AddStyle("SMOOTH", OFX_IM_TOGGLE_ROUNDED_MINI);
+				//ui.AddStyle("POWER", OFX_IM_HSLIDER_MINI);
+				//ui.AddStyle("POWER", OFX_IM_STEPPER);//fix
+			}
+
+			ui.Add(patchingManager.bGui_PreviewWidgets, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
+			ui.AddSpacingSeparated();
+
+			ui.AddGroup(patchingManager.params_Targets, SurfingGuiGroupStyle_Collapsed);
+			ui.EndWindowSpecial();
+		}
+	}
+#endif
 
 	//--
 
@@ -1707,7 +1761,9 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 	{
 		if (bUseIn)
 		{
-			if (bGui_PatchingManager) {
+			if (bUse_PatchingManager) {
+				if (bGui_PatchingManager) {
+				}
 			}
 		}
 
@@ -1884,6 +1940,14 @@ void ofxSurfingOsc::keyPressed(ofKeyEventArgs& eventArgs)
 	if (key == 'g')
 	{
 		setToggleVisible();
+	}
+
+	else if (key == OF_KEY_RETURN)
+	{
+		for (size_t i = 0; i < 16; i++)
+		{
+			doTesterRandom();
+		}
 	}
 
 	//else if (key == ' ')
@@ -2683,13 +2747,13 @@ void ofxSurfingOsc::updatePlots() {
 		_end = NUM_BANGS;
 		if (i >= _start && i < _end)
 			plotsTargets[i]->update(bBangs[i]); // ?
-			//plotsTargets[i]->update(bBangs[i] && bEnablerOuts[i]); // ?
+		//plotsTargets[i]->update(bBangs[i] && bEnablerOuts[i]); // ?
 
 		_start = _end;
 		_end = _start + NUM_TOGGLES;
 		if (i >= _start && i < _end)
 			plotsTargets[i]->update(bToggles[i - _start]);
-			//plotsTargets[i]->update(bToggles[i - _start] && bEnablerOuts[i]);
+		//plotsTargets[i]->update(bToggles[i - _start] && bEnablerOuts[i]);
 
 		_start = _end;
 		_end = _start + NUM_VALUES;

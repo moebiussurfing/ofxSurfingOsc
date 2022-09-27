@@ -9,12 +9,12 @@
 	+		store out enabler settings
 			notice that could not correlate target params to externally added params.
 
-	+		send signals 0 and 1 to OSC values too
-
 	++		Patching Manager: look @daan example!
 	++		PatchPipeValue class:
 				add extra params parallel to targets, to work as
 				def params appliers to any App: using enable/disable osc msg,
+			improve linking/callbacks/getters workflow
+			fix smoothing
 
 	++		add mini class receiver with mute channels,
 				plotting and signal filtering, matrix patcher with ImGui
@@ -42,7 +42,9 @@
 
 */
 
+
 //------------------------------------------------------------------------------------------------
+
 
 #pragma once
 
@@ -161,7 +163,7 @@ class ofxSurfingOsc
 #ifdef USE_IM_GUI
 
 private:
-	
+
 	void setupImGui();
 	ofxSurfingGui ui;
 
@@ -264,6 +266,7 @@ private:
 	std::string strHelpInfoExtra = "";
 
 public:
+
 	void setHelpInfoExtra(string s) {
 		strHelpInfoExtra = s;
 	}
@@ -310,15 +313,15 @@ public:
 	//--
 
 	// Subscribers / Publishers 
-	 
+
 	// Target Linkers
 	void linkBang(ofParameter<bool>& b);
 	void linkToggle(ofParameter<bool>& b);
 	void linkValue(ofParameter<float>& b);
 	void linkNumber(ofParameter<int>& b);
-	
+
 	//--
-	
+
 	// Pass local ofParams (from ofApp) 
 	// with an associated Osc address to link to.
 	// will use addSender when performing a Master app / sender,
@@ -421,6 +424,7 @@ public:
 			ofxTextFlow::setShowing(false);
 #endif
 	}
+
 	//--------------------------------------------------------------
 	void setToggleVisible()
 	{
@@ -432,7 +436,7 @@ public:
 		else if (!bGui)
 			ofxTextFlow::setShowing(false);
 #endif
-}
+	}
 
 	//--
 
@@ -542,14 +546,34 @@ public:
 	//--------------------------------------------------------------
 	void disableGuiInternalAllow() {
 		bGui_InternalAllowed = false;
+
+#ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
+		patchingManager.disableGuiInternalAllow();
+#endif
+	}
+	//--------------------------------------------------------------
+	void enableGuiInternalAllow() {
+		bGui_InternalAllowed = true;
+
+#ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
+		patchingManager.enableGuiInternalAllow();
+#endif
 	}
 	//--------------------------------------------------------------
 	void disableGuiInternal() {
 		bGui_Internal = false;
+
+#ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
+		patchingManager.bGui_Internal = false;
+#endif
 	}
 	//--------------------------------------------------------------
 	void setGuiInternal(bool b) {
 		bGui_Internal = b;
+
+#ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
+		patchingManager.bGui_Internal = b;
+#endif
 	}
 
 	//--
@@ -601,14 +625,14 @@ public:
 public:
 
 	//--------------------------------------------------------------
-	void setCustomTemplate(bool b)
+	void setCustomTemplate(bool b)//must call before setup!
 	{
 		bCustomTemplate = b;
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
 		patchingManager.setCustomTemplate(b);
 		//ofLogError("ofxSurfingOsc") << "Requires SURF_OSC__USE__TARGETS_INTERNAL_PARAMS and SURF_OSC__USE__RECEIVER_PATCHING_MODE";
 #endif
-}
+	}
 
 	//--
 
@@ -706,10 +730,12 @@ public:
 	// for Targets
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS_GUI
 private:
+
 	ofxPanel gui_Targets;
 	ofParameter<glm::vec2> positionGui_Targets;
 
 public:
+
 	ofParameter<bool> bGui_Targets;
 #endif
 
@@ -720,9 +746,9 @@ public:
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 
 public:
-	
+
 	ofParameter<bool> bGui_Plots;
-	
+
 	std::map<int, int> mapPlots;
 	//TODO: WIP: add organize plots
 
@@ -916,13 +942,32 @@ private:
 
 	void updatePatchingManager();
 	void drawPatchingManager();
-	ofParameter<bool> bGui_PatchingManager;
 
-	// API getters for the out of the patching engine
+	ofParameter<bool> bGui_PatchingManager;
+	ofParameter<bool> bUse_PatchingManager{ "use patching manager", false };
 
 	//--
 
 public:
+
+	/*
+	//--------------------------------------------------------------
+	void disablePatchingManager(){
+		bUse_PatchingManager=false;
+	}
+	*/
+	//--------------------------------------------------------------
+	void enablePatchingManager() {
+		bUse_PatchingManager = true;
+	}
+
+	//--
+
+public:
+
+	// API getters for the out of the patching engine
+
+	//TODO: add callbacks template/mode
 
 	//--------------------------------------------------------------
 	bool getOutBang(int i) const {

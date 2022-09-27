@@ -1,8 +1,6 @@
 #pragma once
 
-
 #define USE_local_Targets
-
 
 #include "ofMain.h"
 
@@ -25,7 +23,7 @@ public:
 	ofxSurfingGui ui;
 	ofxSurfingOsc oscHelper;
 
-	ofParameterGroup params{ "OSC IN" };
+	ofParameterGroup params{ "Local Receivers" };
 	ofParameter<float> bpm{ "BPM", 120, 40, 240 };
 	ofParameter<float> val0{ "val0", 0, 0, 1 };
 	ofParameter<float> val1{ "val1", 0, 0, 1 };
@@ -36,9 +34,6 @@ public:
 
 	ofxWindowApp w;
 	string name;
-
-	ofParameterGroup psettings{ "ofApp" };
-
 
 	//----
 

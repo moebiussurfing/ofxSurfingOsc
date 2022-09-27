@@ -41,14 +41,14 @@ void PatchPipeValue::setup(string name, bool bNormalized)
 	
 	params_Map.setName("MAP");
 	//name hardcoded. do not rename without changing PatchingManager too!
-	params_Map.add(minInput.set("MIN IN", 0, inputMinRange, inputMaxRange));
-	params_Map.add(maxInput.set("MAX IN", 1, inputMinRange, inputMaxRange));
-	params_Map.add(minOutput.set("MIN OUT", 0, outMinRange, outMaxRange));
-	params_Map.add(maxOutput.set("MAX OUT", 1, outMinRange, outMaxRange));
+	params_Map.add(minInput.set("IN MIN", 0, inputMinRange, inputMaxRange));
+	params_Map.add(maxInput.set("IN MAX", 1, inputMinRange, inputMaxRange));
+	params_Map.add(minOutput.set("OUT MIN", 0, outMinRange, outMaxRange));
+	params_Map.add(maxOutput.set("OUT MAX", 1, outMinRange, outMaxRange));
 	params_Extra.add(params_Map);
 
 	params_Extra.add(bSmooth.set("SMOOTH", false));
-	params_Extra.add(smoothVal.set("SMOOTH POWER", 0.01, 0.01, 1));
+	params_Extra.add(smoothVal.set("POWER", 0.01, 0.01, 1));
 	//params.add(bClamp.set("CLAMP", true));
 
 	params.add(params_Extra);

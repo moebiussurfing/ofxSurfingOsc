@@ -2,23 +2,23 @@
 
 /*
 
-	Fix Number previews
-	Swap euro filter to biquad
+TODO:
+
 
 */
 
 //--
 
-
 #include "ofMain.h"
 
 #include "PatchPipe.h"
+
 #include "ofxGui.h"
-#include "ofxSurfingHelpers.h"
 #include "ofxSurfingBoxInteractive.h"
 #include "ofxSurfingHelpers.h"
 #include "BarValue.h"
 #include "CircleBeat.h"
+#include "RectBeat.h"
 
 // ranges
 //float inputMinRange = 0;
@@ -26,14 +26,11 @@
 //float outMinRange = -1000.000;
 //float outMaxRange = 1000.000;
 
-//TODO:
-// think on a system to filter noisy bangs: 
-// gate, hysteresis, floated .. use history plot
-
 #include "ofxOneEuroFilter.h"
 #define FREQ_FILTER_REF 5
 
 #define OF_COLOR_BG_PANELS ofColor(0, 200)
+#define OF_COLOR_WIDGETS ofColor(255, 200)
 
 //--
 
@@ -54,8 +51,10 @@ public:
 		params.add(solo.set("SOLO", false));
 		params.add(output.set("OUTPUT", false));
 
-		params.add(bSmooth.set("SMOOTH ENABLE", false));
-		params.add(smoothVal.set("SMOOTH POWER", 0.1, 0.01, 1));
+		//params.add(bSmooth.set("SMOOTH ENABLE", false));
+		//params.add(smoothVal.set("SMOOTH POWER", 0.1, 0.01, 1));
+		params.add(bSmooth.set("SMOOTH", false));
+		params.add(smoothVal.set("POWER", 0.1, 0.01, 1));
 
 		// exclude
 		input.setSerializable(false);
@@ -158,7 +157,7 @@ public:
 
 	void setPositionPreview(glm::vec2 position);
 
-	ofxSurfingBoxInteractive boxPlotsBg;
+	ofxSurfingBoxInteractive boxWidgets;
 
 	PatchPipeBool pipeBangs[NUM_BANGS];
 	PatchPipeBool pipeToggles[NUM_TOGGLES];
@@ -184,23 +183,46 @@ private:
 	ofEventListeners listeners;
 
 	ofParameterGroup params_Settings;
-	ofParameterGroup params_Targets;
 
 	ofxPanel gui_Internal;
 
 	ofParameter<glm::vec2> positionGui_Internal;
 
-	//ofParameter<bool> bGui;
-	ofParameter<bool> bLock;
-
 	float _rounded = 0;
 
 public:
+
+	ofParameterGroup params_Targets;
+	ofParameter<bool> bGui_PreviewWidgets;
+	ofParameter<bool> bLock;
 
 	//--------------------------------------------------------------
 	void setCustomTemplate(bool b)
 	{
 		bCustomTemplate = b;
+	}
+
+	//--
+
+	ofParameter<bool> bGui_Internal;
+	bool bGui_InternalAllowed = true;
+
+	// Disables ofxGui. useful when using external gui like ImGui.
+	//--------------------------------------------------------------
+	void disableGuiInternalAllow() {
+		bGui_InternalAllowed = false;
+	}
+	//--------------------------------------------------------------
+	void enableGuiInternalAllow() {
+		bGui_InternalAllowed = true;
+	}
+	//--------------------------------------------------------------
+	void disableGuiInternal() {
+		bGui_Internal = false;
+	}
+	//--------------------------------------------------------------
+	void setGuiInternal(bool b) {
+		bGui_Internal = b;
 	}
 
 private:
@@ -233,8 +255,10 @@ private:
 	void updatePreview();
 	void drawPreview();
 
-	CircleBeat previewBangs[NUM_BANGS];
-	CircleBeat previewToggles[NUM_TOGGLES];
+	//CircleBeat previewBangs[NUM_BANGS];
+	//CircleBeat previewToggles[NUM_TOGGLES];
+	RectBeat previewBangs[NUM_BANGS];
+	RectBeat previewToggles[NUM_TOGGLES];
 	BarValue previewValues[NUM_VALUES];
 	BarValue previewNumbers[NUM_NUMBERS];
 

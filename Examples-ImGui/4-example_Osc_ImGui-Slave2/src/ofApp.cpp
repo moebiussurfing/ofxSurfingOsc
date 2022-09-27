@@ -3,7 +3,7 @@
 //--------------------------------------------------------------
 void ofApp::setup()
 {
-	name = "ImGui-Slave";
+	name = "ImGui-Slave2";
 	ofSetWindowTitle(name);
 
 	ofSetBackgroundColor(ofColor::blue);
@@ -15,17 +15,13 @@ void ofApp::setup()
 	params.add(bEnable_Beat);
 	params.add(bEnable_Bang_0);
 	params.add(bEnable_Bang_1);
-
-	psettings.add(oscHelper.bGui);
-	psettings.add(ui.bLog);
-	ofxSurfingHelpers::loadGroup(psettings);
 }
 
 //--------------------------------------------------------------
 void ofApp::setupOsc()
 {
 	oscHelper.setup(ofxSurfingOsc::Slave);
-	
+
 	string Osc_Address;
 	string tag = "1/";
 
@@ -49,14 +45,14 @@ void ofApp::setupGui()
 	ui.setup();
 	ui.startup();
 
-	oscHelper.setUiPtr(&ui);
-
 	// custom styles
-	ui.AddStyle(bpm, OFX_IM_HSLIDER_BIG);
-	SurfingGuiTypes type = OFX_IM_TOGGLE_BIG_XXXL_BORDER;
-	ui.AddStyle(bEnable_Beat, type);
-	ui.AddStyle(bEnable_Bang_0, type);
-	ui.AddStyle(bEnable_Bang_1, type);
+	{
+		ui.AddStyle(bpm, OFX_IM_HSLIDER_BIG);
+		SurfingGuiTypes type = OFX_IM_TOGGLE_BIG_XXXL_BORDER;
+		ui.AddStyle(bEnable_Beat, type);
+		ui.AddStyle(bEnable_Bang_0, type);
+		ui.AddStyle(bEnable_Bang_1, type);
+	}
 }
 
 //--------------------------------------------------------------
@@ -83,5 +79,4 @@ void ofApp::draw()
 //--------------------------------------------------------------
 void ofApp::exit()
 {
-	ofxSurfingHelpers::saveGroup(psettings);
 }

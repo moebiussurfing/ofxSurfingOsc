@@ -27,6 +27,4 @@ public:
 
 	ofxWindowApp w;
 	string name;
-
-	ofParameterGroup psettings{ "Settings" };
 };

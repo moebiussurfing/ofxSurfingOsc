@@ -2,6 +2,7 @@
 
 //--------------------------------------------------------------
 PatchingManager::PatchingManager() {
+	bGui_InternalAllowed = false;
 }
 
 //--------------------------------------------------------------
@@ -19,28 +20,28 @@ void PatchingManager::setup(string name)
 
 	for (int i = 0; i < NUM_BANGS; i++)
 	{
-		string name = "BANG_" + ofToString(i + 1);
+		string name = "BANG_" + ofToString(i );
 		pipeBangs[i].setup(name);
 		_gBangs.add(pipeBangs[i].params);
 	}
 
 	for (int i = 0; i < NUM_TOGGLES; i++)
 	{
-		string name = "TOGGLE_" + ofToString(i + 1);
+		string name = "TOGGLE_" + ofToString(i );
 		pipeToggles[i].setup(name);
 		_gToggles.add(pipeToggles[i].params);
 	}
 
 	for (int i = 0; i < NUM_VALUES; i++)
 	{
-		string name = "VALUE_" + ofToString(i + 1);
+		string name = "VALUE_" + ofToString(i );
 		pipeValues[i].setup(name);
 		_gValues.add(pipeValues[i].params);
 	}
 
 	for (int i = 0; i < NUM_NUMBERS; i++)
 	{
-		string name = "NUMBER_" + ofToString(i + 1);
+		string name = "NUMBER_" + ofToString(i );
 		pipeNumbers[i].setup(name, false);//not normalized
 		_gNumbers.add(pipeNumbers[i].params);
 
@@ -73,66 +74,71 @@ void PatchingManager::setup(string name)
 
 	//--
 
+	bGui_PreviewWidgets.makeReferenceTo(boxWidgets.bGui);
+
 	// Gui
-
-	gui_Internal.setup(name);
-	gui_Internal.add(boxPlotsBg.bGui);
-	gui_Internal.add(bLock);
-	gui_Internal.add(params_Targets);
-
-	// Position
-
-	positionGui_Internal.set("Gui Position Internal",
-		glm::vec2(550, 10),
-		glm::vec2(0, 0),
-		glm::vec2(ofGetWidth(), ofGetHeight()));
-	gui_Internal.setPosition(positionGui_Internal.get().x, positionGui_Internal.get().y);
-
-	//--
-
-	// Minimize
-
-	auto& g = gui_Internal.getGroup(params_Targets.getName());
-	auto& gb = g.getGroup("BANGS");
-	gb.minimize();
-	auto& gt = g.getGroup("TOGGLES");
-	gt.minimize();
-	auto& gv = g.getGroup("VALUES");
-	gv.minimize();
-	auto& gn = g.getGroup("NUMBERS");
-	gn.minimize();
-
-	for (int i = 0; i < NUM_BANGS; i++)
+	if (bGui_InternalAllowed)
 	{
-		string name = pipeBangs[i].params.getName();
-		gb.getGroup(name).minimize();
+		gui_Internal.setup(name);
+		gui_Internal.add(bGui_PreviewWidgets);
+		//gui_Internal.add(boxWidgets.bGui);
+		gui_Internal.add(bLock);
+		gui_Internal.add(params_Targets);
+
+		// Position
+
+		positionGui_Internal.set("Gui Position Internal",
+			glm::vec2(550, 10),
+			glm::vec2(0, 0),
+			glm::vec2(ofGetWidth(), ofGetHeight()));
+		gui_Internal.setPosition(positionGui_Internal.get().x, positionGui_Internal.get().y);
+
+		//--
+
+		// Minimize
+
+		auto& g = gui_Internal.getGroup(params_Targets.getName());
+		auto& gb = g.getGroup("BANGS");
+		gb.minimize();
+		auto& gt = g.getGroup("TOGGLES");
+		gt.minimize();
+		auto& gv = g.getGroup("VALUES");
+		gv.minimize();
+		auto& gn = g.getGroup("NUMBERS");
+		gn.minimize();
+
+		for (int i = 0; i < NUM_BANGS; i++)
+		{
+			string name = pipeBangs[i].params.getName();
+			gb.getGroup(name).minimize();
+		}
+
+		for (int i = 0; i < NUM_TOGGLES; i++)
+		{
+			string name = pipeToggles[i].params.getName();
+			gt.getGroup(name).minimize();
+		}
+
+		for (int i = 0; i < NUM_VALUES; i++)
+		{
+			string name = pipeValues[i].params.getName();
+			gv.getGroup(name).minimize();
+			auto& ge = gv.getGroup(name).getGroup("EXTRA");
+			ge.getGroup("MAP").minimize();
+			ge.minimize();
+		}
+
+		for (int i = 0; i < NUM_NUMBERS; i++)
+		{
+			string name = pipeNumbers[i].params.getName();
+			gn.getGroup(name).minimize();
+			auto& ge = gn.getGroup(name).getGroup("EXTRA");
+			ge.getGroup("MAP").minimize();
+			ge.minimize();
+		}
 	}
 
-	for (int i = 0; i < NUM_TOGGLES; i++)
-	{
-		string name = pipeToggles[i].params.getName();
-		gt.getGroup(name).minimize();
-	}
-
-	for (int i = 0; i < NUM_VALUES; i++)
-	{
-		string name = pipeValues[i].params.getName();
-		gv.getGroup(name).minimize();
-		auto& ge = gv.getGroup(name).getGroup("EXTRA");
-		ge.getGroup("MAP").minimize();
-		ge.minimize();
-	}
-
-	for (int i = 0; i < NUM_NUMBERS; i++)
-	{
-		string name = pipeNumbers[i].params.getName();
-		gn.getGroup(name).minimize();
-		auto& ge = gn.getGroup(name).getGroup("EXTRA");
-		ge.getGroup("MAP").minimize();
-		ge.minimize();
-	}
-
-	//--
+	//----
 
 	//TODO:
 	// Must learn handle lambda listeners
@@ -158,11 +164,17 @@ void PatchingManager::setup(string name)
 
 	// Draggable Bg
 	{
-		boxPlotsBg.bGui.setName("Preview");
-		boxPlotsBg.bEdit.setName("EDIT PREVIEW MANAGER");
-		boxPlotsBg.setName("PatchingManager");
-		boxPlotsBg.setPathGlobal(path_Global);
-		boxPlotsBg.setup();
+		boxWidgets.bGui.setName("Preview");
+		boxWidgets.bEdit.setName("EDIT PREVIEW MANAGER");
+		boxWidgets.setName("PatchingManager");
+		boxWidgets.setPathGlobal(path_Global);
+		boxWidgets.setup();
+
+		// constraint sizes
+		glm::vec2 shapeMin(150, 300);
+		boxWidgets.setRectConstraintMin(shapeMin);
+		glm::vec2 shapeMax(ofGetWidth(), ofGetHeight());
+		boxWidgets.setRectConstraintMax(shapeMax);
 	}
 
 	//--
@@ -171,12 +183,15 @@ void PatchingManager::setup(string name)
 
 	params_Settings.setName(name);
 	params_Settings.add(positionGui_Internal);
-	params_Settings.add(boxPlotsBg.bGui);
+	params_Settings.add(boxWidgets.bGui);
 	params_Settings.add(bLock);
 	params_Settings.add(params_Targets);
 
 	ofxSurfingHelpers::loadGroup(params_Settings, path_Global + "/" + path_Settings);
-	gui_Internal.setPosition(positionGui_Internal.get().x, positionGui_Internal.get().y);
+
+	if (bGui_InternalAllowed) {
+		gui_Internal.setPosition(positionGui_Internal.get().x, positionGui_Internal.get().y);
+	}
 }
 
 //--------------------------------------------------------------
@@ -203,6 +218,11 @@ void PatchingManager::update()
 	{
 		pipeNumbers[i].update();
 	}
+
+	//--
+
+	//TODO:
+	//recalculate();//?
 }
 
 //--------------------------------------------------------------
@@ -211,32 +231,39 @@ void PatchingManager::doReset() {
 }
 
 //--------------------------------------------------------------
-void PatchingManager::draw() {
-
-	if (bLock)
+void PatchingManager::draw()
+{
+	if (bGui_InternalAllowed)
 	{
-		//// Bottom
-		//auto p = gui_Internal.getPosition();
-		//auto h = gui_Internal.getHeight();
+		if (bGui_Internal)
+		{
+			if (bLock)
+			{
+				//// Bottom
+				//auto p = gui_Internal.getPosition();
+				//auto h = gui_Internal.getHeight();
 
-		// Top right
-		auto p = gui_Internal.getShape().getTopRight();
+				// Top right
+				auto p = gui_Internal.getShape().getTopRight();
 
-		setPositionPreview(glm::vec2(p.x + 0, p.y));
+				setPositionPreview(glm::vec2(p.x + 0, p.y));
+			}
+
+			//--
+
+			gui_Internal.draw();
+		}
 	}
 
 	//--
 
+	//TODO:
+	//widgets
+	recalculate();//?
+
 	if (bGui_Preview)
 	{
-		gui_Internal.draw();
-
-		//-
-
-		//TODO:
-		recalculate();//?
-
-		if (boxPlotsBg.bGui) drawPreview();
+		if (boxWidgets.bGui) drawPreview();
 	}
 }
 
@@ -277,10 +304,10 @@ void PatchingManager::recalculate()
 //--------------------------------------------------------------
 void PatchingManager::refreshPreview() {
 
-	float x = boxPlotsBg.getX();
-	float y = boxPlotsBg.getY();
-	float w = boxPlotsBg.getWidth();
-	float h = boxPlotsBg.getHeight();
+	float x = boxWidgets.getX();
+	float y = boxWidgets.getY();
+	float w = boxWidgets.getWidth();
+	float h = boxWidgets.getHeight();
 
 	//--
 
@@ -303,14 +330,14 @@ void PatchingManager::refreshPreview() {
 
 	for (int i = 0; i < NUM_BANGS; i++)
 	{
-		previewBangs[i].setRadius(szCircle / 2);
+		previewBangs[i].setSize(szCircle / 2);
 		previewBangs[i].setPosition(glm::vec2(x + szCircle / 2 + i * (szCircle + gapx), y));
 	}
 	y = y + szCircle + 2 * gapy;
 
 	for (int i = 0; i < NUM_TOGGLES; i++)
 	{
-		previewToggles[i].setRadius(szCircle / 2);
+		previewToggles[i].setSize(szCircle / 2);
 		previewToggles[i].setPosition(glm::vec2(x + szCircle / 2 + i * (szCircle + gapx), y));
 	}
 	y = y + szCircle / 2 + 2 * gapy;
@@ -336,24 +363,28 @@ void PatchingManager::setupPreview() {
 
 	for (int i = 0; i < NUM_BANGS; i++)
 	{
-		previewBangs[i].setColor(ofColor::green);
+		//previewBangs[i].setColor(ofColor::green);
+		previewBangs[i].setColor(OF_COLOR_WIDGETS);
 	}
 
 	for (int i = 0; i < NUM_TOGGLES; i++)
 	{
-		previewToggles[i].setColor(ofColor::orange);
+		//previewToggles[i].setColor(ofColor::orange);
+		previewToggles[i].setColor(OF_COLOR_WIDGETS);
 	}
 
 	for (int i = 0; i < NUM_VALUES; i++)
 	{
-		previewValues[i].setColor(ofColor::red);
-		previewValues[i].setRounded(_rounded);
+		//previewValues[i].setColor(ofColor::red);
+		previewValues[i].setColor(OF_COLOR_WIDGETS);
+		//previewValues[i].setRounded(_rounded);
 	}
 
 	for (int i = 0; i < NUM_NUMBERS; i++)
 	{
-		previewNumbers[i].setColor(ofColor::yellow);
-		previewNumbers[i].setRounded(_rounded);
+		//previewNumbers[i].setColor(ofColor::yellow);
+		previewNumbers[i].setColor(OF_COLOR_WIDGETS);
+		//previewNumbers[i].setRounded(_rounded);
 	}
 
 	//--
@@ -361,14 +392,20 @@ void PatchingManager::setupPreview() {
 	// Customize
 	// Template is for my ofxSoundAnalyzer add-on
 
-	if (bCustomTemplate) 
+	if (bCustomTemplate)
 	{
-		previewBangs[0].setColor(ofColor::green);
-		previewBangs[1].setColor(ofColor::red);
-		previewBangs[2].setColor(ofColor::orange);
-		previewValues[0].setColor(ofColor::red);
-		previewValues[1].setColor(ofColor::orange);
-		previewValues[7].setColor(ofColor::lightPink);
+		//previewBangs[0].setColor(ofColor::green);
+		//previewBangs[1].setColor(ofColor::red);
+		//previewBangs[2].setColor(ofColor::orange);
+		//previewValues[0].setColor(ofColor::red);
+		//previewValues[1].setColor(ofColor::orange);
+		//previewValues[7].setColor(ofColor::lightPink);
+		previewBangs[0].setColor(OF_COLOR_WIDGETS);
+		previewBangs[1].setColor(OF_COLOR_WIDGETS);
+		previewBangs[2].setColor(OF_COLOR_WIDGETS);
+		previewValues[0].setColor(OF_COLOR_WIDGETS);
+		previewValues[1].setColor(OF_COLOR_WIDGETS);
+		previewValues[7].setColor(OF_COLOR_WIDGETS);
 	}
 }
 
@@ -404,7 +441,7 @@ void PatchingManager::updatePreview()
 //--------------------------------------------------------------
 void PatchingManager::setPositionPreview(glm::vec2 position)
 {
-	boxPlotsBg.setPosition(position.x, position.y);
+	boxWidgets.setPosition(position.x, position.y);
 }
 
 //--------------------------------------------------------------
@@ -424,8 +461,8 @@ void PatchingManager::drawPreview() {
 		ofFill();
 		ofPushStyle();
 		ofSetColor(OF_COLOR_BG_PANELS);
-		ofDrawRectRounded(boxPlotsBg.getRectangle(), 5);
-		boxPlotsBg.draw();
+		ofDrawRectRounded(boxWidgets.getRectangle(), 5);
+		boxWidgets.draw();
 		ofPopStyle();
 
 		//-
@@ -460,7 +497,8 @@ void PatchingManager::drawPreview() {
 //--------------------------------------------------------------
 void PatchingManager::exit()
 {
-	positionGui_Internal = gui_Internal.getPosition();
+	if (bGui_InternalAllowed)
+		positionGui_Internal = gui_Internal.getPosition();
 
 	ofxSurfingHelpers::saveGroup(params_Settings, path_Global + "/" + path_Settings);
 }
