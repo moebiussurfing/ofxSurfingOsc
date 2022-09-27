@@ -88,17 +88,7 @@ void ofApp::setupOsc()
 //--------------------------------------------------------------
 void ofApp::setupGui()
 {
-	oscHelper.setUiPtr(&ui);
-
-	ui.setName(name);
-	ui.setWindowsMode(IM_GUI_MODE_WINDOWS_SPECIAL_ORGANIZER);
 	ui.setup();
-
-	ui.addWindowSpecial(oscHelper.bGui);
-	ui.addWindowSpecial(oscHelper.bGui_Targets);
-	ui.addWindowSpecial(oscHelper.bGui_Enablers);
-
-	ui.startup();
 }
 
 //--------------------------------------------------------------

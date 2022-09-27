@@ -8,7 +8,7 @@ void ofApp::setup()
 	ofSetBackgroundColor(ofColor::green);
 
 	setupOsc();
-	setupGui();
+	setupGuiInternal();
 
 	// Settings
 	psettings.add(oscHelper.bGui);
@@ -18,7 +18,7 @@ void ofApp::setup()
 #endif
 	ofxSurfingHelpers::loadGroup(psettings);
 
-	// Sender params
+	// Local params
 	params.add(bang0);
 	params.add(bang1);
 	params.add(bang2);
@@ -89,19 +89,19 @@ void ofApp::setupOsc()
 }
 
 //--------------------------------------------------------------
-void ofApp::setupGui()
+void ofApp::setupGuiInternal()
 {
-	oscHelper.setUiPtr(&ui);
+	//oscHelper.setUiPtr(&ui);
 
-	ui.setName(name);
-	ui.setWindowsMode(IM_GUI_MODE_WINDOWS_SPECIAL_ORGANIZER);
+	//ui.setName(name);
+	//ui.setWindowsMode(IM_GUI_MODE_WINDOWS_SPECIAL_ORGANIZER);
 	ui.setup();
 
-	ui.addWindowSpecial(oscHelper.bGui);
-	ui.addWindowSpecial(oscHelper.bGui_Targets);
-	ui.addWindowSpecial(oscHelper.bGui_Enablers);
+	//ui.addWindowSpecial(oscHelper.bGui);
+	//ui.addWindowSpecial(oscHelper.bGui_Targets);
+	//ui.addWindowSpecial(oscHelper.bGui_Enablers);
 
-	ui.startup();
+	//ui.startup();
 }
 
 //--------------------------------------------------------------
@@ -118,11 +118,13 @@ void ofApp::draw()
 		if (ui.BeginWindow(name))
 		{
 			ui.Add(oscHelper.bGui, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
+			/*
 			if (oscHelper.bGui) {
 				ui.Indent();
 				ui.Add(oscHelper.bGui_Targets, OFX_IM_TOGGLE_ROUNDED);
 				ui.Unindent();
 			}
+			*/
 
 #ifdef USE_local_Targets
 			ui.Add(bDebug, OFX_IM_TOGGLE_ROUNDED_SMALL);

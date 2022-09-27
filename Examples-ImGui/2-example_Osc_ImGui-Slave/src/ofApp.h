@@ -20,7 +20,7 @@ public:
 	void draw();
 	void exit();
 
-	void setupGui();
+	void setupGuiInternal();
 	void setupOsc();
 
 	ofxSurfingGui ui;

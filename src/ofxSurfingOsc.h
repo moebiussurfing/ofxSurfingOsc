@@ -6,6 +6,9 @@
 
 	TODO:
 
+	+		store out enabler settings
+			notice that could not correlate target params to externally added params.
+
 	+		send signals 0 and 1 to OSC values too
 
 	++		Patching Manager: look @daan example!
@@ -63,6 +66,7 @@
 //#define USE_MIDI // MIDI //TODO: WIP
 
 #define USE_IM_GUI // Replaces ofxGui!
+
 /*
 // When disabled you must remove the ofxSurfingOsc/src/ImGui/ folder
 // Example parent scope with an external instantiated ImGui
@@ -105,8 +109,6 @@ void ofxSurfingBeatSync::setupImGui()
 
 #ifdef USE_IM_GUI
 #include "ofxSurfingImGui.h"
-//#include "OscImGui.h"
-//#include "OscImGui.cpp"
 #endif
 
 // Patch received signals to some targets (params)
@@ -158,16 +160,10 @@ class ofxSurfingOsc
 
 #ifdef USE_IM_GUI
 
-public:
-
-	ofxSurfingGui* ui;
-
-public:
-
-	//--------------------------------------------------------------
-	void setUiPtr(ofxSurfingGui* _ui) {
-		ui = _ui;
-	}
+private:
+	
+	void setupImGui();
+	ofxSurfingGui ui;
 
 public:
 
@@ -303,7 +299,7 @@ private:
 
 	void setupParams(); // must be called at first before set ports and add params
 
-	void setupGui();
+	void setupGuiInternal();
 
 	//--
 
@@ -648,7 +644,9 @@ public:
 private:
 
 	int t_bBangs[NUM_BANGS];
-	int dur = 100;
+	//int durationBangsTrue = 2 * 1/60.f;//x frames // smaller
+	int durationBangsTrue = 17; // ms visible on the button
+	//int durationBangsTrue = 100;
 
 	//--
 
@@ -710,6 +708,7 @@ public:
 private:
 	ofxPanel gui_Targets;
 	ofParameter<glm::vec2> positionGui_Targets;
+
 public:
 	ofParameter<bool> bGui_Targets;
 #endif
@@ -954,6 +953,7 @@ private:
 
 	ofParameter<bool> bRandomize;
 
+	void doTesterRandomPlay();
 	void doTesterRandom();
 
 #endif

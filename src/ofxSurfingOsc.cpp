@@ -211,6 +211,9 @@ void ofxSurfingOsc::setup_Osc()
 		params_OscSettings.add(bEnableOsc_Output);
 		params_OscSettings.add(OSC_OutputPort);
 		params_OscSettings.add(OSC_OutputIp);
+
+		//TODO:
+		//params_OscSettings.add(params_EnablerOuts);
 	}
 
 	//--
@@ -443,8 +446,25 @@ void ofxSurfingOsc::startupDelayed()
 	}
 }
 
+#ifdef USE_IM_GUI
 //----------------------------------------------------
-void ofxSurfingOsc::setupGui()
+void ofxSurfingOsc::setupImGui()
+{
+	string name = "OSC";
+	ui.setName(name);
+	ui.setWindowsMode(IM_GUI_MODE_WINDOWS_SPECIAL_ORGANIZER);
+	ui.setup();
+
+	ui.addWindowSpecial(bGui);
+	ui.addWindowSpecial(bGui_Targets);
+	ui.addWindowSpecial(bGui_Enablers);
+
+	ui.startup();
+}
+#endif
+
+//----------------------------------------------------
+void ofxSurfingOsc::setupGuiInternal()
 {
 	if (!bGui_InternalAllowed || !bGui_Internal) return;
 
@@ -488,7 +508,7 @@ void ofxSurfingOsc::setupParams()
 	bDebug.set("Debug", false);
 
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
-	bRandomize.set("Randomize", false);
+	bRandomize.set("Random Timer", false);
 #endif
 
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
@@ -659,7 +679,12 @@ void ofxSurfingOsc::setupParams()
 	//--
 
 	// Gui
-	setupGui();
+
+	setupGuiInternal();
+
+#ifdef USE_IM_GUI
+	setupImGui();
+#endif
 
 	//--
 
@@ -964,7 +989,7 @@ void ofxSurfingOsc::update()
 				ofLogNotice("ofxSurfingOsc") << "OSC IN  Addresses: " << ofToString(si);
 
 #ifdef USE_IM_GUI
-				ui->AddToLog(ofToString(si));
+				ui.AddToLog(ofToString(si));
 #endif	
 			}
 
@@ -978,7 +1003,7 @@ void ofxSurfingOsc::update()
 				ofLogNotice("ofxSurfingOsc") << "OSC OUT Addresses: " << ofToString(so);
 
 #ifdef USE_IM_GUI
-				ui->AddToLog(ofToString(so));
+				ui.AddToLog(ofToString(so));
 #endif
 			}
 		}
@@ -992,7 +1017,7 @@ void ofxSurfingOsc::update()
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
 		//if (bUseIn)
 		{
-			doTesterRandom();
+			doTesterRandomPlay();
 		}
 #endif
 	}
@@ -1006,7 +1031,7 @@ void ofxSurfingOsc::update()
 	auto t = ofGetElapsedTimeMillis();
 	for (int i = 0; i < NUM_BANGS; i++)
 	{
-		if (bBangs[i] && (t - t_bBangs[i] > dur))
+		if (bBangs[i] && (t - t_bBangs[i] > durationBangsTrue))
 		{
 			bBangs[i] = false;
 
@@ -1129,104 +1154,31 @@ void ofxSurfingOsc::draw()
 //--------------------------------------------------------------
 void ofxSurfingOsc::drawImGui()
 {
-	if (ui == nullptr) return;
+	//if (ui == nullptr) return;
 
 	if (!bGui) return;
 
-	bool bIsSpecial = (ui->getModeSpecial() == IM_GUI_MODE_WINDOWS_SPECIAL_ORGANIZER);
-
-	// Enablers
-	if (bUseOut)
-	{
-		bool b;
-		if (bIsSpecial) b = ui->BeginWindowSpecial(bGui_Enablers);
-		else b = ui->BeginWindow(bGui_Enablers);
-		if (b)
-		{
-			ui->AddLabelBig("OSC OUT");
-			//ui->AddLabel("Enable channels");
-
-			//if (!ui->bMinimize) 
-			{
-				//if (getOutEnablersSize() != 0) ui->AddSpacingSeparated();
-
-				//if (ui->BeginTree("ENABLERS", false))
-				{
-					//if (!ui->bMinimize) ui->AddLabelBig("ENABLERS");
-
-					SurfingGuiTypes s = OFX_IM_CHECKBOX;
-					//SurfingGuiTypes s = OFX_IM_TOGGLE_SMALL;
-
-					if (ui->AddButton("All", OFX_IM_BUTTON, 2, true))
-					{
-						for (int i = 0; i < bEnablerOuts.size(); i++) bEnablerOuts[i] = true;
-					}
-					if (ui->AddButton("None", OFX_IM_BUTTON, 2))
-					{
-						for (int i = 0; i < bEnablerOuts.size(); i++) bEnablerOuts[i] = false;
-					}
-
-					for (int i = 0; i < getOutEnablersSize(); i++)
-					{
-						ui->Add(getOutEnabler(i), s);
-					}
-
-					//WIP
-					/*
-					for (int i = 0; i < getOutEnablersSize(); i++)
-					{
-						static bool b0 = false;
-						static bool b1 = false;
-						static bool b2 = false;
-						static bool b3 = false;
-
-						if (i == 0) b0 = ui->BeginTree("BANGS");
-						else if (i == NUM_BANGS) b1 = ui->BeginTree("TOGGLES");
-						else if (i == NUM_BANGS + NUM_TOGGLES) b2 = ui->BeginTree("VALUES");
-						else if (i == NUM_BANGS + NUM_TOGGLES + NUM_VALUES) b3 = ui->BeginTree("NUMBERS");
-
-						if (i < NUM_BANGS && !b0) continue;
-						else if (i < NUM_BANGS + NUM_TOGGLES && !b1) continue;
-						else if (i < NUM_BANGS + NUM_TOGGLES + NUM_VALUES && !b2) continue;
-						else if (i < NUM_BANGS + NUM_TOGGLES + NUM_VALUES + NUM_NUMBERS && !b3) continue;
-
-						ui->Add(getOutEnabler(i), s);
-
-						if (i == NUM_BANGS - 1 && b0) ui->EndTree();
-						else if (i == NUM_BANGS + NUM_TOGGLES - 1 && b1) ui->EndTree();
-						else if (i == NUM_BANGS + NUM_TOGGLES + NUM_VALUES - 1 && b2) ui->EndTree();
-						else if (i == NUM_BANGS + NUM_TOGGLES + NUM_VALUES + NUM_NUMBERS - 1 && b3) ui->EndTree();
-					}
-					*/
-
-					//ui->EndTree();
-				}
-			}
-
-			if (bIsSpecial) ui->EndWindowSpecial();
-			else ui->EndWindow();
-		}
-	}
+	bool bIsSpecial = (ui.getModeSpecial() == IM_GUI_MODE_WINDOWS_SPECIAL_ORGANIZER);
 
 	//--
 
 	// Main
 	{
 		bool b;
-		if (bIsSpecial) b = ui->BeginWindowSpecial(bGui);
-		else b = ui->BeginWindow(bGui);
+		if (bIsSpecial) b = ui.BeginWindowSpecial(bGui);
+		else b = ui.BeginWindow(bGui);
 		if (b)
 		{
-			ui->AddLabelHuge("OSC");
-			ui->AddSpacing();
+			ui.AddLabelHuge("OSC");
+			ui.AddSpacing();
 
-			ui->Add(ui->bMinimize, OFX_IM_TOGGLE_ROUNDED);
-			ui->AddSpacingSeparated();
+			ui.Add(ui.bMinimize, OFX_IM_TOGGLE_ROUNDED);
+			ui.AddSpacingSeparated();
 
-			ui->Add(bGui_Targets, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
-			if (bUseOut) ui->Add(bGui_Enablers, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
-			ui->Add(ui->bLog, OFX_IM_TOGGLE_ROUNDED_SMALL);
-			ui->AddSpacingSeparated();
+			ui.Add(bGui_Targets, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
+			if (bUseOut) ui.Add(bGui_Enablers, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
+			ui.Add(ui.bLog, OFX_IM_TOGGLE_ROUNDED_SMALL);
+			ui.AddSpacingSeparated();
 
 			//--
 
@@ -1234,32 +1186,32 @@ void ofxSurfingOsc::drawImGui()
 
 			if (bUseIn)
 			{
-				if (!ui->bMinimize) ui->AddLabelBig("IN");
-				ui->Add(bEnableOsc_Input, OFX_IM_TOGGLE);
+				if (!ui.bMinimize) ui.AddLabelBig("IN");
+				ui.Add(bEnableOsc_Input, OFX_IM_TOGGLE);
 				if (bEnableOsc_Input)
 				{
-					if (!ui->bMinimize)
+					if (!ui.bMinimize)
 					{
 						string tt = "Must restart the app \nto update these settings!";
-						ui->Add(OSC_InputPort, OFX_IM_DRAG);
-						ui->AddTooltip(tt);
+						ui.Add(OSC_InputPort, OFX_IM_DRAG);
+						ui.AddTooltip(tt);
 					}
 
 					//TODO: implement
 					/*
 					*
-					if (!ui->bMinimize) {
+					if (!ui.bMinimize) {
 
-						if (ui->BeginTree("ENABLERS", false))
+						if (ui.BeginTree("ENABLERS", false))
 						{
-							if (getInEnablersSize() != 0) ui->AddSpacingSeparated();
+							if (getInEnablersSize() != 0) ui.AddSpacingSeparated();
 
-							//if (!ui->bMinimize) ui->AddLabelBig("ENABLERS");
+							//if (!ui.bMinimize) ui.AddLabelBig("ENABLERS");
 							SurfingGuiTypes s = OFX_IM_TOGGLE_SMALL;
 							for (int i = 0; i < getInEnablersSize(); i++) {
-								ui->Add(getInEnabler(i), s);
+								ui.Add(getInEnabler(i), s);
 							}
-							ui->EndTree();
+							ui.EndTree();
 						}
 					}
 					*/
@@ -1272,20 +1224,20 @@ void ofxSurfingOsc::drawImGui()
 
 			if (bUseOut)
 			{
-				if (bUseIn) ui->AddSpacingSeparated();
+				if (bUseIn) ui.AddSpacingSeparated();
 
-				if (!ui->bMinimize) ui->AddLabelBig("OUT");
-				ui->Add(bEnableOsc_Output, OFX_IM_TOGGLE);
+				if (!ui.bMinimize) ui.AddLabelBig("OUT");
+				ui.Add(bEnableOsc_Output, OFX_IM_TOGGLE);
 				if (bEnableOsc_Output)
 				{
-					if (!ui->bMinimize)
+					if (!ui.bMinimize)
 					{
 						string tt = "Must restart the app \nto update these settings!";
-						//ui->AddLabelBig(ofToString(OSC_OutputPort));
-						ui->Add(OSC_OutputPort, OFX_IM_DRAG);
-						ui->AddTooltip(tt);
-						ui->Add(OSC_OutputIp, OFX_IM_TEXT_INPUT);
-						ui->AddTooltip(tt);
+						//ui.AddLabelBig(ofToString(OSC_OutputPort));
+						ui.Add(OSC_OutputPort, OFX_IM_DRAG);
+						ui.AddTooltip(tt);
+						ui.Add(OSC_OutputIp, OFX_IM_TEXT_INPUT);
+						ui.AddTooltip(tt);
 					}
 				}
 			}
@@ -1294,29 +1246,35 @@ void ofxSurfingOsc::drawImGui()
 
 			// Plots
 
-			if (!ui->bMinimize)
+			if (!ui.bMinimize)
 			{
-				ui->AddSpacingSeparated();
+				ui.AddSpacingSeparated();
 
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
-				ui->AddLabel("PLOTS");
-				ui->Indent();
-				ui->Add(bGui_Plots, OFX_IM_TOGGLE_ROUNDED);
-				ui->Add(bPlotsMini, OFX_IM_TOGGLE_ROUNDED_SMALL);
-				if (bCustomTemplate) ui->Add(bGui_AllPlots, OFX_IM_TOGGLE_ROUNDED_MINI);
-				ui->Unindent();
-				ui->AddSpacingSeparated();
+				ui.AddLabel("PLOTS");
+				ui.Indent();
+				ui.Add(bGui_Plots, OFX_IM_TOGGLE_ROUNDED);
+				ui.Add(bPlotsMini, OFX_IM_TOGGLE_ROUNDED_SMALL);
+				if (bCustomTemplate) ui.Add(bGui_AllPlots, OFX_IM_TOGGLE_ROUNDED_MINI);
+				ui.Unindent();
+				ui.AddSpacingSeparated();
 #endif					
-				ui->Add(bRandomize, OFX_IM_TOGGLE_SMALL_BORDER_BLINK);
-				ui->Add(bDebug, OFX_IM_TOGGLE_ROUNDED_MINI);
-				if (bGui_InternalAllowed) ui->Add(bGui_Internal, OFX_IM_TOGGLE_ROUNDED_MINI);
-				ui->Add(bHelp, OFX_IM_TOGGLE_ROUNDED_MINI);
+				if (ui.AddButton("Random", OFX_IM_BUTTON_SMALL)) {
+					for (size_t i = 0; i < 16; i++)
+					{
+						doTesterRandom();
+					}
+				};
+				ui.Add(bRandomize, OFX_IM_TOGGLE_SMALL_BORDER_BLINK);
+				ui.Add(bDebug, OFX_IM_TOGGLE_ROUNDED_MINI);
+				if (bGui_InternalAllowed) ui.Add(bGui_Internal, OFX_IM_TOGGLE_ROUNDED_MINI);
+				ui.Add(bHelp, OFX_IM_TOGGLE_ROUNDED_MINI);
 			}
 
 			bool block = false;
 			if (block) {
-				glm::vec2 p = ui->getWindowShape().getBottomLeft();
-				//float w = ui->getWindowShape().getWidth();
+				glm::vec2 p = ui.getWindowShape().getBottomLeft();
+				//float w = ui.getWindowShape().getWidth();
 				//w = (w / 2.f) - (boxHelp.getRectangle().getWidth() / 2.f);
 				//p += glm::vec2(w, 0);
 				p += glm::vec2(-11, -9);
@@ -1325,8 +1283,8 @@ void ofxSurfingOsc::drawImGui()
 
 			//--
 
-			if (bIsSpecial) ui->EndWindowSpecial();
-			else ui->EndWindow();
+			if (bIsSpecial) ui.EndWindowSpecial();
+			else ui.EndWindow();
 		}
 	}
 
@@ -1337,31 +1295,103 @@ void ofxSurfingOsc::drawImGui()
 		static bool bdone = false;
 		if (!bdone) {
 			bdone = true;
-			ui->ClearStyles();
-			ui->AddStyleGroupForBools(params_Bangs, OFX_IM_TOGGLE_SMALL);
-			ui->AddStyleGroupForBools(params_Toggles, OFX_IM_TOGGLE_SMALL);
+			ui.ClearStyles();
+			ui.AddStyleGroupForBools(params_Bangs, OFX_IM_TOGGLE_SMALL);
+			ui.AddStyleGroupForBools(params_Toggles, OFX_IM_TOGGLE_SMALL);
 		}
 
 		bool b;
-		if (bIsSpecial) b = ui->BeginWindowSpecial(bGui_Targets);
-		else b = ui->BeginWindow(bGui_Targets);
+		bool bExist = ui.isThereSpecialWindowFor(bGui_Targets);
+		if (bIsSpecial && bExist) b = ui.BeginWindowSpecial(bGui_Targets);
+		else b = ui.BeginWindow(bGui_Targets);
 		if (b)
 		{
 			//if (bUseIn)
 			{
-				ui->AddGroup(params_Targets);
+				ui.AddGroup(params_Targets);
 			}
 
 			//--
 
-			if (bIsSpecial) ui->EndWindowSpecial();
-			else ui->EndWindow();
+			if (bIsSpecial) ui.EndWindowSpecial();
+			else ui.EndWindow();
 		}
 	}
 
 	//--
 
-	ui->DrawWindowLogIfEnabled();
+	// Enablers (only out!)
+
+	if (bUseOut)
+	{
+		bool b;
+		bool bExist = ui.isThereSpecialWindowFor(bGui_Enablers);
+		if (bIsSpecial && bExist) b = ui.BeginWindowSpecial(bGui_Enablers);
+		else b = ui.BeginWindow(bGui_Enablers);
+		if (b)
+		{
+			ui.AddLabelBig("OSC OUT");
+
+			{
+				//if (getOutEnablersSize() != 0) ui.AddSpacingSeparated();
+				//if (ui.BeginTree("ENABLERS", false))
+				{
+					SurfingGuiTypes s = OFX_IM_CHECKBOX;
+
+					if (ui.AddButton("All", OFX_IM_BUTTON, 2, true))
+					{
+						for (int i = 0; i < bEnablerOuts.size(); i++) bEnablerOuts[i] = true;
+					}
+					if (ui.AddButton("None", OFX_IM_BUTTON, 2))
+					{
+						for (int i = 0; i < bEnablerOuts.size(); i++) bEnablerOuts[i] = false;
+					}
+
+					for (int i = 0; i < getOutEnablersSize(); i++)
+					{
+						ui.Add(getOutEnabler(i), s);
+					}
+
+					//WIP
+					/*
+					for (int i = 0; i < getOutEnablersSize(); i++)
+					{
+						static bool b0 = false;
+						static bool b1 = false;
+						static bool b2 = false;
+						static bool b3 = false;
+
+						if (i == 0) b0 = ui.BeginTree("BANGS");
+						else if (i == NUM_BANGS) b1 = ui.BeginTree("TOGGLES");
+						else if (i == NUM_BANGS + NUM_TOGGLES) b2 = ui.BeginTree("VALUES");
+						else if (i == NUM_BANGS + NUM_TOGGLES + NUM_VALUES) b3 = ui.BeginTree("NUMBERS");
+
+						if (i < NUM_BANGS && !b0) continue;
+						else if (i < NUM_BANGS + NUM_TOGGLES && !b1) continue;
+						else if (i < NUM_BANGS + NUM_TOGGLES + NUM_VALUES && !b2) continue;
+						else if (i < NUM_BANGS + NUM_TOGGLES + NUM_VALUES + NUM_NUMBERS && !b3) continue;
+
+						ui.Add(getOutEnabler(i), s);
+
+						if (i == NUM_BANGS - 1 && b0) ui.EndTree();
+						else if (i == NUM_BANGS + NUM_TOGGLES - 1 && b1) ui.EndTree();
+						else if (i == NUM_BANGS + NUM_TOGGLES + NUM_VALUES - 1 && b2) ui.EndTree();
+						else if (i == NUM_BANGS + NUM_TOGGLES + NUM_VALUES + NUM_NUMBERS - 1 && b3) ui.EndTree();
+					}
+					*/
+
+					//ui.EndTree();
+				}
+			}
+
+			if (bIsSpecial) ui.EndWindowSpecial();
+			else ui.EndWindow();
+		}
+	}
+
+	//--
+
+	ui.DrawWindowLogIfEnabled();
 }
 #endif
 
@@ -1666,7 +1696,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 		ofxTextFlow::setShowing(bGui_LogFlow);
 
 		return;
-}
+	}
 #endif
 
 	//--
@@ -1812,7 +1842,7 @@ void ofxSurfingOsc::refreshGui()
 	else
 	{
 		gm.minimize();
-}
+	}
 #endif
 
 	//--
@@ -1842,7 +1872,7 @@ void ofxSurfingOsc::refreshGui()
 	//{
 	//	go.minimize();
 	//}
-		}
+}
 
 //--------------------------------------------------------------
 void ofxSurfingOsc::keyPressed(ofKeyEventArgs& eventArgs)
@@ -1864,7 +1894,7 @@ void ofxSurfingOsc::keyPressed(ofKeyEventArgs& eventArgs)
 #ifdef USE_TEXT_FLOW
 	else if (key == OF_KEY_BACKSPACE) {
 		ofxTextFlow::clear();
-}
+	}
 #endif
 }
 
@@ -2338,7 +2368,7 @@ void ofxSurfingOsc::setupReceiveLogger()
 					ofLogNotice("ofxSurfingOsc") << "OSC \t" << msgString;
 
 #ifdef USE_IM_GUI
-					if (!bskip) ui->AddToLog(msgString);
+					if (!bskip) ui.AddToLog(msgString);
 #endif
 
 #ifdef USE_TEXT_FLOW
@@ -2374,6 +2404,7 @@ void ofxSurfingOsc::Changed_Tar_Bangs(ofAbstractParameter& e) // preset load/tri
 
 			// Plot
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
+			//if (bEnablerOuts[i])
 			bangRects[i].bang();
 
 			//TODO: 
@@ -2404,8 +2435,15 @@ void ofxSurfingOsc::Changed_Tar_Toggles(ofAbstractParameter& e)
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 			// first toggle (e.g: gist note)
 			//if (b) { togglesRects[i].bang(); }
+
 			if (b) { togglesRects[i].toggle(true); }
 			else { togglesRects[i].toggle(false); }
+
+			/*
+			if (bEnablerOuts[i + NUM_BANGS])
+				if (b) { togglesRects[i].toggle(true); }
+				else { togglesRects[i].toggle(false); }
+			*/
 #endif
 			return;
 		}
@@ -2645,21 +2683,31 @@ void ofxSurfingOsc::updatePlots() {
 		_end = NUM_BANGS;
 		if (i >= _start && i < _end)
 			plotsTargets[i]->update(bBangs[i]); // ?
+			//plotsTargets[i]->update(bBangs[i] && bEnablerOuts[i]); // ?
 
 		_start = _end;
 		_end = _start + NUM_TOGGLES;
 		if (i >= _start && i < _end)
 			plotsTargets[i]->update(bToggles[i - _start]);
+			//plotsTargets[i]->update(bToggles[i - _start] && bEnablerOuts[i]);
 
 		_start = _end;
 		_end = _start + NUM_VALUES;
 		if (i >= _start && i < _end)
 			plotsTargets[i]->update(values[i - _start]);
+		/*
+			if (bEnablerOuts[i]) plotsTargets[i]->update(values[i - _start]);
+			else plotsTargets[i]->update(0);//bypass
+		*/
 
 		_start = _end;
 		_end = _start + NUM_NUMBERS;
 		if (i >= _start && i < _end)
 			plotsTargets[i]->update(numbers[i - _start]);
+		/*
+			if (bEnablerOuts[i]) plotsTargets[i]->update(numbers[i - _start]);
+			else plotsTargets[i]->update(0);//bypass
+		*/
 	}
 }
 
@@ -2828,6 +2876,8 @@ void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
 			if (i >= _start && i < _end) {
 				float v = values[ii];
 
+				//if (!bEnablerOuts[i]) v = 0;//bypass
+
 				//valuesBars[i].setEnableBorder(!bIsSmall);
 
 				valuesBars[ii].draw(
@@ -2846,6 +2896,8 @@ void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
 
 			if (i >= _start && i < _end) {
 				int v = numbers[ii];
+
+				//if (!bEnablerOuts[i]) v = 0;//bypass
 
 				//numbersBars[i].setEnableBorder(!bIsSmall);
 
@@ -3011,10 +3063,18 @@ void ofxSurfingOsc::updatePatchingManager() {
 
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
 //--------------------------------------------------------------
-void ofxSurfingOsc::doTesterRandom()
+void ofxSurfingOsc::doTesterRandomPlay()
 {
 	// Timed Randomizer
 	if (bRandomize && ofGetFrameNum() % 6 == 0)
+	{
+		doTesterRandom();
+	}
+}
+//--------------------------------------------------------------
+void ofxSurfingOsc::doTesterRandom()
+{
+	// Timed Randomizer
 	{
 		static bool b = false;
 		if (ofGetFrameNum() % 60 == 0) b = !b;
