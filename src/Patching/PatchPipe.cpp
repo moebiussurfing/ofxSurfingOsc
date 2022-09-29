@@ -48,7 +48,7 @@ void PatchPipeValue::setup(string name, bool bNormalized)
 	params_Extra.add(params_Map);
 
 	params_Extra.add(bSmooth.set("SMOOTH", false));
-	params_Extra.add(smoothVal.set("POWER", 0.01, 0.01, 1));
+	params_Extra.add(smoothVal.set("POWER", 0.0, 0.0f, 1));
 	//params.add(bClamp.set("CLAMP", true));
 
 	params.add(params_Extra);
@@ -105,12 +105,14 @@ void PatchPipeValue::setup(string name, bool bNormalized)
 
 	// Startup
 
+	/*
 	// Filter oneEuro
 	frequency = (float)FREQ_FILTER_REF; // Hz
 	double mincutoff = 1.0; // FIXME
 	double beta = 1.0;      // FIXME
 	double dcutoff = 1.0;   // this one should be ok
 	filter.setup(frequency, mincutoff, beta, dcutoff);
+	*/
 
 	// Filter biquad
 	//filter.setType(OFX_BIQUAD_TYPE_LOWPASS);
@@ -122,16 +124,37 @@ void PatchPipeValue::setup(string name, bool bNormalized)
 void PatchPipeValue::update() {
 
 	// Filter
-	if (bSmooth) 
+	static float o_;
+	float o = output.get();
+
+	if (bSmooth)
 	{
+		float s = ofMap(smoothVal.get(), 0, 1, SMOOTH_MIN, SMOOTH_MAX);
+		ofxKuValueSmooth(o, tempInput, s);
+
+		if (o != o_) {//changed
+			o_ = o;
+			output.set(o);
+		}
+		else output.setWithoutEventNotifications(o);
+
+		/*
 		// oneEuro
-		output = filter.filter(tempOut, ofGetElapsedTimef());
+		output = filter.filter(tempInput, ofGetElapsedTimef());
+		*/
 
 		// biquad
-		//filter.update(tempOut);
+		//filter.update(tempInput);
 		//output = filter.value();
 	}
-	else output = tempOut;
+	else
+	{
+		if (tempInput != o_) {//changed
+			o_ = tempInput;
+			output.set(tempInput);
+		}
+		else output.setWithoutEventNotifications(o);
+	}
 }
 
 //--------------------------------------------------------------
@@ -153,19 +176,21 @@ void PatchPipeValue::recalculate()
 	if (enable)
 	{
 		// 1. Map / clamp
-		tempOut = ofMap(input, minInput, maxInput, minOutput, maxOutput, bClamp);
+		tempInput = ofMap(input, minInput, maxInput, minOutput, maxOutput, bClamp);
 
 		// 2. Smooth filter
 
+		/*
 		// OneEuro
 		filter.setMinCutoff(smoothVal * frequency);
 		//filter.setBeta(smoothVal);
 		//filter.setDerivateCutoff(smoothVal);
+		*/
 
 		// Biquad
 		//filter.setFc(smoothVal);
 
-		//ofLogNotice(__FUNCTION__) << "output: " << ofToString(output);
+		//ofLogVerbose(__FUNCTION__) << "output: " << ofToString(output);
 	}
 }
 
