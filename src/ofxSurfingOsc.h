@@ -10,6 +10,8 @@
 			notice that could not correlate target params 
 				to externally added params instead of default targets!
 
+	+		add selector to draw plots from in/out/smoothed
+
 	PATCHING MANAGER
 	+		move all classes to https://github.com/moebiussurfing/ofxPatchbayParams	
 	+ 		look @daan example!
@@ -31,7 +33,7 @@
 	++		API: we should make a queuer to OSC messages faster:
 				auto assigning the names depending of his type.
 				API like: addBool(); so params are in oscHelper
-					and we put getters un ofApp::update() like @dimitris GUI...
+					and we put getters on ofApp::update() like @dimitris GUI...
 				add method add grouped of params (faster) or any param type (only bool/int/float for now)
 					sequentially adding params splitting on bool/float/int types
 					should use kind of map/pairs/smartPointers/msaOrderedMap to store all added params?
@@ -89,6 +91,7 @@
 #define NUM_TOGGLES 8
 #define NUM_VALUES 8
 #define NUM_NUMBERS 8
+
 
 //-----------------------
 
@@ -159,6 +162,12 @@ private:
 	void update(); // only required to plotting
 	void draw();
 
+	//--
+
+	int durationBangsTrue = 20; // ms visible on the button
+	//int durationBangsTrue = 2 * 1/60.f;//x frames // smaller
+	//int durationBangsTrue = 100;
+	 
 	//--
 
 public:
@@ -648,9 +657,6 @@ private:
 
 	// mantain bangs enable for a short time to ui display purposes
 	int t_bBangs[NUM_BANGS];
-	int durationBangsTrue = 17; // ms visible on the button
-	//int durationBangsTrue = 2 * 1/60.f;//x frames // smaller
-	//int durationBangsTrue = 100;
 
 	//--
 

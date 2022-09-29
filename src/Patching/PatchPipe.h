@@ -2,16 +2,12 @@
 
 #include "ofMain.h"
 
+//--
+
 // Smoothing
 
-//#include "ofxBiquadFilter.h"
-/*
-#include "ofxOneEuroFilter.h"
-#define FREQ_FILTER_REF 3
-*/
-
-#define SMOOTH_MIN 0.35f
-#define SMOOTH_MAX 0.935f
+#define SMOOTH_MIN 0.600f
+#define SMOOTH_MAX 0.980f
 
 template <typename T>
 void ofxKuValueSmooth(T& value, T target, float smooth) {
@@ -24,18 +20,12 @@ void ofxKuValueSmoothDirected(T& value, T target, float smooth0, float smooth1) 
 	ofxKuValueSmooth(value, target, smooth);
 }
 */
-/*
-#include "ofxOneEuroFilter.h"
-#define FREQ_FILTER_REF 5
-*/
 
 //--
 
 class PatchPipeBool
 {
 public:
-
-	//double frequency;
 
 	PatchPipeBool::PatchPipeBool() {};
 	PatchPipeBool::~PatchPipeBool() {};
@@ -47,13 +37,6 @@ public:
 		params.add(enable.set("ENABLE", true));
 		params.add(solo.set("SOLO", false));
 		params.add(output.set("OUTPUT", false));
-
-		/*
-		//params.add(bSmooth.set("SMOOTH ENABLE", false));
-		//params.add(smoothVal.set("SMOOTH POWER", 0.1, 0.01, 1));
-		params.add(bSmooth.set("SMOOTH", false));
-		params.add(smoothVal.set("POWER", 0.1, 0.01, 1));
-		*/
 
 		// exclude
 		input.setSerializable(false);
@@ -71,16 +54,6 @@ public:
 		listeners.push(input.newListener([&](bool& b) {
 			recalculate();
 			}));
-
-		/*
-		//TODO:
-		// filter oneEuro
-		frequency = (float)FREQ_FILTER_REF; // Hz
-		double mincutoff = 1.0; // FIXME
-		double beta = 1.0;      // FIXME
-		double dcutoff = 1.0;   // this one should be ok
-		filter.setup(frequency, mincutoff, beta, dcutoff);
-		*/
 	}
 
 	ofParameterGroup params;
@@ -89,13 +62,6 @@ public:
 	ofParameter<bool> input;
 	ofParameter<bool> output;
 
-	/*
-	//TODO:
-	ofxOneEuroFilter filter;
-	ofParameter<bool> bSmooth;
-	ofParameter<float> smoothVal;
-	*/
-
 	//-
 
 	ofEventListeners listeners;
@@ -103,42 +69,12 @@ public:
 	//TODO:
 	void update()
 	{
-		/*
-		if (enable)
-		{
-			if (bSmooth)
-			{
-				// oneEuro
-				float tempIn = (input ? 1.0 : 0.0);
-				float tempInput = filter.filter(tempIn, ofGetElapsedTimef());
-				if (tempInput > 0.8) output = true;
-				else output = false;
-			}
-		}
-		*/
+		if (enable) output = input;
 	}
 
 	void recalculate()
 	{
-		output = input;
-
-		/*
-		if (enable)
-		{
-			if (!bSmooth)
-			{
-				output = input;
-			}
-		}
-
-		// oneEuro
-		if (bSmooth)
-		{
-			filter.setMinCutoff(smoothVal * frequency);
-			//filter.setBeta(smoothVal);
-			//filter.setDerivateCutoff(smoothVal);
-		}
-		*/
+		if (enable) output = input;
 
 		////ofLogVerbose(__FUNCTION__) << "output: " << ofToString(output);
 	}
@@ -159,13 +95,6 @@ private:
 	float inputMaxRange;
 	float outMinRange;
 	float outMaxRange;
-
-	/*
-	// filter / smooth
-	ofxOneEuroFilter filter;
-	double frequency;
-	//ofxBiquadFilter1f filter;
-	*/
 
 	float tempInput;
 

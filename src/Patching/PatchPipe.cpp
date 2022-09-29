@@ -23,8 +23,6 @@ void PatchPipeValue::setup(string name, bool bNormalized)
 	{
 		inputMinRange = 0;
 		inputMaxRange = 127;
-		//outMinRange = -100;
-		//outMaxRange = 100;
 		outMinRange = 0;
 		outMaxRange = 1000;
 	}
@@ -100,24 +98,6 @@ void PatchPipeValue::setup(string name, bool bNormalized)
 	listeners.push(maxOutput.newListener([&](float& f) {
 		recalculate();
 		}));
-
-	//--
-
-	// Startup
-
-	/*
-	// Filter oneEuro
-	frequency = (float)FREQ_FILTER_REF; // Hz
-	double mincutoff = 1.0; // FIXME
-	double beta = 1.0;      // FIXME
-	double dcutoff = 1.0;   // this one should be ok
-	filter.setup(frequency, mincutoff, beta, dcutoff);
-	*/
-
-	// Filter biquad
-	//filter.setType(OFX_BIQUAD_TYPE_LOWPASS);
-	//filter.setFc(smoothVal);
-	//0.1 sets the cutoff frequency to 1/10 of the framerate
 }
 
 //--------------------------------------------------------------
@@ -137,15 +117,6 @@ void PatchPipeValue::update() {
 			output.set(o);
 		}
 		else output.setWithoutEventNotifications(o);
-
-		/*
-		// oneEuro
-		output = filter.filter(tempInput, ofGetElapsedTimef());
-		*/
-
-		// biquad
-		//filter.update(tempInput);
-		//output = filter.value();
 	}
 	else
 	{
@@ -177,18 +148,6 @@ void PatchPipeValue::recalculate()
 	{
 		// 1. Map / clamp
 		tempInput = ofMap(input, minInput, maxInput, minOutput, maxOutput, bClamp);
-
-		// 2. Smooth filter
-
-		/*
-		// OneEuro
-		filter.setMinCutoff(smoothVal * frequency);
-		//filter.setBeta(smoothVal);
-		//filter.setDerivateCutoff(smoothVal);
-		*/
-
-		// Biquad
-		//filter.setFc(smoothVal);
 
 		//ofLogVerbose(__FUNCTION__) << "output: " << ofToString(output);
 	}
