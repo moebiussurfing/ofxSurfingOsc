@@ -313,7 +313,7 @@ void ofxSurfingOsc::initiate()
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
 
 	// Setup param Targets
-	setupTargets();
+	setupOutputSenders();
 
 	//--
 
@@ -2040,7 +2040,7 @@ void ofxSurfingOsc::noteOut(int note, bool state)
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
 
 //--------------------------------------------------------------
-void ofxSurfingOsc::setupTargets()
+void ofxSurfingOsc::setupOutputSenders()
 {
 	ofLogNotice("ofxSurfingOsc") << (__FUNCTION__);
 
@@ -2487,7 +2487,7 @@ void ofxSurfingOsc::Changed_Tar_Bangs(ofAbstractParameter& e) // preset load/tri
 		if (name == "BANG_" + ofToString(i) && bBangs[i])
 		{
 			// Bang
-			ofLogNotice("ofxSurfingOsc") << (__FUNCTION__) << "BANGS\t[" << ofToString(i) << "] " << "BANG";
+			ofLogNotice("ofxSurfingOsc") << (__FUNCTION__) << "\t BANGS   \t[" << ofToString(i) << "] " << "BANG";
 
 			// Plot
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
@@ -2516,7 +2516,7 @@ void ofxSurfingOsc::Changed_Tar_Toggles(ofAbstractParameter& e)
 		{
 			// State
 			bool b = bToggles[i].get();
-			ofLogNotice("ofxSurfingOsc") << (__FUNCTION__) << "TOGGLE\t[" << ofToString(i) << "] " << (b ? "ON" : "OFF");
+			ofLogNotice("ofxSurfingOsc") << (__FUNCTION__) << "\t TOGGLE \t[" << ofToString(i) << "] " << (b ? "ON" : "OFF");
 
 			// Plot
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
@@ -2549,7 +2549,7 @@ void ofxSurfingOsc::Changed_Tar_Values(ofAbstractParameter& e)
 		if (name == "VALUE_" + ofToString(i))
 		{
 			// Values
-			ofLogNotice("ofxSurfingOsc") << (__FUNCTION__) << "VALUE\t[" << ofToString(i) << "] " << values[i];
+			ofLogNotice("ofxSurfingOsc") << (__FUNCTION__) << "\t VALUE   \t[" << ofToString(i) << "] " << values[i];
 
 			return;
 		}
@@ -2568,7 +2568,7 @@ void ofxSurfingOsc::Changed_Tar_Numbers(ofAbstractParameter& e)
 		if (name == "NUMBER_" + ofToString(i))
 		{
 			// numbers
-			ofLogNotice("ofxSurfingOsc") << (__FUNCTION__) << "NUMBER\t[" << ofToString(i) << "] " << numbers[i];
+			ofLogNotice("ofxSurfingOsc") << (__FUNCTION__) << "\t NUMBER \t[" << ofToString(i) << "] " << numbers[i];
 
 			return;
 		}

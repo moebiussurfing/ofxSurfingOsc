@@ -33,7 +33,7 @@ void ofApp::setupOsc()
 {
 	oscHelper.enablePatchingManager();
 
-	//oscHelper.setCustomTemplate(true);//must call before setup!
+	//oscHelper.setCustomTemplate(true);//WIP: must call before setup!
 	//oscHelper.enableGuiInternalAllow();
 	
 	oscHelper.setup(ofxSurfingOsc::Slave);

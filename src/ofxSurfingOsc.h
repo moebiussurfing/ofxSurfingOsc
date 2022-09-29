@@ -292,6 +292,16 @@ private:
 public:
 
 	void drawImGui();
+	// NOTE that only populate the window and their widgets. 
+	// Requires ImGui instantiated externally!
+	// Example
+	/*
+	ui.Begin();
+	{
+		oscHelper.drawImGui();
+	}
+	ui.End();
+	*/
 
 #endif
 
@@ -633,7 +643,7 @@ private:
 
 private:
 
-	void setupTargets();
+	void setupOutputSenders();
 
 	bool bDone_SetupTargets = false;
 

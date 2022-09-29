@@ -362,7 +362,7 @@ void PatchingManager::refreshPreview() {
 //--------------------------------------------------------------
 void PatchingManager::setupPreview() {
 
-	//default styles
+	// default styles
 	for (int i = 0; i < NUM_BANGS; i++)
 	{
 		//previewBangs[i].setColor(ofColor::green);
@@ -417,6 +417,15 @@ void PatchingManager::setupPreview() {
 		previewValues[7].setColor(OF_COLOR_WIDGETS);
 	}
 	*/
+
+	//TODO:
+	// Customize
+	// Bpm
+	if (bCustomTemplate)
+	{
+		previewValues[7].setValueMin(40);
+		previewValues[7].setValueMax(300);
+	}
 }
 
 //--------------------------------------------------------------
@@ -462,14 +471,14 @@ void PatchingManager::updatePreview()
 		previewNumbers[i].setValueMax(pipeNumbers[i].maxOutput);
 	}
 
-	//TODO:
-	// Customize
-	// Bpm
-	if (bCustomTemplate)
-	{
-		previewValues[7].setValueMin(40);
-		previewValues[7].setValueMax(300);
-	}
+	////TODO:
+	//// Customize
+	//// Bpm
+	//if (bCustomTemplate)
+	//{
+	//	previewValues[7].setValueMin(40);
+	//	previewValues[7].setValueMax(300);
+	//}
 }
 
 //--------------------------------------------------------------
@@ -492,8 +501,8 @@ void PatchingManager::drawPreview() {
 	ofPushStyle();
 	{
 		// Bg box
-		ofFill();
 		ofPushStyle();
+		ofFill();
 		ofSetColor(OF_COLOR_BG_PANELS);
 		ofDrawRectRounded(boxWidgets.getRectangle(), 5);
 		boxWidgets.draw();
@@ -505,13 +514,11 @@ void PatchingManager::drawPreview() {
 
 		for (int i = 0; i < NUM_BANGS; i++)
 		{
-			//previewBangs[i].update();
 			previewBangs[i].draw();
 		}
 
 		for (int i = 0; i < NUM_TOGGLES; i++)
 		{
-			//previewToggles[i].update();
 			previewToggles[i].draw();
 		}
 
