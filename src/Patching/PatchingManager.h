@@ -121,11 +121,8 @@ private:
 	float gapratio = 0.01f;//->used responsive
 
 	bool bGui_Preview = true;
-	//--------------------------------------------------------------
-	void setVisiblePreview(bool b)
-	{
-		bGui_Preview = b;
-	}
+
+private:
 
 	void setupPreview();
 	void refreshPreview();
@@ -136,5 +133,16 @@ private:
 	RectBeat previewToggles[NUM_TOGGLES];
 	BarValue previewValues[NUM_VALUES];
 	BarValue previewNumbers[NUM_NUMBERS];
+
+public:
+
+	void setupStyleWidget(int index, ofColor color);
+
+	//--------------------------------------------------------------
+	void setVisiblePreview(bool b)
+	{
+		bGui_Preview = b;
+	}
+
 };
 

@@ -348,6 +348,17 @@ void ofxSurfingOsc::initiate()
 //----------------------------------------------------
 void ofxSurfingOsc::startupDelayed()
 {
+
+	//----
+
+	// Customize special plots
+	// Template is for my ofxSoundAnalyzer add-on
+
+	if (bCustomTemplate)
+	{
+		setupPlotsCustomTemplate();
+	}
+
 	//----
 
 	// Load Settings
@@ -1437,12 +1448,7 @@ void ofxSurfingOsc::drawImGui()
 				if (!bDone) {
 					bDone = true;
 
-					//ui.ClearStyles();//-> note that this will clear all other styles added around!
-					//ui.AddStyle("POWER", OFX_IM_HSLIDER_MINI);
-					//ui.AddStyle("POWER", OFX_IM_STEPPER);//fix
-
 					ui.UpdateStyle("SMOOTH", OFX_IM_TOGGLE_ROUNDED_MINI);
-
 					ui.UpdateStyle("ENABLE", bMinimize_ ? OFX_IM_HIDDEN : OFX_IM_TOGGLE_SMALL_BORDER_BLINK);
 					ui.UpdateStyleGroup("MAP", bMinimize_ ? SurfingGuiGroupStyle_Hidden : SurfingGuiGroupStyle_None);
 					ui.UpdateStyleGroup("EXTRA", bMinimize_ ? SurfingGuiGroupStyle_NoHeader : SurfingGuiGroupStyle_None);
@@ -1469,7 +1475,7 @@ void ofxSurfingOsc::drawImGui()
 //--------------------------------------------------------------
 void ofxSurfingOsc::exit()
 {
-	ofLogWarning("ofxSurfingOsc") << (__FUNCTION__);
+	ofLogNotice("ofxSurfingOsc") << (__FUNCTION__);
 
 	ofRemoveListener(params_AppSettings.parameterChangedE(), this, &ofxSurfingOsc::Changed_Params);
 	ofRemoveListener(params_Osc.parameterChangedE(), this, &ofxSurfingOsc::Changed_Params);
@@ -1896,7 +1902,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 		return;
 	}
 #endif
-	}
+}
 
 //--------------------------------------------------------------
 void ofxSurfingOsc::refreshGui()
@@ -2457,8 +2463,8 @@ void ofxSurfingOsc::setupReceiveLogger()
 #endif
 				}
 			});
-		}
 	}
+}
 
 //--
 
@@ -2660,27 +2666,34 @@ void ofxSurfingOsc::setupPlotsCustomTemplate()
 	// Bang 1 
 	s.name = "BEAT";
 	s.target = plotTarget_Bang;
-	s.index = 0 + 1;
+	s.index = 0;
 	//s.index = mapPlots[0] + 1;
-	//s.index = 1;
 	s.color = ofColor(ofColor::white, _a);
 	setupPlotCustom(s);
 
-	//-
+#ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
+	patchingManager.setupStyleWidget(0, s.color);
+#endif
+
+	//--
 
 	// Bang 2 
 	s.name = "SIGNAL_0";
 	s.target = plotTarget_Bang;
-	s.index = 1 + 1;
+	s.index = 1;
 	s.color = ofColor(ofColor::turquoise, _a);
 	setupPlotCustom(s);
+
+#ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
+	patchingManager.setupStyleWidget(1, s.color);
+#endif
 
 	//--
 
 	// Bang 3 
 	s.name = "SIGNAL_1";
 	s.target = plotTarget_Bang;
-	s.index = 1 + 2;
+	s.index = 2;
 	s.color = ofColor(ofColor::orange, _a);
 	setupPlotCustom(s);
 
@@ -2690,14 +2703,13 @@ void ofxSurfingOsc::setupPlotsCustomTemplate()
 
 	s.name = "SIGNAL_0";
 	s.target = plotTarget_Value;
-	s.index = 1;
+	s.index = 0;
 	s.color = ofColor(ofColor::turquoise, _a);
 	setupPlotCustom(s);
 
 	s.name = "SIGNAL_1";
 	s.target = plotTarget_Value;
-	//s.index = 2;
-	s.index = 1 + 1;
+	s.index = 1;
 	s.color = ofColor(ofColor::orange, _a);
 	setupPlotCustom(s);
 
@@ -2705,16 +2717,114 @@ void ofxSurfingOsc::setupPlotsCustomTemplate()
 	// Bpm
 	s.name = "BPM";
 	s.target = plotTarget_Value;
-	s.index = 1 + 2;
-	//s.index = 3;
+	s.index = 2;
 	s.range = glm::vec2(40, 240);//min, max
 	s.color = ofColor(ofColor::white, _a);
 	setupPlotCustom(s);
 }
 
 //--------------------------------------------------------------
+void ofxSurfingOsc::setupPlotCustom(plotStyle style)
+{
+	// BeatCircles
+	if (style.target == plotTarget_Bang)
+	{
+		int _start = 0;
+		int _i = _start + style.index;//related to style
+		ofColor _c = style.color;
+		plotsTargets[_i]->setVariableName(style.name);
+		plotsTargets[_i]->setColor(_c);
+		plotsTargets_Visible[_i] = true;
+
+		bangRects[_i].setColor(_c);
+
+#ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
+		patchingManager.setupStyleWidget(_i, _c);
+#endif
+	}
+
+	// Toggles
+	if (style.target == plotTarget_Toggle)
+	{
+		int _start = NUM_BANGS;
+		int _i = _start + style.index;//related to style
+		ofColor _c = style.color;
+		plotsTargets[_i]->setVariableName(style.name);
+		plotsTargets[_i]->setColor(_c);
+		plotsTargets_Visible[_i] = true;
+
+		togglesRects[_i - _start].setColor(_c);
+
+#ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
+		patchingManager.setupStyleWidget(_i, _c);
+#endif
+
+	}
+
+	// Values
+	if (style.target == plotTarget_Value)
+	{
+		int _start = NUM_BANGS + NUM_TOGGLES;
+		int _i = _start + style.index;//related to style
+		float _min = style.range.x;
+		float _max = style.range.y;
+		if (_min == -1 && _max == -1) {//default
+			_min = 0;
+			_max = 1;
+		}
+		ofColor _c = style.color;
+		// plot
+		plotsTargets[_i]->setVariableName(style.name);
+		plotsTargets[_i]->setColor(_c);
+		plotsTargets_Visible[_i] = true;
+		plotsTargets[_i]->setRange(_min, _max);
+
+		// widget
+		int _ii = _i - _start;
+		valuesBars[_ii].setColor(_c);
+		valuesBars[_ii].setValueMin(_min);
+		valuesBars[_ii].setValueMax(_max);
+
+#ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
+		patchingManager.setupStyleWidget(_i, _c);
+#endif
+	}
+
+	// Numbers
+	if (style.target == plotTarget_Number)
+	{
+		int _start = NUM_BANGS + NUM_TOGGLES + NUM_VALUES;
+		int _i = _start + style.index;//related to style
+		int _min = style.range.x;
+		int _max = style.range.y;
+		if (_min == -1 && _max == -1) {//default
+			_min = 0;
+			_max = 1;
+		}
+		ofColor _c = style.color;
+		// plot
+		plotsTargets[_i]->setVariableName(style.name);
+		plotsTargets[_i]->setColor(_c);
+		plotsTargets_Visible[_i] = true;
+		plotsTargets[_i]->setRange(_min, _max);
+
+		// widget
+		int _ii = _i - _start;
+		numbersBars[_ii].setColor(_c);
+		numbersBars[_ii].setValueMin(_min);
+		numbersBars[_ii].setValueMax(_max);
+
+#ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
+		patchingManager.setupStyleWidget(_i, _c);
+#endif
+	}
+}
+
+//--------------------------------------------------------------
 void ofxSurfingOsc::setupPlots()
 {
+	ofLogNotice("ofxSurfingOsc") << (__FUNCTION__);
+	
 	//--
 
 	//TODO:
@@ -2732,14 +2842,17 @@ void ofxSurfingOsc::setupPlots()
 	}
 
 	//----
-
+	
+	//TODO:
+	//moved to startup..
 	// Customize special plots
 	// Template is for my ofxSoundAnalyzer add-on
-
+	/*
 	if (bCustomTemplate)
 	{
 		setupPlotsCustomTemplate();
 	}
+	*/
 
 	//----
 

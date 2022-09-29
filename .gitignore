@@ -564,3 +564,5 @@ MigrationBackup/
 .ionide/
 Examples/example_Osc_Master/enc_temp_folder/308f7844c05fdcde28b5f31334ed236/ofxSurfingOsc.cpp
 Examples/3-example_Osc_SlavePatching/enc_temp_folder/a31e81c960dbf9a8ca592b540fc45ec/ofxSurfingOsc.cpp
+Examples-ImGui/3-example_Osc_ImGui-SlavePatching/enc_temp_folder/821f28d93a44286da1b3e0597fe4332b/ofxSurfingOsc.cpp
+Examples-ImGui/3-example_Osc_ImGui-SlavePatching/enc_temp_folder/9a8c7a9c1dc779b7e822e39b614afd2/ofApp.cpp

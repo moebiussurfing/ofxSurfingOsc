@@ -8,7 +8,6 @@
 #include "ofxSurfingImGui.h"
 #include "ofxWindowApp.h"
 
-
 class ofApp : public ofBaseApp
 {
 public:
@@ -43,12 +42,15 @@ public:
 #ifdef USE_local_Targets
 
 	ofParameter<bool> bBypass{ "ByPass", false };
-	//ofParameter<bool> bRandom{ "Randomizer", false };
 
 	//--
 
 	void setupTargets();
-	//void setupReceivers();
+
+	void Changed_Bangs(ofAbstractParameter& e);
+	void Changed_Toggles(ofAbstractParameter& e);
+	void Changed_Values(ofAbstractParameter& e);
+	void Changed_Numbers(ofAbstractParameter& e);
 
 	//--
 	/*
@@ -61,7 +63,6 @@ public:
 
 	// Bool Bangs / Triggers
 
-#define NUM_BANGS 8
 	ofParameterGroup params_Bangs;
 	ofParameter<bool> bBangs[NUM_BANGS];
 	string bangsNames[NUM_BANGS];
@@ -70,7 +71,6 @@ public:
 
 	// Bool Toggles / States-on/off
 
-#define NUM_TOGGLES 8
 	ofParameterGroup params_Toggles;
 	ofParameter<bool> bToggles[NUM_TOGGLES];
 	string togglesNames[NUM_TOGGLES];
@@ -79,7 +79,6 @@ public:
 
 	// Float Values
 
-#define NUM_VALUES 8
 	ofParameterGroup params_Values;
 	ofParameter<float> values[NUM_VALUES];
 	string valuesNames[NUM_VALUES];
@@ -88,16 +87,10 @@ public:
 
 	// Int Numbers
 
-#define NUM_NUMBERS 8
 	ofParameterGroup params_Numbers;
 	ofParameter<int> numbers[NUM_NUMBERS];
 	string numberNames[NUM_NUMBERS];
 	*/
-
-	void Changed_Bangs(ofAbstractParameter& e);
-	void Changed_Toggles(ofAbstractParameter& e);
-	void Changed_Values(ofAbstractParameter& e);
-	void Changed_Numbers(ofAbstractParameter& e);
 #endif
 
 };

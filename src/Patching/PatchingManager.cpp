@@ -362,6 +362,7 @@ void PatchingManager::refreshPreview() {
 //--------------------------------------------------------------
 void PatchingManager::setupPreview() {
 
+	//default styles
 	for (int i = 0; i < NUM_BANGS; i++)
 	{
 		//previewBangs[i].setColor(ofColor::green);
@@ -395,6 +396,7 @@ void PatchingManager::setupPreview() {
 
 	//--
 
+	/*
 	//TODO:
 	// Customize
 	// Template is for my ofxSoundAnalyzer add-on
@@ -413,6 +415,31 @@ void PatchingManager::setupPreview() {
 		previewValues[0].setColor(OF_COLOR_WIDGETS);
 		previewValues[1].setColor(OF_COLOR_WIDGETS);
 		previewValues[7].setColor(OF_COLOR_WIDGETS);
+	}
+	*/
+}
+
+//--------------------------------------------------------------
+void PatchingManager::setupStyleWidget(int i, ofColor color) {
+
+	if (i < NUM_BANGS)
+	{
+		previewBangs[i].setColor(color);
+	}
+	else if (i < NUM_BANGS + NUM_TOGGLES)
+	{
+		int start = NUM_BANGS;
+		previewToggles[i - start].setColor(color);
+	}
+	else if (i < NUM_BANGS + NUM_TOGGLES + NUM_VALUES)
+	{
+		int start = NUM_BANGS + NUM_TOGGLES;
+		previewValues[i - start].setColor(color);
+	}
+	else if (i < NUM_BANGS + NUM_TOGGLES + NUM_VALUES + NUM_NUMBERS)
+	{
+		int start = NUM_BANGS + NUM_TOGGLES + NUM_VALUES;
+		previewNumbers[i - start].setColor(color);
 	}
 }
 
@@ -478,13 +505,13 @@ void PatchingManager::drawPreview() {
 
 		for (int i = 0; i < NUM_BANGS; i++)
 		{
-			previewBangs[i].update();
+			//previewBangs[i].update();
 			previewBangs[i].draw();
 		}
 
 		for (int i = 0; i < NUM_TOGGLES; i++)
 		{
-			previewToggles[i].update();
+			//previewToggles[i].update();
 			previewToggles[i].draw();
 		}
 

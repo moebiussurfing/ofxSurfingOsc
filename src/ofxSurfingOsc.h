@@ -804,90 +804,13 @@ public:
 	{
 		plotTarget target;
 		ofColor color;
-		int index;//starting at 1 instead of 0
+		int index;//starting at 0
 		string name;
 		glm::vec2 range = glm::vec2(-1, -1);//min, max
 	};
 
 	//--------------------------------------------------------------
-	void setupPlotCustom(plotStyle style)
-	{
-		// BeatCircles
-		if (style.target == plotTarget_Bang)
-		{
-			int _start = 0;
-			int _i = _start + style.index;//related to style
-			ofColor _c = style.color;
-			plotsTargets[_i - 1]->setVariableName(style.name);
-			plotsTargets[_i - 1]->setColor(_c);
-			plotsTargets_Visible[_i - 1] = true;
-
-			bangRects[_i - 1].setColor(_c);
-		}
-
-		// Toggles
-		if (style.target == plotTarget_Toggle)
-		{
-			int _start = NUM_BANGS;
-			int _i = _start + style.index;//related to style
-			ofColor _c = style.color;
-			plotsTargets[_i - 1]->setVariableName(style.name);
-			plotsTargets[_i - 1]->setColor(_c);
-			plotsTargets_Visible[_i - 1] = true;
-
-			togglesRects[_i - 1 - _start].setColor(_c);
-		}
-
-		// Values
-		if (style.target == plotTarget_Value)
-		{
-			int _start = NUM_BANGS + NUM_TOGGLES;
-			int _i = _start + style.index;//related to style
-			float _min = style.range.x;
-			float _max = style.range.y;
-			if (_min == -1 && _max == -1) {//default
-				_min = 0;
-				_max = 1;
-			}
-			ofColor _c = style.color;
-			// plot
-			plotsTargets[_i - 1]->setVariableName(style.name);
-			plotsTargets[_i - 1]->setColor(_c);
-			plotsTargets_Visible[_i - 1] = true;
-			plotsTargets[_i - 1]->setRange(_min, _max);
-
-			// widget
-			int _ii = _i - 1 - _start;
-			valuesBars[_ii].setColor(_c);
-			valuesBars[_ii].setValueMin(_min);
-			valuesBars[_ii].setValueMax(_max);
-		}
-
-		// Numbers
-		if (style.target == plotTarget_Number)
-		{
-			int _start = NUM_BANGS + NUM_TOGGLES + NUM_VALUES;
-			int _i = _start + style.index;//related to style
-			int _min = style.range.x;
-			int _max = style.range.y;
-			if (_min == -1 && _max == -1) {//default
-				_min = 0;
-				_max = 1;
-			}
-			ofColor _c = style.color;
-			// plot
-			plotsTargets[_i - 1]->setVariableName(style.name);
-			plotsTargets[_i - 1]->setColor(_c);
-			plotsTargets_Visible[_i - 1] = true;
-			plotsTargets[_i - 1]->setRange(_min, _max);
-
-			// widget
-			int _ii = _i - 1 - _start;
-			numbersBars[_ii].setColor(_c);
-			numbersBars[_ii].setValueMin(_min);
-			numbersBars[_ii].setValueMax(_max);
-		}
-	}
+	void setupPlotCustom(plotStyle style);
 
 	//--
 

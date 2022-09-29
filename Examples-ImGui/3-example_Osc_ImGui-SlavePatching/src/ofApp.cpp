@@ -32,13 +32,15 @@ void ofApp::setup()
 void ofApp::setupOsc()
 {
 	oscHelper.enablePatchingManager();
-	//oscHelper.enableGuiInternalAllow();
+
 	//oscHelper.setCustomTemplate(true);//must call before setup!
+	//oscHelper.enableGuiInternalAllow();
 	
 	oscHelper.setup(ofxSurfingOsc::Slave);
 
 	//--
 
+	// Setup special addresses receivers
 	/*
 	string Osc_Address;
 	string tag = "1/";
