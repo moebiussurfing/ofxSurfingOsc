@@ -427,6 +427,19 @@ void ofxSurfingOsc::startupDelayed()
 
 		//--
 
+		//TODO: fix
+#ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
+		// Count enabled plots to enable hide the all not used
+		amountPlotsTargetsVisible = 0;
+		for (int _i = 0; _i < plotsTargets_Visible.size(); _i++)
+		{
+			// count how many are enabled
+			if (plotsTargets_Visible[_i]) amountPlotsTargetsVisible++;
+		}
+#endif
+
+		//--
+
 		buildHelp();
 	}
 
@@ -688,7 +701,7 @@ void ofxSurfingOsc::setupParams()
 		params_MIDI.add(MIDI_OutputPort);
 		params_MIDI.add(MIDI_OutPort_name);
 		MIDI_OutPort_name.setSerializable(false);
-	}
+}
 #endif
 
 #endif
@@ -1083,7 +1096,7 @@ void ofxSurfingOsc::update()
 			//plotsTargets[_start + i]->update(false);
 		}
 	}
-}
+	}
 
 //--------------------------------------------------------------
 void ofxSurfingOsc::update(ofEventArgs& args) {
@@ -1157,7 +1170,7 @@ void ofxSurfingOsc::draw()
 		mMidiParams.draw();
 		//mMidiParams.setVisible(true);
 		//mMidiParams.setVisible(true);
-	}
+}
 #endif
 
 	//--
@@ -1178,7 +1191,7 @@ void ofxSurfingOsc::draw()
 	{
 		posOSC = glm::vec2(p.x + w + 5, p.y);
 		widthOSC = 0;
-	}
+}
 	ofxTextFlow::setPosition(posOSC.x + widthOSC + 5, posOSC.y);
 #endif
 
@@ -1197,8 +1210,6 @@ void ofxSurfingOsc::draw()
 //--------------------------------------------------------------
 void ofxSurfingOsc::drawImGui()
 {
-	//if (ui == nullptr) return;
-
 	if (!bGui) return;
 
 	bool bIsSpecial = (ui.getModeSpecial() == IM_GUI_MODE_WINDOWS_SPECIAL_ORGANIZER);
@@ -1218,8 +1229,19 @@ void ofxSurfingOsc::drawImGui()
 			ui.Add(ui.bMinimize, OFX_IM_TOGGLE_ROUNDED);
 			ui.AddSpacingSeparated();
 
-			if (bUseOut) ui.Add(bGui_Enablers, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
+			if (bUseOut) {
+				ui.Add(bGui_Enablers, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
+				ui.AddTooltip("Enable which addresses\nyou want to be sent \nor ignored.");
+			}
 			ui.Add(bGui_Targets, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
+			string s = "All the controls will send OSC messages.\n";
+			s += "(if they are not in use!)\n";
+			s += "Can be use for testing purposes.\n\n";
+			s += "WIP \nSource commands can be patched\n";
+			s += "to map different destinations!\n\n";
+			s += "Example: \nFrom Enablers to different TARGETS.\n";
+			s += "Allowing different layouts.\n";
+			ui.AddTooltip(s);
 
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
 			if (bUse_PatchingManager) {
@@ -1798,7 +1820,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 		ofxTextFlow::setShowing(bGui_LogFlow);
 
 		return;
-	}
+}
 #endif
 
 	//--
@@ -2056,7 +2078,7 @@ void ofxSurfingOsc::noteOut(int note, bool state)
 	{
 		ofLogError() << __FUNCTION__ << "midi out port is closed!";
 	}
-	}
+}
 
 #endif
 
@@ -2488,8 +2510,8 @@ void ofxSurfingOsc::setupReceiveLogger()
 			ofxTextFlow::addText(msgString);
 #endif
 		}
-			});
-	}
+	});
+}
 }
 
 //--
@@ -2965,6 +2987,7 @@ void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
 			//_amount = _amountPlotsTargets;
 		}
 		else {
+			//amountPlotsTargetsVisible = 4;
 			plotHeight = (_h - 2 * plotMargin) / (float)amountPlotsTargetsVisible;
 			//_amount = amountPlotsTargetsVisible;
 		}
