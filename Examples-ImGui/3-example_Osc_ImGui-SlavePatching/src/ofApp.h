@@ -30,6 +30,8 @@ public:
 	ofParameter<bool> bBeat{ "Beat", false };
 	ofParameter<bool> bBang_0{ "Bang 0", false };
 	ofParameter<bool> bBang_1{ "Bang 1", false };
+	ofParameter<bool> bToggle_0{ "Toggle 0", false };
+	ofParameter<bool> bToggle_1{ "Toggle 1", false };
 
 	ofxWindowApp w;
 	string name;

@@ -17,9 +17,11 @@ void ofApp::setup()
 	params.add(val1);
 	params.add(val2);
 	params.add(bpm);
-	params.add(bBeat);
 	params.add(bBang_0);
 	params.add(bBang_1);
+	params.add(bBeat);
+	params.add(bToggle_0);
+	params.add(bToggle_1);
 
 	//--
 
@@ -35,7 +37,7 @@ void ofApp::setupOsc()
 
 	//oscHelper.setCustomTemplate(true);//WIP: must call before setup!
 	//oscHelper.enableGuiInternalAllow();
-	
+
 	oscHelper.setup(ofxSurfingOsc::Slave);
 
 	//--
@@ -68,23 +70,35 @@ void ofApp::setupGui()
 	// custom styles
 	{
 		ui.AddStyle(bpm, OFX_IM_HSLIDER_BIG);
-		SurfingGuiTypes type = OFX_IM_TOGGLE_BIG_XXXL_BORDER;
-		ui.AddStyle(bBeat, type);
-		ui.AddStyle(bBang_0, type);
-		ui.AddStyle(bBang_1, type);
+		SurfingGuiTypes type1 = OFX_IM_TOGGLE_BIG_XXXL_BORDER;
+		SurfingGuiTypes type2 = OFX_IM_HSLIDER;
+		ui.AddStyle(val0, type2);
+		ui.AddStyle(val1, type2);
+		ui.AddStyle(val2, type2);
+		ui.AddStyle(bBang_0, type1);
+		ui.AddStyle(bBang_1, type1);
+		ui.AddStyle(bBeat, type1);
+		ui.AddStyle(bToggle_0, type1);
+		ui.AddStyle(bToggle_1, type1);
 	}
 }
 
 //--------------------------------------------------------------
 void ofApp::update()
 {
+	//TODO:
+	//perform patching here
+
 	val0 = oscHelper.getOutValue(0);
 	val1 = oscHelper.getOutValue(1);
 	val2 = oscHelper.getOutValue(2);
 
-	bBeat = oscHelper.getOutBang(0);
-	bBang_0 = oscHelper.getOutBang(1);
-	bBang_1 = oscHelper.getOutBang(2);
+	bBang_0 = oscHelper.getOutBang(0);
+	bBang_1 = oscHelper.getOutBang(1);
+	bBeat = oscHelper.getOutBang(2);
+
+	bToggle_0 = oscHelper.getOutToggle(0);
+	bToggle_1 = oscHelper.getOutToggle(1);
 }
 
 //--------------------------------------------------------------
@@ -152,9 +166,9 @@ void ofApp::Changed_Bangs(ofAbstractParameter& e)//preset load/trig
 
 	ofParameter<bool> p = e.cast<bool>();
 
-	if (name == "BANG_1") bBeat = p.get();
-	else if (name == "BANG_2") bBang_0 = p.get();
-	else if (name == "BANG_3") bBang_1 = p.get();
+	if (name == "BANG_0") bBang_0 = p.get();
+	else if (name == "BANG_1") bBang_1 = p.get();
+	else if (name == "BANG_2") bBeat = p.get();
 
 	/*
 		for (int i = 0; i < NUM_BANGS - 1; i++)
@@ -215,6 +229,7 @@ void ofApp::Changed_Values(ofAbstractParameter& e)
 		if (name == "VALUE_1") {
 
 			bpm = p.get();
+			return;
 		}
 	}
 
@@ -224,7 +239,6 @@ void ofApp::Changed_Values(ofAbstractParameter& e)
 		if (name == "VALUE " + ofToString(i + 1))
 		{
 			ofLogNotice(__FUNCTION__) << "\tVALUE\t[" << ofToString(i + 1) << "] " << values[i];
-
 			return;
 		}
 	}

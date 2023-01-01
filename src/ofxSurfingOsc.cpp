@@ -528,7 +528,8 @@ void ofxSurfingOsc::setupParams()
 #endif
 
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
-	bGui_Targets.set("OSC TARGETS", true);
+	//bGui_Targets.set("OSC TARGETS", true);
+	bGui_Targets.set("TARGETS", true);
 #endif
 
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PARAMS
@@ -1015,12 +1016,24 @@ void ofxSurfingOsc::update()
 
 			if (bUseIn)
 			{
-				auto si = "OSC IN \n\n" + ofToString(ofxGetSubscribedAddresses(OSC_InputPort)) + "\n\n";
+#ifdef USE_IM_GUI
+				ui.AddToLog("OSC IN \n");
+				ui.AddToLog("addresses \n\n");
+#endif	
+				auto ss = ofxGetSubscribedAddresses(OSC_InputPort);
+#ifdef USE_IM_GUI
+				for (size_t i = 0; i < ss.size(); i++)
+				{
+					ui.AddToLog(ss[i]);
+				}
+#endif	
+				auto si = "OSC IN \n\n" + ofToString(ss) + "\n\n";
 				ofLogNotice("ofxSurfingOsc") << "OSC IN  Addresses: " << ofToString(si);
-
+				/*
 #ifdef USE_IM_GUI
 				ui.AddToLog(ofToString(si));
-#endif	
+#endif
+				*/
 			}
 
 			//--
@@ -1205,8 +1218,8 @@ void ofxSurfingOsc::drawImGui()
 			ui.Add(ui.bMinimize, OFX_IM_TOGGLE_ROUNDED);
 			ui.AddSpacingSeparated();
 
-			ui.Add(bGui_Targets, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
 			if (bUseOut) ui.Add(bGui_Enablers, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
+			ui.Add(bGui_Targets, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
 
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
 			if (bUse_PatchingManager) {
@@ -1216,10 +1229,16 @@ void ofxSurfingOsc::drawImGui()
 				ui.Add(bGui_PatchingManager, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
 				if (!ui.bMinimize)
 					if (patchingManager.bGui_InternalAllowed) ui.Add(bGui_Internal, OFX_IM_TOGGLE_ROUNDED_MINI);
-				ui.AddSpacingSeparated();
 			}
 #endif
+			ui.AddSpacingSeparated();
+
+			if (ui.bMinimize) {
+				ui.Add(bGui_Plots, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
+			}
+
 			ui.Add(ui.bLog, OFX_IM_TOGGLE_ROUNDED_SMALL);
+
 			ui.AddSpacingSeparated();
 
 			//--
@@ -1293,7 +1312,7 @@ void ofxSurfingOsc::drawImGui()
 				ui.AddSpacingSeparated();
 
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
-				ui.AddLabel("PLOTS");
+				ui.AddLabelBig("PLOTS");
 				ui.Indent();
 				ui.Add(bGui_Plots, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
 				ui.Add(bPlotsMini, OFX_IM_TOGGLE_ROUNDED_SMALL);
@@ -1301,15 +1320,21 @@ void ofxSurfingOsc::drawImGui()
 				ui.Unindent();
 				ui.AddSpacingSeparated();
 #endif					
-				if (ui.AddButton("Random", OFX_IM_BUTTON_SMALL)) {
-					for (size_t i = 0; i < 16; i++)
-					{
-						doTesterRandom();
-					}
-				};
-				ui.Add(bRandomize, OFX_IM_TOGGLE_SMALL_BORDER_BLINK);
-				ui.Add(bDebug, OFX_IM_TOGGLE_ROUNDED_MINI);
-				if (bGui_InternalAllowed) ui.Add(bGui_Internal, OFX_IM_TOGGLE_ROUNDED_MINI);
+				if (ui.BeginTree("TESTER")) {
+					if (ui.AddButton("Random", OFX_IM_BUTTON_SMALL)) {
+						for (size_t i = 0; i < 16; i++)
+						{
+							doTesterRandom();
+						}
+					};
+					ui.Add(bRandomize, OFX_IM_TOGGLE_SMALL_BORDER_BLINK);
+					ui.Add(bDebug, OFX_IM_TOGGLE_ROUNDED_MINI);
+					if (bGui_InternalAllowed) ui.Add(bGui_Internal, OFX_IM_TOGGLE_ROUNDED_MINI);
+					ui.EndTree();
+				}
+
+				ui.AddSpacingSeparated();
+
 				ui.Add(bHelp, OFX_IM_TOGGLE_ROUNDED_MINI);
 			}
 
@@ -1528,7 +1553,7 @@ void ofxSurfingOsc::exit()
 //--------------------------------------------------------------
 void ofxSurfingOsc::setInputPort(int p)
 {
-	ofLogVerbose("ofxSurfingOsc") << (__FUNCTION__) << "setInputPort: " << p;
+	ofLogVerbose("ofxSurfingOsc") << (__FUNCTION__) << " : " << p;
 	OSC_InputPort = p;
 	str_OSC_InputPort = ofToString(OSC_InputPort);
 }
@@ -1536,7 +1561,7 @@ void ofxSurfingOsc::setInputPort(int p)
 //--------------------------------------------------------------
 void ofxSurfingOsc::setOutputPort(int p)
 {
-	ofLogVerbose("ofxSurfingOsc") << (__FUNCTION__) << "setInputPort: " << p;
+	ofLogVerbose("ofxSurfingOsc") << (__FUNCTION__) << " : " << p;
 	OSC_OutputPort = p;
 	str_OSC_OutputPort = ofToString(OSC_OutputPort);
 }
@@ -1544,7 +1569,7 @@ void ofxSurfingOsc::setOutputPort(int p)
 //--------------------------------------------------------------
 void ofxSurfingOsc::setOutputIp(string ip)
 {
-	ofLogVerbose("ofxSurfingOsc") << (__FUNCTION__) << "setOutputIp: " << ip;
+	ofLogVerbose("ofxSurfingOsc") << (__FUNCTION__) << " : " << ip;
 	OSC_OutputIp = ip;
 }
 
@@ -1591,7 +1616,7 @@ void ofxSurfingOsc::addReceiver_Bool(ofParameter<bool>& p, string address)
 	{
 		ofxPublishOsc(OSC_OutputIp, OSC_OutputPort, address, p);
 	}
-}
+	}
 
 //--------------------------------------------------------------
 void ofxSurfingOsc::addReceiver_Int(ofParameter<int>& p, string address)
@@ -1864,7 +1889,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 		}
 
 		return;
-	}
+}
 
 #endif
 
@@ -1880,7 +1905,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 		//if (!bGui_OscHelper && bGui_LogFlow) bGui_OscHelper = true;
 
 		return;
-	}
+}
 #endif
 
 	//--
@@ -2031,7 +2056,7 @@ void ofxSurfingOsc::noteOut(int note, bool state)
 	{
 		ofLogError() << __FUNCTION__ << "midi out port is closed!";
 	}
-}
+	}
 
 #endif
 
@@ -2211,7 +2236,8 @@ void ofxSurfingOsc::setupOutputSenders()
 	// that will depends on how params are subscribed to the class: 
 	//addReceiver/addSender -> OSC in/out
 
-	params_Targets.setName("TARGETS");
+	//params_Targets.setName("TARGETS");
+	params_Targets.setName("OSC TARGETS");
 	params_Targets.add(params_Bangs);
 	params_Targets.add(params_Toggles);
 	params_Targets.add(params_Values);
@@ -2389,79 +2415,79 @@ void ofxSurfingOsc::setupReceiveLogger()
 		ofxSubscribeAllOsc([&](const ofxOscMessageEx& m, bool is_leaked)
 			{
 				bool _b = false;
-				_b += bDebug;
+		_b += bDebug;
 #ifdef USE_TEXT_FLOW
-				_b += (bGui_LogFlow);
+		_b += (bGui_LogFlow);
 #endif
-				if (_b)
+		if (_b)
+		{
+			bool bskip = false;
+			// workaround to ignore booleans false
+
+			// Unrecognized message: 
+			// Display on the bottom of the screen
+
+			string msgString;
+			msgString = "";
+			msgString += "OSC IN \t";
+			msgString += m.getAddress();
+
+			for (size_t i = 0; i < m.getNumArgs(); i++) {
+
+				msgString += "\t";
+				//msgString += "\t";
+
+				// Get the argument type too:
+				//msgString += m.getArgTypeName(i);
+				//msgString += ":";
+
+				// Display the argument 
+				// Make sure we get the right type
+				if (m.getArgType(i) == OFXOSC_TYPE_INT32)
 				{
-					bool bskip = false;
-					// workaround to ignore booleans false
-
-					// Unrecognized message: 
-					// Display on the bottom of the screen
-
-					string msgString;
-					msgString = "";
-					msgString += "OSC IN \t";
-					msgString += m.getAddress();
-
-					for (size_t i = 0; i < m.getNumArgs(); i++) {
-
-						msgString += "\t";
-						//msgString += "\t";
-
-						// Get the argument type too:
-						//msgString += m.getArgTypeName(i);
-						//msgString += ":";
-
-						// Display the argument 
-						// Make sure we get the right type
-						if (m.getArgType(i) == OFXOSC_TYPE_INT32)
-						{
-							if (m.getArgAsInt32(i) == 0) bskip = true;
-							// ignore bools arg as it is a bang
-							if (m.getArgAsInt32(i) != 1) {
-								msgString += ofToString(m.getArgAsInt32(i));
-							}
-						}
-						else if (m.getArgType(i) == OFXOSC_TYPE_FLOAT)
-						{
-							msgString += ofToString(m.getArgAsFloat(i));
-						}
-						else if (m.getArgType(i) == OFXOSC_TYPE_STRING)
-						{
-							msgString += m.getArgAsString(i);
-						}
-						else
-						{
-							msgString += "Not handled argument type " + m.getArgTypeName(i);
-						}
+					if (m.getArgAsInt32(i) == 0) bskip = true;
+					// ignore bools arg as it is a bang
+					if (m.getArgAsInt32(i) != 1) {
+						msgString += ofToString(m.getArgAsInt32(i));
 					}
+				}
+				else if (m.getArgType(i) == OFXOSC_TYPE_FLOAT)
+				{
+					msgString += ofToString(m.getArgAsFloat(i));
+				}
+				else if (m.getArgType(i) == OFXOSC_TYPE_STRING)
+				{
+					msgString += m.getArgAsString(i);
+				}
+				else
+				{
+					msgString += "Not handled argument type " + m.getArgTypeName(i);
+				}
+			}
 
-					// More debug
-					//msgString += " ";
-					//msgString += m.getRemotePort() + " ";
-					//msgString += m.getRemoteHost() + " ";
-					//ofLogNotice("ofxSurfingOsc")
-					//	//<< m.getWaitingPort() << " : "
-					//	<< m.getAddress() << " "
-					//	<< m.getRemoteHost() << " "
-					//	<< m.getRemotePort() << " "
-					//	//<< m.getTypeString() << " "
-					//	//<< m.getNumArgs()
-					//	;
+			// More debug
+			//msgString += " ";
+			//msgString += m.getRemotePort() + " ";
+			//msgString += m.getRemoteHost() + " ";
+			//ofLogNotice("ofxSurfingOsc")
+			//	//<< m.getWaitingPort() << " : "
+			//	<< m.getAddress() << " "
+			//	<< m.getRemoteHost() << " "
+			//	<< m.getRemotePort() << " "
+			//	//<< m.getTypeString() << " "
+			//	//<< m.getNumArgs()
+			//	;
 
-					ofLogNotice("ofxSurfingOsc") << "OSC \t" << msgString;
+			ofLogNotice("ofxSurfingOsc") << "OSC \t" << msgString;
 
 #ifdef USE_IM_GUI
-					if (!bskip) ui.AddToLog(msgString);
+			if (!bskip) ui.AddToLog(msgString);
 #endif
 
 #ifdef USE_TEXT_FLOW
-					ofxTextFlow::addText(msgString);
+			ofxTextFlow::addText(msgString);
 #endif
-				}
+		}
 			});
 	}
 }
@@ -2824,7 +2850,7 @@ void ofxSurfingOsc::setupPlotCustom(plotStyle style)
 void ofxSurfingOsc::setupPlots()
 {
 	ofLogNotice("ofxSurfingOsc") << (__FUNCTION__);
-	
+
 	//--
 
 	//TODO:
@@ -2842,7 +2868,7 @@ void ofxSurfingOsc::setupPlots()
 	}
 
 	//----
-	
+
 	//TODO:
 	//moved to startup..
 	// Customize special plots
