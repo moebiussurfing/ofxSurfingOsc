@@ -33,7 +33,7 @@ public:
 
 	//----
 
-	ofParameterGroup params{ "Params" };
+	ofParameterGroup params{ "Local ofParam's" };
 
 #ifdef USE_local_Targets
 	ofParameter<bool> bang0{ "bang0", false };

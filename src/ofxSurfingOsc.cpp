@@ -661,6 +661,7 @@ void ofxSurfingOsc::setupParams()
 		params_PlotsInput.setName("PLOTS INPUT");
 		params_PlotsInput.add(bGui_Plots);
 		params_PlotsInput.add(bPlotsMini);
+		params_PlotsInput.add(bLeft);
 		if (bCustomTemplate) params_PlotsInput.add(bGui_AllPlots);
 	}
 #endif
@@ -1237,12 +1238,12 @@ void ofxSurfingOsc::drawImGui()
 
 			if (bUseOut) {
 				ui.Add(bGui_Enablers, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
-				ui.AddTooltip("Enable which addresses\nyou want to be sent \nor ignored.");
+				ui.AddTooltip("Enable which addresses\nyou want to be sent \nor to be ignored.");
 			}
 			ui.Add(bGui_Targets, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
 			string s = "All the controls will send OSC messages.\n";
-			s += "(if they are not in use!)\n";
-			s += "Can be use for testing purposes.\n\n";
+			s += "(If they are not in use!)\n";
+			s += "Can be used for testing purposes.\n\n";
 			s += "WIP \nSource commands can be patched\n";
 			s += "to map different destinations!\n\n";
 			s += "Example: \nFrom Enablers to different TARGETS.\n";
@@ -1343,9 +1344,15 @@ void ofxSurfingOsc::drawImGui()
 				ui.AddLabelBig("PLOTS");
 				ui.Indent();
 				ui.Add(bGui_Plots, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
-				ui.Add(bPlotsMini, OFX_IM_TOGGLE_ROUNDED_SMALL);
-				if (bCustomTemplate) ui.Add(bGui_AllPlots, OFX_IM_TOGGLE_ROUNDED_MINI);
-				ui.Unindent();
+				if (bGui_Plots) {
+					ui.Add(bPlotsMini, OFX_IM_TOGGLE_ROUNDED_SMALL);
+					if (bCustomTemplate) ui.Add(bGui_AllPlots, OFX_IM_TOGGLE_ROUNDED_MINI);
+					ui.Indent();
+					ui.Add(bLeft, OFX_IM_TOGGLE_ROUNDED_MINI);
+					ui.Unindent();
+					ui.Unindent();
+				}
+
 				ui.AddSpacingSeparated();
 #endif					
 				if (ui.BeginTree("TESTER")) {
@@ -2557,6 +2564,11 @@ void ofxSurfingOsc::Changed_Tar_Bangs(ofAbstractParameter& e) // preset load/tri
 			// Timed off. Required bc ofxPubSubOsc sends one state per frame.
 			t_bBangs[i] = ofGetElapsedTimeMillis();
 #endif
+
+#ifdef USE_IM_GUI
+			string s = name + "  \t" + (bBangs[i].get() ? "TRUE" : "FALSE");
+			ui.AddToLog(ofToString(s));
+#endif
 			return;
 		}
 	}
@@ -2591,6 +2603,11 @@ void ofxSurfingOsc::Changed_Tar_Toggles(ofAbstractParameter& e)
 				else { togglesRects[i].toggle(false); }
 			*/
 #endif
+
+#ifdef USE_IM_GUI
+			string s = name + "\t" + (bToggles[i].get() ? "TRUE" : "FALSE");
+			ui.AddToLog(ofToString(s));
+#endif
 			return;
 		}
 	}
@@ -2609,6 +2626,11 @@ void ofxSurfingOsc::Changed_Tar_Values(ofAbstractParameter& e)
 		{
 			// Values
 			ofLogNotice("ofxSurfingOsc") << (__FUNCTION__) << "\t VALUE   \t[" << ofToString(i) << "] " << values[i];
+
+#ifdef USE_IM_GUI
+			string s = name + " \t" + ofToString(values[i].get(), 2);
+			ui.AddToLog(ofToString(s));
+#endif
 
 			return;
 		}
@@ -2629,6 +2651,10 @@ void ofxSurfingOsc::Changed_Tar_Numbers(ofAbstractParameter& e)
 			// numbers
 			ofLogNotice("ofxSurfingOsc") << (__FUNCTION__) << "\t NUMBER \t[" << ofToString(i) << "] " << numbers[i];
 
+#ifdef USE_IM_GUI
+			string s = name + "\t" + ofToString(numbers[i].get(), 0);
+			ui.AddToLog(ofToString(s));
+#endif
 			return;
 		}
 	}
@@ -3036,7 +3062,6 @@ void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
 			//bIsSmall = true;
 
 			//layout
-			bool bLeft = false;
 			float offsetR = 75;
 
 			float xx;
@@ -3113,7 +3138,7 @@ void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
 				}
 				else {
 					xx = x + w - (_r + _xpadR) - offsetR;
-					yy = y + 2 * plotMargin + h / 2.0f + 3;
+					yy = y + 2 * plotMargin + h / 2.0f /*+ 3*/;//fix
 				}
 				ww = _r;
 
@@ -3132,9 +3157,14 @@ void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
 			{
 				//togglesRects[i].setEnableBorder(!bIsSmall);
 
-				if (bLeft) xx = x + _r + _xpad;
-				else xx = x + w - (_r + _xpadR) - offsetR;
-				yy = y + plotMargin + h / 2.0f;
+				if (bLeft) {
+					xx = x + _r + _xpad;
+					yy = y + plotMargin + h / 2.0f;
+				}
+				else {
+					xx = x + w - (_r + _xpadR) - offsetR;
+					yy = y + plotMargin + h / 2.0f /*+ 3*/;//fix
+				}
 				ww = _r;
 
 				togglesRects[ii].draw(glm::vec2(xx, yy), ww);
@@ -3162,9 +3192,14 @@ void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
 
 				ww = 2 * _r;
 				hh = h - _gap;
-				if (bLeft) xx = x + _xpad;
-				else xx = x + w - _xpadR - ww - offsetR;
-				yy = y + plotMargin + h - 2;
+				if (bLeft) {
+					xx = x + _xpad;
+					yy = y + plotMargin + h - 2;
+				}
+				else {
+					xx = x + w - _xpadR - ww - offsetR;
+					yy = y + plotMargin + h - 2;
+				}
 
 				valuesBars[ii].draw(
 					v,
@@ -3190,9 +3225,14 @@ void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
 
 				ww = 2 * _r;
 				hh = h - _gap;
-				if (bLeft) xx = x + _xpad;
-				else xx = x + w - _xpadR - ww - offsetR;
-				yy = y + plotMargin + h - 2;
+				if (bLeft) {
+					xx = x + _xpad;
+					yy = y + plotMargin + h - 2;
+				}
+				else {
+					xx = x + w - _xpadR - ww - offsetR;
+					yy = y + plotMargin + h - 2;
+				}
 
 				numbersBars[ii].draw(
 					v,

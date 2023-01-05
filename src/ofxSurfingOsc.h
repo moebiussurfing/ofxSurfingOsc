@@ -6,11 +6,9 @@
 
 	TODO:
 
-	+		store out enabler settings
+	+		minimize allows to hide not enabled targets
 			notice that could not correlate target params 
 				to externally added params instead of default targets!
-
-	+		add selector to draw plots from in/out/smoothed
 
 	PATCHING MANAGER
 	+		move all classes to https://github.com/moebiussurfing/ofxPatchbayParams	
@@ -232,6 +230,8 @@ private:
 
 	SurfOscModes mode = UNKNOWN;
 
+public:
+
 	void setEnableOscInput(bool b) { bUseIn = b; };//must be called before setup. can not be modified on runtime!
 	void setEnableOscOutput(bool b) { bUseOut = b; };//must be called before setup. can not be modified on runtime!
 
@@ -352,6 +352,7 @@ public:
 	// In Enablers
 
 	//TODO:
+
 private:
 
 	ofParameterGroup params_EnablerIns{ "In Enablers" };
@@ -669,7 +670,7 @@ public:
 
 private:
 
-	// mantain bangs enable for a short time to ui display purposes
+	// maintain bangs enable for a short time to ui display purposes
 	int t_bBangs[NUM_BANGS];
 
 	//--
@@ -795,6 +796,7 @@ private:
 	const int amount_Plots_Targets = NUM_BANGS + NUM_TOGGLES + NUM_VALUES + NUM_NUMBERS;
 	vector<bool> plotsTargets_Visible; // array with bool of display state of any plot
 	int amountPlotsTargetsVisible = 0;
+	ofParameter<bool> bLeft{ "Left" ,false };
 
 private:
 

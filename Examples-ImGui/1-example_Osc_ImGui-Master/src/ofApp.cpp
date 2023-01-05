@@ -110,6 +110,19 @@ void ofApp::draw()
 		if (ui.BeginWindow(name))
 		{
 			ui.Add(oscHelper.bGui, OFX_IM_TOGGLE_ROUNDED_MEDIUM);
+			
+			// HELP INFO
+			{
+				ui.AddSpacing();
+				ui.BeginBlinkText();
+				ui.AddLabelHuge("HELP");
+				ui.EndBlinkText();
+				ui.pushStyleFont(2);
+				string s = "All the bellow params \nwill be auto configured \nto send OSC messages.";
+				s += "\nIt will use a template \nof addresses for common uses.";
+				ui.AddTooltip(s);
+				ui.popStyleFont();
+			}
 
 #ifdef USE_local_Targets
 			ui.AddSpacingBigSeparated();
