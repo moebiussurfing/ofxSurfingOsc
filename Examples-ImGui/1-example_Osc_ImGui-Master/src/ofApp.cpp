@@ -3,7 +3,9 @@
 //--------------------------------------------------------------
 void ofApp::setup()
 {
-	ofSetLogLevel("ofxSurfingOsc", OF_LOG_SILENT);
+	//w.doReset();
+
+	//ofSetLogLevel("ofxSurfingOsc", OF_LOG_SILENT);
 
 	ofSetBackgroundColor(ofColor::orange);
 
@@ -55,6 +57,9 @@ void ofApp::setupOsc()
 	else if (mode == ofxSurfingOsc::Master) name += "Master";
 	ofSetWindowTitle(name);
 
+	oscHelper.disableGuiInternal();
+	oscHelper.setCustomTemplate(true);
+
 	oscHelper.setup(mode);
 
 	// Link param
@@ -88,6 +93,7 @@ void ofApp::setupOsc()
 //--------------------------------------------------------------
 void ofApp::setupGui()
 {
+	ui.setName("ofApp");
 	ui.setup();
 }
 

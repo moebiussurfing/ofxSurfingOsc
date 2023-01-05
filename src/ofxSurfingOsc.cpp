@@ -22,6 +22,9 @@ ofxSurfingOsc::ofxSurfingOsc()
 	path_AppSettings = "App_Settings.xml";
 	path_OscSettings = "Osc_Settings.xml";
 
+	path_EnablersIn = "EnablersIn_Settings.xml";
+	path_EnablersOut = "EnablersOut_Settings.xml";
+
 	//--
 
 	//TODO:
@@ -114,8 +117,8 @@ void ofxSurfingOsc::setup()
 
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
 	{
-		boxPlotsBg.setPathGlobal(path_Global);
 		boxPlotsBg.setName("Plots");
+		boxPlotsBg.setPathGlobal(path_Global);
 		boxPlotsBg.bEdit.setName("EDIT PLOTS");
 
 #ifdef SURF_OSC__USE__RECEIVER_PATCHING_MODE
@@ -343,6 +346,9 @@ void ofxSurfingOsc::initiate()
 	// Load Settings
 
 	//ofxSurfingHelpers::loadGroup(params_AppSettings, path_Global + "/" + path_AppSettings);
+
+	ofxSurfingHelpers::loadGroup(params_EnablerIns, path_Global + "/" + path_EnablersIn);
+	ofxSurfingHelpers::loadGroup(params_EnablerOuts, path_Global + "/" + path_EnablersOut);
 }
 
 //----------------------------------------------------
@@ -475,7 +481,7 @@ void ofxSurfingOsc::startupDelayed()
 //----------------------------------------------------
 void ofxSurfingOsc::setupImGui()
 {
-	string name = "OSC";
+	string name = "ofxSurfingOsc";
 	ui.setName(name);
 	ui.setWindowsMode(IM_GUI_MODE_WINDOWS_SPECIAL_ORGANIZER);
 	ui.setup();
@@ -701,7 +707,7 @@ void ofxSurfingOsc::setupParams()
 		params_MIDI.add(MIDI_OutputPort);
 		params_MIDI.add(MIDI_OutPort_name);
 		MIDI_OutPort_name.setSerializable(false);
-}
+	}
 #endif
 
 #endif
@@ -1096,7 +1102,7 @@ void ofxSurfingOsc::update()
 			//plotsTargets[_start + i]->update(false);
 		}
 	}
-	}
+}
 
 //--------------------------------------------------------------
 void ofxSurfingOsc::update(ofEventArgs& args) {
@@ -1170,7 +1176,7 @@ void ofxSurfingOsc::draw()
 		mMidiParams.draw();
 		//mMidiParams.setVisible(true);
 		//mMidiParams.setVisible(true);
-}
+	}
 #endif
 
 	//--
@@ -1191,7 +1197,7 @@ void ofxSurfingOsc::draw()
 	{
 		posOSC = glm::vec2(p.x + w + 5, p.y);
 		widthOSC = 0;
-}
+	}
 	ofxTextFlow::setPosition(posOSC.x + widthOSC + 5, posOSC.y);
 #endif
 
@@ -1358,6 +1364,8 @@ void ofxSurfingOsc::drawImGui()
 				ui.AddSpacingSeparated();
 
 				ui.Add(bHelp, OFX_IM_TOGGLE_ROUNDED_MINI);
+				string s = "List all OSC Addresses\nfor Input and/or Output";
+				ui.AddTooltip(s);
 			}
 
 			bool block = false;
@@ -1544,6 +1552,9 @@ void ofxSurfingOsc::exit()
 	ofxSurfingHelpers::saveGroup(params_AppSettings, path_Global + "/" + path_AppSettings);
 	ofxSurfingHelpers::saveGroup(params_OscSettings, path_Global + "/" + path_OscSettings);
 
+	ofxSurfingHelpers::saveGroup(params_EnablerIns, path_Global + "/" + path_EnablersIn);
+	ofxSurfingHelpers::saveGroup(params_EnablerOuts, path_Global + "/" + path_EnablersOut);
+
 	//-
 
 #ifdef USE_MIDI_OUT
@@ -1638,7 +1649,7 @@ void ofxSurfingOsc::addReceiver_Bool(ofParameter<bool>& p, string address)
 	{
 		ofxPublishOsc(OSC_OutputIp, OSC_OutputPort, address, p);
 	}
-	}
+}
 
 //--------------------------------------------------------------
 void ofxSurfingOsc::addReceiver_Int(ofParameter<int>& p, string address)
@@ -1820,7 +1831,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 		ofxTextFlow::setShowing(bGui_LogFlow);
 
 		return;
-}
+	}
 #endif
 
 	//--
@@ -1911,7 +1922,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 		}
 
 		return;
-}
+	}
 
 #endif
 
@@ -1927,7 +1938,7 @@ void ofxSurfingOsc::Changed_Params(ofAbstractParameter& e)
 		//if (!bGui_OscHelper && bGui_LogFlow) bGui_OscHelper = true;
 
 		return;
-}
+	}
 #endif
 
 	//--
@@ -2510,8 +2521,8 @@ void ofxSurfingOsc::setupReceiveLogger()
 			ofxTextFlow::addText(msgString);
 #endif
 		}
-	});
-}
+			});
+	}
 }
 
 //--
@@ -2994,9 +3005,10 @@ void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
 
 		_amount = _amountPlotsTargets;
 
-		int x, y, w, h;
-		int _xpad = 30;
-		int p = 0;//picked plot
+		float x, y, w, h;
+		float _xpad = 30;
+		float _xpadR = 5;
+		float p = 0;//picked plot
 		float _r;//widgets size
 		bool bIsSmall;
 
@@ -3022,6 +3034,15 @@ void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
 			// when small will simplify drawing stuff like disabling borders.
 			bIsSmall = (_r < 100);
 			//bIsSmall = true;
+
+			//layout
+			bool bLeft = false;
+			float offsetR = 75;
+
+			float xx;
+			float yy;
+			float ww;
+			float hh;
 
 			//--
 
@@ -3086,7 +3107,17 @@ void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
 			{
 				//bangRects[i].setEnableBorder(!bIsSmall);
 
-				bangRects[i].draw(glm::vec2(x + _r + _xpad, y + plotMargin + h / 2.0f), _r);
+				if (bLeft) {
+					xx = x + _r + _xpad;
+					yy = y + plotMargin + h / 2.0f;
+				}
+				else {
+					xx = x + w - (_r + _xpadR) - offsetR;
+					yy = y + 2 * plotMargin + h / 2.0f + 3;
+				}
+				ww = _r;
+
+				bangRects[i].draw(glm::vec2(xx, yy), ww);
 			}
 
 			//--
@@ -3101,7 +3132,12 @@ void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
 			{
 				//togglesRects[i].setEnableBorder(!bIsSmall);
 
-				togglesRects[ii].draw(glm::vec2(x + _r + _xpad, y + plotMargin + h / 2.0f), _r);
+				if (bLeft) xx = x + _r + _xpad;
+				else xx = x + w - (_r + _xpadR) - offsetR;
+				yy = y + plotMargin + h / 2.0f;
+				ww = _r;
+
+				togglesRects[ii].draw(glm::vec2(xx, yy), ww);
 			}
 
 			//--
@@ -3116,17 +3152,24 @@ void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
 			ii = i - _start;
 
 			//if (i >= _start && i < _end && i != _end - 1) {//exclude bpm bc out of range
-			if (i >= _start && i < _end) {
+			if (i >= _start && i < _end)
+			{
 				float v = values[ii];
 
 				//if (!bEnablerOuts[i]) v = 0;//bypass
 
 				//valuesBars[i].setEnableBorder(!bIsSmall);
 
+				ww = 2 * _r;
+				hh = h - _gap;
+				if (bLeft) xx = x + _xpad;
+				else xx = x + w - _xpadR - ww - offsetR;
+				yy = y + plotMargin + h - 2;
+
 				valuesBars[ii].draw(
 					v,
-					glm::vec2(x + _xpad, y + plotMargin + h - 2),
-					2 * _r, h - _gap);
+					glm::vec2(xx, yy),
+					ww, hh);
 			}
 
 			//--
@@ -3137,17 +3180,24 @@ void ofxSurfingOsc::drawPlots(float _x, float _y, float _w, float _h)
 			_end = _start + NUM_NUMBERS;
 			ii = i - _start;
 
-			if (i >= _start && i < _end) {
+			if (i >= _start && i < _end)
+			{
 				int v = numbers[ii];
 
 				//if (!bEnablerOuts[i]) v = 0;//bypass
 
 				//numbersBars[i].setEnableBorder(!bIsSmall);
 
+				ww = 2 * _r;
+				hh = h - _gap;
+				if (bLeft) xx = x + _xpad;
+				else xx = x + w - _xpadR - ww - offsetR;
+				yy = y + plotMargin + h - 2;
+
 				numbersBars[ii].draw(
 					v,
-					glm::vec2(x + _xpad, y + plotMargin + h - 2),
-					2 * _r, h - _gap);
+					glm::vec2(xx, yy),
+					ww, hh);
 			}
 		}
 	}

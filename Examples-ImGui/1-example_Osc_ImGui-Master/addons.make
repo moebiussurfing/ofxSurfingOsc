@@ -1,3 +1,4 @@
+ofxFontStash2
 ofxGui
 ofxHistoryPlot
 ofxImGui

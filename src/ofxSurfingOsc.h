@@ -266,7 +266,9 @@ public:
 		path_Global = s;
 
 #ifdef SURF_OSC__USE__TARGETS_INTERNAL_PLOTS
+		boxPlotsBg.setName("PlotsOSC");
 		boxPlotsBg.setPathGlobal(path_Global);
+		boxPlotsBg.setup();
 #endif
 	}
 
@@ -275,6 +277,8 @@ private:
 	// Settings paths
 	string path_AppSettings;
 	string path_OscSettings;
+	string path_EnablersIn;
+	string path_EnablersOut;
 
 	void setupParams(); // must be called at first before set ports and add params
 
