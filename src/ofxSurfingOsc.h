@@ -6,12 +6,14 @@
 
 	TODO:
 
+	+		how to log sent messages / OSC OUT ?
+
 	+		minimize allows to hide not enabled targets
-			notice that could not correlate target params 
+			notice that could not correlate target params
 				to externally added params instead of default targets!
 
 	PATCHING MANAGER
-	+		move all classes to https://github.com/moebiussurfing/ofxPatchbayParams	
+	+		move all classes to https://github.com/moebiussurfing/ofxPatchbayParams
 	+ 		look @daan example!
 	++		PatchPipeValue class:
 				add extra params parallel to targets, to work as.
@@ -37,7 +39,7 @@
 					should use kind of map/pairs/smartPointers/msaOrderedMap to store all added params?
 
 	+		disabler per project for not include midi?
-	+		add midi out feedback for received subscribed toggles/bool: 
+	+		add midi out feedback for received subscribed toggles/bool:
 			using ofxParamsMisiSync?
 				https://github.com/NickHardeman/ofxMidiParams/issues/1#issuecomment-630559720
 				add bg rectangle.
@@ -165,7 +167,7 @@ private:
 	int durationBangsTrue = 20; // ms visible on the button
 	//int durationBangsTrue = 2 * 1/60.f;//x frames // smaller
 	//int durationBangsTrue = 100;
-	 
+
 	//--
 
 public:
@@ -222,7 +224,16 @@ public:
 	ofParameter<bool> bGui_Internal;
 	ofParameter<bool> bGui_Enablers;
 
-	void setName(string n) { name = n; };
+	void setName(string n) {
+		name = n;
+
+		bGui.setName("OSC");
+		ui.setLogName("LOG OSC");
+	};
+
+	string tagTarget = "T";
+	string tagIn = "I";
+	string tagOut = "O";
 
 private:
 
@@ -707,14 +718,14 @@ private:
 	// when is disabled. all the plots will be drawn.
 	// when enabled will draw only the selected!
 	// default colors can be changed too.
-	
+
 	//--
 
 public:
 
 	//TODO:
 	ofParameterGroup params_Targets;
-	
+
 	ofParameterGroup params_Bangs;
 	ofParameterGroup params_Toggles;
 	ofParameterGroup params_Values;
@@ -738,7 +749,7 @@ private:
 	ofParameter<glm::vec2> positionGui_Targets;
 
 public:
-	
+
 	ofParameter<bool> bGui_Targets;
 #endif
 

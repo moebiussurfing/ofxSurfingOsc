@@ -496,6 +496,11 @@ void ofxSurfingOsc::setupImGui()
 #endif
 
 	ui.startup();
+
+	// Log
+	ui.AddLogTag(SurfingLog::tagData{ tagTarget, ofColor::turquoise });
+	ui.AddLogTag(SurfingLog::tagData{ tagIn, ofColor::yellow });
+	ui.AddLogTag(SurfingLog::tagData{ tagOut, ofColor::blue });
 }
 #endif
 
@@ -1037,21 +1042,21 @@ void ofxSurfingOsc::update()
 			if (bUseIn)
 			{
 #ifdef USE_IM_GUI
-				ui.AddToLog("OSC IN \n");
-				ui.AddToLog("addresses \n\n");
+				ui.AddToLog("OSC IN \n", tagIn);
+				ui.AddToLog("addresses \n\n", tagIn);
 #endif	
 				auto ss = ofxGetSubscribedAddresses(OSC_InputPort);
 #ifdef USE_IM_GUI
 				for (size_t i = 0; i < ss.size(); i++)
 				{
-					ui.AddToLog(ss[i]);
+					ui.AddToLog(ss[i], tagIn);
 				}
 #endif	
 				auto si = "OSC IN \n\n" + ofToString(ss) + "\n\n";
 				ofLogNotice("ofxSurfingOsc") << "OSC IN  Addresses: " << ofToString(si);
 				/*
 #ifdef USE_IM_GUI
-				ui.AddToLog(ofToString(si));
+				ui.AddToLog(ofToString(si),tagIn);
 #endif
 				*/
 			}
@@ -1066,7 +1071,7 @@ void ofxSurfingOsc::update()
 				ofLogNotice("ofxSurfingOsc") << "OSC OUT Addresses: " << ofToString(so);
 
 #ifdef USE_IM_GUI
-				ui.AddToLog(ofToString(so));
+				ui.AddToLog(ofToString(so), tagOut);
 #endif
 			}
 		}
@@ -2521,7 +2526,7 @@ void ofxSurfingOsc::setupReceiveLogger()
 			ofLogNotice("ofxSurfingOsc") << "OSC \t" << msgString;
 
 #ifdef USE_IM_GUI
-			if (!bskip) ui.AddToLog(msgString);
+			if (!bskip) ui.AddToLog(msgString, tagIn);
 #endif
 
 #ifdef USE_TEXT_FLOW
@@ -2567,7 +2572,7 @@ void ofxSurfingOsc::Changed_Tar_Bangs(ofAbstractParameter& e) // preset load/tri
 
 #ifdef USE_IM_GUI
 			string s = name + "  \t" + (bBangs[i].get() ? "TRUE" : "FALSE");
-			ui.AddToLog(ofToString(s));
+			ui.AddToLog(ofToString(s), tagTarget);
 #endif
 			return;
 		}
@@ -2606,7 +2611,7 @@ void ofxSurfingOsc::Changed_Tar_Toggles(ofAbstractParameter& e)
 
 #ifdef USE_IM_GUI
 			string s = name + "\t" + (bToggles[i].get() ? "TRUE" : "FALSE");
-			ui.AddToLog(ofToString(s));
+			ui.AddToLog(ofToString(s), tagTarget);
 #endif
 			return;
 		}
@@ -2629,7 +2634,7 @@ void ofxSurfingOsc::Changed_Tar_Values(ofAbstractParameter& e)
 
 #ifdef USE_IM_GUI
 			string s = name + " \t" + ofToString(values[i].get(), 2);
-			ui.AddToLog(ofToString(s));
+			ui.AddToLog(ofToString(s), tagTarget);
 #endif
 
 			return;
@@ -2653,7 +2658,7 @@ void ofxSurfingOsc::Changed_Tar_Numbers(ofAbstractParameter& e)
 
 #ifdef USE_IM_GUI
 			string s = name + "\t" + ofToString(numbers[i].get(), 0);
-			ui.AddToLog(ofToString(s));
+			ui.AddToLog(ofToString(s), tagTarget);
 #endif
 			return;
 		}
